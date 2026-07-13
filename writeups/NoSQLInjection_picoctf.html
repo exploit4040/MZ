@@ -6,6 +6,7 @@
 <title>No Sql Injection — picoCTF 2024 | Write-up par SPECTRA MZ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
@@ -232,7 +233,6 @@
   .ref-name { font-family: 'JetBrains Mono', monospace; font-size: .78rem; color: var(--cyan); font-weight: 600; }
   .ref-url { font-size: .73rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-  /* Hosting providers grid */
   .host-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
   .host-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem; transition: border-color .2s, transform .2s; }
   .host-card:hover { border-color: var(--cyan); transform: translateY(-2px); }
@@ -245,10 +245,18 @@
   .flag-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); margin-bottom: .8rem; }
   .flag-text { font-family: 'JetBrains Mono', monospace; font-size: clamp(.85rem, 3.2vw, 1.15rem); font-weight: 700; color: var(--cyan); letter-spacing: .02em; text-shadow: 0 0 20px var(--cyan-glow); word-break: break-all; }
 
+  .share-section { padding: 2rem 0; border-top: 1px solid var(--border); margin-top: 2rem; display: flex; flex-direction: column; gap: 1rem; }
+  .share-section .share-label { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--muted); display: flex; align-items: center; gap: 0.5rem; }
+  .share-buttons { display: flex; flex-wrap: wrap; gap: 0.8rem; }
+  .share-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 99px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; border: 1px solid var(--border); color: var(--text); background: var(--surface); cursor: pointer; transition: all 0.2s; text-decoration: none; }
+  .share-btn:hover, .share-btn:active { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); box-shadow: 0 0 12px var(--cyan-glow); }
+  .share-btn i { font-size: 1rem; }
+
   footer { margin-top: 4rem; padding: 2rem 0; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
   .footer-author { font-family: 'JetBrains Mono', monospace; font-size: .78rem; color: var(--muted); line-height: 1.8; }
-  .footer-badge { font-family: 'JetBrains Mono', monospace; font-size: .72rem; color: var(--muted); display: flex; align-items: center; gap: .4rem; }
+  .footer-badge { font-family: 'JetBrains Mono', monospace; font-size: .72rem; color: var(--muted); display: flex; flex-direction: column; align-items: flex-end; gap: .2rem; }
   .footer-badge span { color: var(--cyan); }
+  .footer-date { font-size: .68rem; color: var(--muted); opacity: .7; }
 
   .bottom-back { display: inline-flex; align-items: center; gap: .5rem; padding: .7rem 1.2rem; margin-top: .8rem; min-height: 44px; border: 1px solid var(--cyan); border-radius: 8px; color: var(--cyan); text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: .8rem; background: var(--cyan-dim); transition: all .2s; }
   .bottom-back:hover, .bottom-back:active { box-shadow: 0 0 20px var(--cyan-glow); }
@@ -287,6 +295,7 @@
     .chain-node { font-size: .7rem; padding: .3rem .55rem; }
     .host-grid { grid-template-columns: 1fr; }
     footer { flex-direction: column; align-items: flex-start; }
+    .footer-badge { align-items: flex-start; }
   }
   @media (max-height: 480px) and (orientation: landscape) {
     .mobile-nav { padding-bottom: calc(.4rem + var(--safe-b)); }
@@ -361,6 +370,7 @@
     <div class="hero-divider"></div>
   </header>
 
+  <!-- SOMMAIRE -->
   <div class="toc">
     <div class="toc-title">Sommaire</div>
     <ul class="toc-list">
@@ -393,9 +403,9 @@
         <div class="t-dot t-dot-red"></div>
         <div class="t-dot t-dot-amber"></div>
         <div class="t-dot t-dot-green"></div>
-        <span class="terminal-bar-label">challenge_card.png — picoCTF</span>
+        <span class="terminal-bar-label">def1.png — Carte du challenge</span>
       </div>
-      <div class="img-scroll"><img src="assets/01_challenge.png" alt="Carte du challenge No Sql Injection sur picoCTF" loading="lazy"></div>
+      <div class="img-scroll"><img src="../no_sql_injection/def1.png" alt="Carte du challenge No Sql Injection sur picoCTF" loading="lazy"></div>
       <div class="terminal-caption">No Sql Injection — Web Exploitation, Medium, 200 pts, picoCTF 2024. Source téléchargeable.</div>
     </div>
 
@@ -414,7 +424,7 @@
     <h2 class="section-title">MongoDB — Architecture & Stockage des Données</h2>
 
     <p>
-      Avant d'attaquer quoi que ce soit, il faut comprendre precisément ce qu'est MongoDB et
+      Avant d'attaquer quoi que ce soit, il faut comprendre précisément ce qu'est MongoDB et
       comment il diffère fondamentalement d'une base de données relationnelle classique
       (MySQL, PostgreSQL) — cette différence est justement à l'origine de toute la classe de
       vulnérabilités que nous allons exploiter.
@@ -589,26 +599,9 @@ db.users.findOne({ email: { <span class="hl">$ne</span>: <span class="kw">null</
         <div class="t-dot t-dot-red"></div>
         <div class="t-dot t-dot-amber"></div>
         <div class="t-dot t-dot-green"></div>
-        <span class="terminal-bar-label">Archive du code source extraite</span>
+        <span class="terminal-bar-label">indice_mongod_dans_le_code_source.png — Code source server.js</span>
       </div>
-      <div class="img-scroll"><img src="assets/02_source_archive.png" alt="Archive app.tar.gz extraite en dossier app" loading="lazy"></div>
-      <div class="terminal-caption">app.tar.gz extrait — dossier "app" contenant le code source complet du serveur</div>
-    </div>
-
-    <p>
-      À l'intérieur, on trouve un projet Node.js classique. Le fichier le plus important à
-      étudier est <code>server.js</code>, qui contient la logique métier de l'application —
-      c'est ici que se trouve potentiellement la faille.
-    </p>
-
-    <div class="terminal-frame">
-      <div class="terminal-bar">
-        <div class="t-dot t-dot-red"></div>
-        <div class="t-dot t-dot-amber"></div>
-        <div class="t-dot t-dot-green"></div>
-        <span class="terminal-bar-label">server.js — Extrait du code source</span>
-      </div>
-      <div class="img-scroll"><img src="assets/03_server_js.png" alt="Code source server.js avec Mongoose et schéma User" loading="lazy"></div>
+      <div class="img-scroll"><img src="../no_sql_injection/indice_mongod_dans_le_code_source.png" alt="Code source server.js avec Mongoose et schéma User" loading="lazy"></div>
       <div class="terminal-caption">Express + Mongoose + MongoMemoryServer — schéma User avec champ token par défaut "{{Flag}}"</div>
     </div>
 
@@ -666,9 +659,9 @@ db.users.findOne({ email: { <span class="hl">$ne</span>: <span class="kw">null</
         <div class="t-dot t-dot-red"></div>
         <div class="t-dot t-dot-amber"></div>
         <div class="t-dot t-dot-green"></div>
-        <span class="terminal-bar-label">atlas.picoctf.net:54195 — Page de connexion</span>
+        <span class="terminal-bar-label">loginpages.png — Page de connexion</span>
       </div>
-      <div class="img-scroll"><img src="assets/04_login_page.png" alt="Page de connexion vide du challenge" loading="lazy"></div>
+      <div class="img-scroll"><img src="../no_sql_injection/loginpages.png" alt="Page de connexion du challenge" loading="lazy"></div>
       <div class="terminal-caption">Formulaire de connexion standard — champs Email et Password</div>
     </div>
 
@@ -682,9 +675,9 @@ db.users.findOne({ email: { <span class="hl">$ne</span>: <span class="kw">null</
         <div class="t-dot t-dot-red"></div>
         <div class="t-dot t-dot-amber"></div>
         <div class="t-dot t-dot-green"></div>
-        <span class="terminal-bar-label">Tentative avec identifiants basiques</span>
+        <span class="terminal-bar-label">test.png — Tentative avec identifiants basiques</span>
       </div>
-      <div class="img-scroll"><img src="assets/05_test_creds.png" alt="Tentative de connexion avec email test" loading="lazy"></div>
+      <div class="img-scroll"><img src="../no_sql_injection/test.png" alt="Tentative de connexion avec email test" loading="lazy"></div>
       <div class="terminal-caption">Email: test / Password: (saisi) — soumission du formulaire</div>
     </div>
 
@@ -693,9 +686,9 @@ db.users.findOne({ email: { <span class="hl">$ne</span>: <span class="kw">null</
         <div class="t-dot t-dot-red"></div>
         <div class="t-dot t-dot-amber"></div>
         <div class="t-dot t-dot-green"></div>
-        <span class="terminal-bar-label">Réponse — Invalid credentials</span>
+        <span class="terminal-bar-label">testinvalide.png — Réponse "Invalid credentials"</span>
       </div>
-      <div class="img-scroll"><img src="assets/06_invalid_creds.png" alt="Message d'erreur Invalid credentials" loading="lazy"></div>
+      <div class="img-scroll"><img src="../no_sql_injection/testinvalide.png" alt="Message d'erreur Invalid credentials" loading="lazy"></div>
       <div class="terminal-caption">"Invalid credentials" — comportement attendu, l'authentification fonctionne normalement pour des entrées classiques</div>
     </div>
 
@@ -723,9 +716,9 @@ db.users.findOne({ email: { <span class="hl">$ne</span>: <span class="kw">null</
         <div class="t-dot t-dot-red"></div>
         <div class="t-dot t-dot-amber"></div>
         <div class="t-dot t-dot-green"></div>
-        <span class="terminal-bar-label">Recherche — mongodb injection authentication bypass</span>
+        <span class="terminal-bar-label">recherchgoogle.png — Recherche MongoDB authentication bypass</span>
       </div>
-      <div class="img-scroll"><img src="assets/07_google_research.png" alt="Recherche Google sur le bypass d'authentification MongoDB" loading="lazy"></div>
+      <div class="img-scroll"><img src="../no_sql_injection/recherchgoogle.png" alt="Recherche Google sur le bypass d'authentification MongoDB" loading="lazy"></div>
       <div class="terminal-caption">Principe confirmé : l'opérateur $ne permet de contourner une vérification d'identifiants</div>
     </div>
 
@@ -821,9 +814,9 @@ db.users.findOne({ email: { <span class="hl">$ne</span>: <span class="kw">null</
         <div class="t-dot t-dot-red"></div>
         <div class="t-dot t-dot-amber"></div>
         <div class="t-dot t-dot-green"></div>
-        <span class="terminal-bar-label">Injection du payload NoSQL</span>
+        <span class="terminal-bar-label">bypass_login.png — Injection du payload NoSQL</span>
       </div>
-      <div class="img-scroll"><img src="assets/08_bypass_payload.png" alt="Payload NoSQL saisi dans le formulaire" loading="lazy"></div>
+      <div class="img-scroll"><img src="../no_sql_injection/bypass_login.png" alt="Payload NoSQL saisi dans le formulaire" loading="lazy"></div>
       <div class="terminal-caption">Champ Email : { "$ne": null } — Password : valeur quelconque non vide</div>
     </div>
 
@@ -846,9 +839,9 @@ Password: { <span class="str">"$ne"</span>: <span class="kw">null</span> }</pre>
         <div class="t-dot t-dot-red"></div>
         <div class="t-dot t-dot-amber"></div>
         <div class="t-dot t-dot-green"></div>
-        <span class="terminal-bar-label">Burp Suite — Intercept — POST /login</span>
+        <span class="terminal-bar-label">on_sercher_la_flag_on_na_interseptelarequest.png — Burp Suite Intercept</span>
       </div>
-      <div class="img-scroll"><img src="assets/09_burp_intercept.png" alt="Requête POST /login interceptée avec le payload NoSQL" loading="lazy"></div>
+      <div class="img-scroll"><img src="../no_sql_injection/on_sercher_la_flag_on_na_interseptelarequest.png.png" alt="Requête POST /login interceptée avec le payload NoSQL" loading="lazy"></div>
       <div class="terminal-caption">Corps JSON transmis : email et password contiennent tous deux { "$ne": null }</div>
     </div>
 
@@ -873,9 +866,9 @@ Password: { <span class="str">"$ne"</span>: <span class="kw">null</span> }</pre>
         <div class="t-dot t-dot-red"></div>
         <div class="t-dot t-dot-amber"></div>
         <div class="t-dot t-dot-green"></div>
-        <span class="terminal-bar-label">Burp Suite — Réponse 200 OK</span>
+        <span class="terminal-bar-label">on_n'as_capture_le_flag_code_en_base_64.png — Réponse 200 OK</span>
       </div>
-      <div class="img-scroll"><img src="assets/10_burp_response.png" alt="Réponse serveur 200 OK avec token" loading="lazy"></div>
+      <div class="img-scroll"><img src="../no_sql_injection/on_n'as_capture_le_flag_code_en_base_64.png" alt="Réponse serveur 200 OK avec token" loading="lazy"></div>
       <div class="terminal-caption">success: true — authentification réussie sans connaître le moindre identifiant valide</div>
     </div>
 
@@ -904,6 +897,24 @@ Password: { <span class="str">"$ne"</span>: <span class="kw">null</span> }</pre>
       <span class="chain-arrow">→</span>
       <span class="chain-node highlight">Token exfiltré</span>
     </div>
+
+    <p>
+      À titre exploratoire, on visite également la route <code>/admin</code> repérée dans le
+      code source (<code>server.js</code> ligne 48) — elle expose une page de contenu
+      pédagogique sur la cybersécurité, sans lien direct avec le flag, mais confirmant la
+      structure générale de l'application.
+    </p>
+
+    <div class="terminal-frame">
+      <div class="terminal-bar">
+        <div class="t-dot t-dot-red"></div>
+        <div class="t-dot t-dot-amber"></div>
+        <div class="t-dot t-dot-green"></div>
+        <span class="terminal-bar-label">on_se_connecte_mais_zero_flag.png — Route /admin</span>
+      </div>
+      <div class="img-scroll"><img src="../no_sql_injection/on_se_connecte_mais_zero_flag.png" alt="Page admin avec contenu Cybersecurity Concepts" loading="lazy"></div>
+      <div class="terminal-caption">Route /admin — contenu statique sans rapport avec le flag (fausse piste)</div>
+    </div>
   </section>
 
   <!-- 06 - FLAG -->
@@ -922,9 +933,9 @@ Password: { <span class="str">"$ne"</span>: <span class="kw">null</span> }</pre>
         <div class="t-dot t-dot-red"></div>
         <div class="t-dot t-dot-amber"></div>
         <div class="t-dot t-dot-green"></div>
-        <span class="terminal-bar-label">Décodage Base64 du token</span>
+        <span class="terminal-bar-label">flag_trouver.png — Décodage Base64 du token</span>
       </div>
-      <div class="img-scroll"><img src="assets/11_base64_decode.png" alt="Décodage Base64 du token révélant le flag" loading="lazy"></div>
+      <div class="img-scroll"><img src="../no_sql_injection/flag_trouver.png" alt="Décodage Base64 du token révélant le flag" loading="lazy"></div>
       <div class="terminal-caption">Le token décodé révèle directement le flag complet</div>
     </div>
 
@@ -941,24 +952,6 @@ cGljb0NURntqQmhEMnk3WG9OZWlB2XzFZeFM1RXc1cUwwdUk2cGFzcXWxfaW5qZWN0aW9uXzc4NGU0MG
     </div>
 
     <p>
-      À titre exploratoire, on visite également la route <code>/admin</code> repérée dans le
-      code source (<code>server.js</code> ligne 48) — elle expose une page de contenu
-      pédagogique sur la cybersécurité, sans lien direct avec le flag, mais confirmant la
-      structure générale de l'application.
-    </p>
-
-    <div class="terminal-frame">
-      <div class="terminal-bar">
-        <div class="t-dot t-dot-red"></div>
-        <div class="t-dot t-dot-amber"></div>
-        <div class="t-dot t-dot-green"></div>
-        <span class="terminal-bar-label">atlas.picoctf.net:54195/admin</span>
-      </div>
-      <div class="img-scroll"><img src="assets/12_admin_page.png" alt="Page admin avec contenu Cybersecurity Concepts" loading="lazy"></div>
-      <div class="terminal-caption">Route /admin — contenu statique sans rapport avec le flag (fausse piste)</div>
-    </div>
-
-    <p>
       On soumet enfin le flag extrait dans l'interface picoCTF pour valider le challenge.
     </p>
 
@@ -967,9 +960,9 @@ cGljb0NURntqQmhEMnk3WG9OZWlB2XzFZeFM1RXc1cUwwdUk2cGFzcXWxfaW5qZWN0aW9uXzc4NGU0MG
         <div class="t-dot t-dot-red"></div>
         <div class="t-dot t-dot-amber"></div>
         <div class="t-dot t-dot-green"></div>
-        <span class="terminal-bar-label">picoCTF — Soumission du flag</span>
+        <span class="terminal-bar-label">validation_dudefie.png — Soumission du flag</span>
       </div>
-      <div class="img-scroll"><img src="assets/13_flag_submitted.png" alt="Flag soumis dans l'interface picoCTF" loading="lazy"></div>
+      <div class="img-scroll"><img src="../no_sql_injection/validation_dudefie.png" alt="Flag soumis dans l'interface picoCTF" loading="lazy"></div>
       <div class="terminal-caption">Flag validé avec succès</div>
     </div>
 
@@ -1063,6 +1056,22 @@ cGljb0NURntqQmhEMnk3WG9OZWlB2XzFZeFM1RXc1cUwwdUk2cGFzcXWxfaW5qZWN0aW9uXzc4NGU0MG
     </div>
   </section>
 
+  <!-- ── PARTAGE SOCIAL ── -->
+  <div class="share-section">
+    <div class="share-label">
+      <i class="fas fa-share-alt" style="color: var(--cyan);"></i> Partager ce write-up
+    </div>
+    <div class="share-buttons">
+      <button class="share-btn" onclick="share('twitter')"><i class="fab fa-twitter"></i> Twitter</button>
+      <button class="share-btn" onclick="share('linkedin')"><i class="fab fa-linkedin"></i> LinkedIn</button>
+      <button class="share-btn" onclick="share('facebook')"><i class="fab fa-facebook"></i> Facebook</button>
+      <button class="share-btn" onclick="share('whatsapp')"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+      <button class="share-btn" onclick="share('email')"><i class="fas fa-envelope"></i> Email</button>
+      <button class="share-btn" onclick="copyLink()"><i class="fas fa-link"></i> Copier le lien</button>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
   <footer>
     <div class="footer-author">
       Rédigé par <strong style="color: var(--cyan);">SPECTRA MZ</strong>
@@ -1072,6 +1081,7 @@ cGljb0NURntqQmhEMnk3WG9OZWlB2XzFZeFM1RXc1cUwwdUk2cGFzcXWxfaW5qZWN0aW9uXzc4NGU0MG
     </div>
     <div class="footer-badge">
       <span>picoCTF</span> 2024 · by NGIRIMANA Schadrack
+      <span class="footer-date" id="current-date-time"></span>
     </div>
   </footer>
 
@@ -1094,6 +1104,47 @@ cGljb0NURntqQmhEMnk3WG9OZWlB2XzFZeFM1RXc1cUwwdUk2cGFzcXWxfaW5qZWN0aW9uXzc4NGU0MG
     });
   }
 
+  // ── PARTAGE ──
+  function share(platform) {
+    const url = encodeURIComponent(window.location.href);
+    const text = encodeURIComponent("Découvrez ce write-up sur l'injection NoSQL dans MongoDB ! #picoCTF #NoSQL #Cybersecurity");
+    let shareUrl = '';
+    switch(platform) {
+      case 'twitter': shareUrl = `https://twitter.com/intent/tweet?url=${url}&text=${text}`; break;
+      case 'linkedin': shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${url}`; break;
+      case 'facebook': shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`; break;
+      case 'whatsapp': shareUrl = `https://api.whatsapp.com/send?text=${text}%20${url}`; break;
+      case 'email': shareUrl = `mailto:?subject=NoSQL%20Injection%20Write-up&body=${text}%20${url}`; break;
+      default: return;
+    }
+    if (shareUrl) window.open(shareUrl, '_blank');
+  }
+
+  function copyLink() {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      alert('✅ Lien copié dans le presse-papier !');
+    }).catch(() => {
+      const input = document.createElement('input');
+      input.value = window.location.href;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      document.body.removeChild(input);
+      alert('✅ Lien copié dans le presse-papier !');
+    });
+  }
+
+  // ── DATE & HEURE ──
+  (function displayDateTime() {
+    const now = new Date();
+    const options = { 
+      year: 'numeric', month: 'long', day: 'numeric',
+      hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short'
+    };
+    document.getElementById('current-date-time').textContent = '🕒 Mis à jour le ' + now.toLocaleDateString('fr-FR', options);
+  })();
+
+  // ── SCROLL PROGRESS & ACTIVE SIDEBAR ──
   const sections = document.querySelectorAll('.section[id]');
   const dots = document.querySelectorAll('.phase-dot');
   const mobileItems = document.querySelectorAll('.mobile-nav-item');
