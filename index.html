@@ -380,6 +380,13 @@
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  .writeup-date {
+    display: flex; align-items: center; gap: .35rem;
+    font-family: 'JetBrains Mono', monospace; font-size: .68rem; color: var(--muted);
+    margin-top: -.2rem;
+  }
+  .writeup-date svg { width: 11px; height: 11px; color: var(--cyan); flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -437,7 +444,7 @@
   <div class="stats-bar">
     <div class="stat-box"><div class="stat-num">16</div><div class="stat-label">Repositories</div></div>
     <div class="stat-box"><div class="stat-num">6</div><div class="stat-label">Stars</div></div>
-    <div class="stat-box"><div class="stat-num">8</div><div class="stat-label">Write-ups</div></div>
+    <div class="stat-box"><div class="stat-num">9</div><div class="stat-label">Write-ups</div></div>
     <div class="stat-box"><div class="stat-num">3</div><div class="stat-label">Certifications</div></div>
   </div>
 
@@ -566,6 +573,7 @@
           <div class="writeup-desc">
             Contournement d'un WAF Jinja2 via hex-encoding et le filtre attr() jusqu'à la RCE complète.
           </div>
+          <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>07 juil. 2026</div>
           <div class="writeup-footer">
             <span>Web Exploitation · 200 pts</span>
             <span class="writeup-arrow">→</span>
@@ -585,6 +593,7 @@
           <div class="writeup-desc">
             Contournement d'un contrôle d'accès basé sur un cookie côté client via Burp Suite Repeater.
           </div>
+          <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>09 juil. 2026</div>
           <div class="writeup-footer">
             <span>Web Exploitation · 200 pts</span>
             <span class="writeup-arrow">→</span>
@@ -605,6 +614,7 @@
           <div class="writeup-desc">
             Reconnaissance via robots.txt, code source HTML et décodage Base64 pour dénicher un flag caché.
           </div>
+          <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>10 juil. 2026</div>
           <div class="writeup-footer">
             <span>Web Exploitation · 200 pts</span>
             <span class="writeup-arrow">→</span>
@@ -625,6 +635,7 @@
           <div class="writeup-desc">
             Cours complet : reconnaissance nmap, exploitation RMI non authentifiée, architecture C2 et post-exploitation Meterpreter.
           </div>
+          <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>10 juil. 2026</div>
           <div class="writeup-footer">
             <span>Lab Pentest · CVE-2011-3556</span>
             <span class="writeup-arrow">→</span>
@@ -645,6 +656,7 @@
           <div class="writeup-desc">
             Interception d'une chaîne de redirections HTTP avec Burp Suite pour révéler un flag encodé en Base64.
           </div>
+          <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>13 juil. 2026</div>
           <div class="writeup-footer">
             <span>Web Exploitation · 100 pts</span>
             <span class="writeup-arrow">→</span>
@@ -665,6 +677,7 @@
           <div class="writeup-desc">
             Guide complet : installation d'outils, recon réseau, exploitation web, brute-force et OSINT en CLI.
           </div>
+          <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>10 juil. 2026</div>
           <div class="writeup-footer">
             <span>Guide · Cours complet</span>
             <span class="writeup-arrow">→</span>
@@ -685,6 +698,7 @@
           <div class="writeup-desc">
             Cours complet : architecture MongoDB (BSON, documents, collections), audit de code source, et exploitation de l'opérateur $ne.
           </div>
+          <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>13 juil. 2026</div>
           <div class="writeup-footer">
             <span>Web Exploitation · 200 pts</span>
             <span class="writeup-arrow">→</span>
@@ -704,6 +718,31 @@
           <div class="writeup-title">SQLiLite — picoCTF 2022</div>
           <div class="writeup-desc">
             Cours complet : architecture SQLite, injection SQL par commentaire, et panorama des techniques avancées (UNION, blind, time-based).
+          </div>
+          <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>15 juil. 2026</div>
+          <div class="writeup-footer">
+            <span>Web Exploitation · 300 pts</span>
+            <span class="writeup-arrow">→</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- Write-up 9 : Sql1 -->
+      <a class="writeup-card" href="writeups/sql1-picoctf2026.html">
+        <div class="writeup-thumb"><span class="writeup-thumb-icon">🤖</span></div>
+        <div class="writeup-body">
+          <div class="writeup-tags">
+            <span class="wtag cyan">sqlmap</span>
+            <span class="wtag red">SQL Injection</span>
+            <span class="wtag amber">MD5 Cracking</span>
+          </div>
+          <div class="writeup-title">Sql1 — picoCTF 2026</div>
+          <div class="writeup-desc">
+            Cours complet : automatisation sqlmap, extraction de tables SQLite, cassage de hashs MD5 par dictionnaire, et navigation à travers de fausses pistes.
+          </div>
+          <div class="writeup-date">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>
+            16 juil. 2026
           </div>
           <div class="writeup-footer">
             <span>Web Exploitation · 300 pts</span>
