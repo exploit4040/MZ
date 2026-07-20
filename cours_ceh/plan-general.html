@@ -1,1 +1,1442 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CEH v12 — Cours Complet, 20 Modules | SPECTRA MZ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+  :root {
+    --bg:        #080c18;
+    --surface:   #0f1525;
+    --surface2:  #151d30;
+    --border:    #1e2a42;
+    --cyan:      #00d4aa;
+    --cyan-dim:  #00d4aa22;
+    --cyan-glow: #00d4aa44;
+    --red:       #ff4757;
+    --amber:     #ffa502;
+    --purple:    #a855f7;
+    --blue:      #2f9bff;
+    --text:      #e2e8f4;
+    --muted:     #6b7a99;
+    --code-bg:   #060a14;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,0,0,.08) 2px, rgba(0,0,0,.08) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  .back-home {
+    position: fixed;
+    top: 1.2rem; left: 1.2rem;
+    z-index: 600;
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .55rem 1rem;
+    background: rgba(15,21,37,.85);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .78rem; font-weight: 500;
+    color: var(--muted);
+    text-decoration: none;
+    transition: all .2s;
+  }
+  .back-home:hover {
+    border-color: var(--cyan); color: var(--cyan);
+    box-shadow: 0 0 16px var(--cyan-glow);
+    transform: translateX(-2px);
+  }
+  .back-home svg { width: 14px; height: 14px; }
+  @media (max-width: 640px) {
+    .back-home { top: .8rem; left: .8rem; padding: .45rem .8rem; font-size: .7rem; }
+  }
+
+  .sidebar {
+    position: fixed; left: 0; top: 0;
+    width: 60px; height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center;
+    z-index: 100; padding: 1.4rem 0;
+    overflow-y: auto;
+  }
+  .sidebar::-webkit-scrollbar { width: 0; }
+  .sidebar-line { width: 1px; flex: 0 0 10px; background: var(--border); }
+  .phase-dot {
+    width: 26px; height: 26px; border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8.5px; color: var(--muted);
+    cursor: pointer; transition: all .3s;
+    text-decoration: none; flex-shrink: 0;
+  }
+  .phase-dot:hover, .phase-dot.active {
+    border-color: var(--cyan); color: var(--cyan);
+    box-shadow: 0 0 12px var(--cyan-glow);
+    background: var(--cyan-dim);
+  }
+
+  main { margin-left: 60px; width: calc(100% - 60px); padding: 0 2rem 6rem; }
+  .inner { max-width: 900px; margin: 0 auto; }
+
+  .hero { padding: 5.5rem 0 4rem; position: relative; }
+  .hero-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--cyan); margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: .75rem;
+  }
+  .hero-eyebrow::before { content:''; display:inline-block; width:24px; height:1px; background: var(--cyan); }
+
+  .hero-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(1.9rem, 4.4vw, 3.2rem);
+    font-weight: 700; line-height: 1.15; letter-spacing: -.02em;
+    margin-bottom: 1rem;
+  }
+  .hero-title .accent { color: var(--cyan); }
+  .hero-title .dim    { color: var(--muted); font-weight: 300; }
+
+  .hero-sub { font-size: 1.05rem; color: var(--muted); margin-bottom: 2.5rem; max-width: 640px; }
+
+  .meta-pills { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 2rem; }
+  .pill {
+    padding: .3rem .9rem; border-radius: 99px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: .08em; font-weight: 500;
+  }
+  .pill-cyan   { border:1px solid var(--cyan);   color:var(--cyan);   background:var(--cyan-dim); }
+  .pill-red    { border:1px solid var(--red);    color:var(--red);    background:#ff475711; }
+  .pill-amber  { border:1px solid var(--amber);  color:var(--amber);  background:#ffa50211; }
+  .pill-purple { border:1px solid var(--purple); color:var(--purple); background:#a855f711; }
+  .pill-blue   { border:1px solid var(--blue);   color:var(--blue);   background:#2f9bff11; }
+
+  .hero-divider {
+    width: 100%; height: 1px;
+    background: linear-gradient(90deg, var(--cyan) 0%, var(--border) 60%, transparent 100%);
+    margin-top: 3rem;
+  }
+
+  .toc {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 1.5rem 1.8rem; margin: 2rem 0;
+  }
+  .toc-title {
+    font-family: 'JetBrains Mono', monospace; font-size: .75rem;
+    letter-spacing: .15em; text-transform: uppercase; color: var(--cyan);
+    margin-bottom: 1rem;
+  }
+  .toc-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: .5rem 1.5rem; }
+  @media (max-width: 640px) { .toc-list { grid-template-columns: 1fr; } }
+  .toc-list a {
+    font-size: .85rem; color: #b8c3d9; text-decoration: none;
+    display: flex; align-items: baseline; gap: .5rem;
+    transition: color .2s;
+  }
+  .toc-list a:hover { color: var(--cyan); }
+  .toc-num { font-family: 'JetBrains Mono', monospace; font-size: .7rem; color: var(--muted); flex-shrink: 0; }
+
+  .section { padding: 3.5rem 0 2rem; border-bottom: 1px solid var(--border); }
+  .section:last-of-type { border-bottom: none; }
+
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--cyan); margin-bottom: .6rem;
+    display: flex; align-items: center; gap: .5rem;
+  }
+  .section-label span { color: var(--muted); }
+
+  .section-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.5rem; font-weight: 600; color: var(--text);
+    margin-bottom: 1.5rem; line-height: 1.3;
+  }
+
+  .subsection-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.05rem; font-weight: 600; color: var(--cyan);
+    margin: 2.2rem 0 .9rem; padding-left: 1rem; border-left: 2px solid var(--cyan);
+  }
+
+  p { margin-bottom: 1.1rem; color: #b8c3d9; }
+  p strong { color: var(--text); font-weight: 600; }
+  ul.plain, ol.plain { margin: 0 0 1.1rem 1.3rem; color: #b8c3d9; }
+  ul.plain li, ol.plain li { margin-bottom: .4rem; }
+
+  .def-box {
+    background: linear-gradient(135deg, #2f9bff0a 0%, #2f9bff03 100%);
+    border: 1px solid var(--blue);
+    border-radius: 10px;
+    padding: 1.3rem 1.5rem;
+    margin: 1.2rem 0 1.6rem;
+  }
+  .def-term {
+    display: flex; align-items: center; gap: .6rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .95rem; font-weight: 700; color: var(--blue);
+    margin-bottom: .5rem;
+  }
+  .def-term::before { content: '§'; font-size: 1.1rem; }
+  .def-body { color: #b8c3d9; font-size: .9rem; }
+  .def-body code { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: .1em .4em; color: #c0cce8; font-size: .85em; }
+
+  .glossary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+  .glossary-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 1.2rem;
+  }
+  .glossary-term {
+    font-family: 'JetBrains Mono', monospace; font-size: .85rem; font-weight: 700;
+    color: var(--cyan); margin-bottom: .5rem;
+  }
+  .glossary-def { font-size: .82rem; color: var(--muted); line-height: 1.55; }
+
+  .code-wrap {
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: 8px; overflow: hidden; margin: 1rem 0 1.5rem; position: relative;
+  }
+  .code-header {
+    background: var(--surface2); padding: .45rem 1rem;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .code-lang {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--cyan);
+  }
+  .copy-btn {
+    background: none; border: 1px solid var(--border); color: var(--muted);
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    padding: .2rem .6rem; border-radius: 4px; cursor: pointer; transition: all .2s;
+  }
+  .copy-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+  .code-wrap pre {
+    padding: 1.1rem 1.2rem; overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace; font-size: .8rem; line-height: 1.7; color: #c0cce8;
+  }
+  .code-wrap pre .cmt { color: var(--muted); font-style: italic; }
+  .code-wrap pre .hl { color: var(--amber); font-weight: 700; }
+
+  .result-badge {
+    display: inline-flex; align-items: center; gap: .5rem;
+    background: #00d4aa0f; border: 1px solid var(--cyan); border-radius: 6px;
+    padding: .5rem 1rem; font-family: 'JetBrains Mono', monospace;
+    font-size: .82rem; color: var(--cyan); margin: .5rem 0 1rem;
+  }
+  .result-badge::before { content: '✓'; font-weight: 700; }
+
+  .warn-badge {
+    display: inline-flex; align-items: center; gap: .5rem;
+    background: #ffa5020f; border: 1px solid var(--amber); border-radius: 6px;
+    padding: .5rem 1rem; font-family: 'JetBrains Mono', monospace;
+    font-size: .82rem; color: var(--amber); margin: .5rem 0 1rem;
+  }
+  .warn-badge::before { content: '⚠'; font-weight: 700; }
+
+  .danger-badge {
+    display: inline-flex; align-items: center; gap: .5rem;
+    background: #ff47570f; border: 1px solid var(--red); border-radius: 6px;
+    padding: .5rem 1rem; font-family: 'JetBrains Mono', monospace;
+    font-size: .82rem; color: var(--red); margin: .5rem 0 1rem;
+  }
+  .danger-badge::before { content: '✗'; font-weight: 700; }
+
+  .table-wrap { overflow-x: auto; margin: 1.2rem 0 1.8rem; border-radius: 8px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+  thead tr { background: var(--surface2); }
+  thead th {
+    padding: .7rem 1rem; text-align: left;
+    font-family: 'JetBrains Mono', monospace; font-size: .72rem;
+    letter-spacing: .1em; text-transform: uppercase; color: var(--cyan);
+    font-weight: 500; border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface); }
+  tbody td { padding: .7rem 1rem; color: #b8c3d9; vertical-align: top; }
+  tbody td:first-child { font-family: 'JetBrains Mono', monospace; font-size: .78rem; color: var(--amber); }
+  td code, p code, li code {
+    font-family: 'JetBrains Mono', monospace; font-size: .82em;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 4px; padding: .1em .4em; color: #c0cce8;
+  }
+
+  .tool-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+  .tool-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 1.3rem;
+    transition: border-color .2s, transform .2s;
+  }
+  .tool-card:hover { border-color: var(--cyan); transform: translateY(-2px); }
+  .tool-icon { font-size: 1.3rem; margin-bottom: .5rem; }
+  .tool-name { font-family: 'JetBrains Mono', monospace; font-size: .88rem; font-weight: 700; color: var(--cyan); margin-bottom: .4rem; }
+  .tool-desc { font-size: .8rem; color: var(--muted); line-height: 1.5; margin-bottom: .6rem; }
+  .tool-cmd {
+    font-family: 'JetBrains Mono', monospace; font-size: .72rem; color: var(--amber);
+    background: var(--code-bg); border: 1px solid var(--border); border-radius: 5px;
+    padding: .4rem .6rem; overflow-x: auto; white-space: nowrap;
+  }
+
+  .chain {
+    display: flex; flex-wrap: wrap; align-items: center; gap: .4rem;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 1.1rem 1.3rem; margin: 1rem 0 1.5rem;
+  }
+  .chain-title {
+    width: 100%; font-family: 'JetBrains Mono', monospace; font-size: .68rem;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: .6rem;
+  }
+  .chain-node {
+    font-family: 'JetBrains Mono', monospace; font-size: .76rem; color: var(--text);
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 5px; padding: .3rem .7rem;
+  }
+  .chain-arrow { font-family: 'JetBrains Mono', monospace; font-size: .9rem; color: var(--cyan); }
+  .chain-node.highlight { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+  .chain-node.danger { border-color: var(--red); color: var(--red); }
+
+  blockquote {
+    background: #ff475709; border-left: 3px solid var(--red);
+    border-radius: 0 6px 6px 0; padding: .9rem 1.2rem; margin: 1rem 0;
+    font-family: 'JetBrains Mono', monospace; font-size: .875rem; color: var(--red);
+  }
+
+  .rec-list { list-style: none; margin: .5rem 0; }
+  .rec-list li {
+    display: flex; gap: .8rem; align-items: flex-start;
+    padding: .9rem 0; border-bottom: 1px solid var(--border); color: #b8c3d9;
+  }
+  .rec-list li:last-child { border-bottom: none; }
+  .rec-num {
+    font-family: 'JetBrains Mono', monospace; font-size: .75rem; color: var(--cyan);
+    background: var(--cyan-dim); border: 1px solid var(--cyan); border-radius: 4px;
+    padding: .1rem .5rem; flex-shrink: 0; margin-top: .1rem;
+  }
+
+  .ref-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: .8rem; margin-top: 1rem; }
+  .ref-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 1rem; text-decoration: none; display: flex; flex-direction: column; gap: .3rem;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .ref-card:hover { border-color: var(--cyan); box-shadow: 0 0 20px var(--cyan-glow); }
+  .ref-icon { font-size: 1.1rem; margin-bottom: .2rem; }
+  .ref-name { font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--cyan); font-weight: 600; }
+  .ref-url { font-size: .75rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  footer {
+    margin-top: 4rem; padding: 2rem 0; border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+  }
+  .footer-author { font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--muted); }
+  .footer-badge {
+    font-family: 'JetBrains Mono', monospace; font-size: .75rem; color: var(--muted);
+    display: flex; align-items: center; gap: .4rem;
+  }
+  .footer-badge span { color: var(--cyan); }
+
+  .bottom-back {
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .7rem 1.3rem; margin-top: 1rem;
+    border: 1px solid var(--cyan); border-radius: 8px;
+    color: var(--cyan); text-decoration: none;
+    font-family: 'JetBrains Mono', monospace; font-size: .82rem;
+    background: var(--cyan-dim);
+    transition: all .2s;
+  }
+  .bottom-back:hover { box-shadow: 0 0 20px var(--cyan-glow); transform: translateY(-1px); }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  @media (max-width: 640px) {
+    .sidebar { display: none; }
+    main { margin-left: 0; padding: 0 1.2rem 4rem; }
+    .hero-title { font-size: 1.6rem; }
+  }
+</style>
+</head>
+<body>
+
+<a class="back-home" href="../index.html">
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9.5 3L4.5 8L9.5 13"/></svg>
+  Retour à l'accueil
+</a>
+
+<nav class="sidebar">
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s0" title="Intro">00</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s1" title="Ethical Hacking">01</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s2" title="Footprinting">02</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s3" title="Scanning">03</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s4" title="Énumération">04</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s5" title="Vulnérabilités">05</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s6" title="Systèmes">06</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s7" title="Malwares">07</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s8" title="Sniffing">08</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s9" title="Ingénierie sociale">09</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s10" title="DoS/DDoS">10</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s11" title="Vol de session">11</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s12" title="Évasion IDS">12</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s13" title="Serveurs web">13</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s14" title="Apps web">14</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s15" title="Bases de données">15</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s16" title="Sans fil">16</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s17" title="Mobile">17</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s18" title="IoT/OT">18</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s19" title="Cloud">19</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s20" title="Cryptographie">20</a>
+  <div class="sidebar-line"></div>
+</nav>
+
+<main>
+<div class="inner">
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="hero-eyebrow">EC-Council · CEH v12 · Cours Complet</div>
+    <h1 class="hero-title">
+      CEH v12 — <span class="accent">Plan de Cours</span><br>
+      <span class="dim" style="font-size:60%;">20 modules officiels, de la reconnaissance à la cryptographie</span>
+    </h1>
+    <p class="hero-sub">
+      Support de révision complet et structuré pour le Certified Ethical Hacker (EC-Council) —
+      objectifs, concepts clés, outils, méthodologies d'attaque et contre-mesures pour chacun
+      des 20 modules officiels. Rédigé comme référence de préparation à l'examen et de pratique.
+    </p>
+    <div class="meta-pills">
+      <span class="pill pill-cyan">CEH v12</span>
+      <span class="pill pill-red">Pentest</span>
+      <span class="pill pill-amber">Red Team</span>
+      <span class="pill pill-purple">OSINT</span>
+      <span class="pill pill-blue">20 Modules</span>
+    </div>
+    <div class="hero-divider"></div>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">Sommaire</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">00</span><a href="#s0">Vue d'ensemble du cours</a></li>
+      <li><span class="toc-num">01</span><a href="#s1">Introduction à l'Ethical Hacking</a></li>
+      <li><span class="toc-num">02</span><a href="#s2">Footprinting et Reconnaissance</a></li>
+      <li><span class="toc-num">03</span><a href="#s3">Scanning Réseaux</a></li>
+      <li><span class="toc-num">04</span><a href="#s4">Énumération</a></li>
+      <li><span class="toc-num">05</span><a href="#s5">Analyse de Vulnérabilités</a></li>
+      <li><span class="toc-num">06</span><a href="#s6">Hacking de Systèmes</a></li>
+      <li><span class="toc-num">07</span><a href="#s7">Malwares</a></li>
+      <li><span class="toc-num">08</span><a href="#s8">Sniffing</a></li>
+      <li><span class="toc-num">09</span><a href="#s9">Ingénierie Sociale</a></li>
+      <li><span class="toc-num">10</span><a href="#s10">Déni de Service (DoS/DDoS)</a></li>
+      <li><span class="toc-num">11</span><a href="#s11">Vol de Session</a></li>
+      <li><span class="toc-num">12</span><a href="#s12">Évasion IDS/Pare-feu/Honeypots</a></li>
+      <li><span class="toc-num">13</span><a href="#s13">Hacking de Serveurs Web</a></li>
+      <li><span class="toc-num">14</span><a href="#s14">Hacking d'Applications Web</a></li>
+      <li><span class="toc-num">15</span><a href="#s15">Hacking de Bases de Données</a></li>
+      <li><span class="toc-num">16</span><a href="#s16">Hacking Sans Fil</a></li>
+      <li><span class="toc-num">17</span><a href="#s17">Hacking Mobile</a></li>
+      <li><span class="toc-num">18</span><a href="#s18">IoT et OT Hacking</a></li>
+      <li><span class="toc-num">19</span><a href="#s19">Cloud Computing</a></li>
+      <li><span class="toc-num">20</span><a href="#s20">Cryptographie</a></li>
+    </ul>
+  </div>
+
+  <!-- 00 - INTRO -->
+  <section class="section" id="s0">
+    <div class="section-label">Module <span>00</span></div>
+    <h2 class="section-title">Vue d'ensemble du cours</h2>
+
+    <div class="def-box">
+      <div class="def-term">CEH — Certified Ethical Hacker</div>
+      <div class="def-body">
+        Certification EC-Council de référence en sécurité offensive. Elle couvre l'intégralité de la
+        méthodologie d'un pentest — de la reconnaissance passive jusqu'à la post-exploitation — à travers
+        20 modules organisés par domaine technique, chacun combinant théorie, outils et pratique en
+        laboratoire.
+      </div>
+    </div>
+
+    <p>
+      Les 20 modules suivent une logique de progression proche d'un vrai engagement de test d'intrusion :
+      on part de la collecte d'informations, puis on scanne, on énumère, on identifie les failles,
+      on exploite, et enfin on couvre les domaines spécialisés (web, mobile, cloud, IoT, cryptographie).
+    </p>
+
+    <div class="chain">
+      <div class="chain-title">Ordinogramme — Logique globale du cours</div>
+      <span class="chain-node">Reconnaissance (M02-M05)</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Exploitation (M06-M15)</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node highlight">Domaines spécialisés (M16-M20)</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Certification / Terrain</span>
+    </div>
+
+    <div class="warn-badge">Ce support est destiné à un usage éducatif — toute pratique doit se faire sur des systèmes autorisés (labs CEH, TryHackMe, HackTheBox, Metasploitable)</div>
+  </section>
+
+  <!-- 01 -->
+  <section class="section" id="s1">
+    <div class="section-label">Module <span>01</span></div>
+    <h2 class="section-title">Introduction à l'Ethical Hacking</h2>
+
+    <p>
+      Ce module pose les fondations théoriques et légales de toute la certification : ce qu'est
+      un hacker éthique, ce qui distingue un test autorisé d'une attaque criminelle, et les
+      principes de sécurité qui structurent tout le reste du cours.
+    </p>
+
+    <h3 class="subsection-title">Objectifs</h3>
+    <ul class="plain">
+      <li>Comprendre les concepts fondamentaux de la cybersécurité</li>
+      <li>Distinguer les types de hackers : White hat, Black hat, Grey hat, Script kiddie, Hacktivist</li>
+      <li>Maîtriser les 5 phases d'un test d'intrusion</li>
+      <li>Connaître les cadres légaux : <code>ISO 27001</code>, <code>PCI DSS</code>, <code>HIPAA</code>, <code>GDPR</code>, <code>SOX</code></li>
+      <li>Comprendre les Rules of Engagement (RoE)</li>
+    </ul>
+
+    <h3 class="subsection-title">Ordinogramme — Les 5 phases d'un test d'intrusion</h3>
+    <div class="chain">
+      <span class="chain-node">Reconnaissance</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Scanning</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Gaining Access</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node highlight">Maintaining Access</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Covering Tracks</span>
+    </div>
+
+    <h3 class="subsection-title">Concepts clés</h3>
+    <div class="glossary-grid">
+      <div class="glossary-card">
+        <div class="glossary-term">CIA Triad</div>
+        <div class="glossary-def">Confidentialité, Intégrité, Disponibilité — les trois piliers que toute mesure de sécurité doit protéger.</div>
+      </div>
+      <div class="glossary-card">
+        <div class="glossary-term">AAA</div>
+        <div class="glossary-def">Authentification, Autorisation, Comptabilité (Accounting) — le triptyque du contrôle d'accès.</div>
+      </div>
+      <div class="glossary-card">
+        <div class="glossary-term">Non-répudiation</div>
+        <div class="glossary-def">Garantie qu'un acteur ne peut nier avoir réalisé une action (signatures, logs horodatés).</div>
+      </div>
+      <div class="glossary-card">
+        <div class="glossary-term">Zero-day</div>
+        <div class="glossary-def">Vulnérabilité inconnue de l'éditeur, exploitable avant qu'un correctif n'existe.</div>
+      </div>
+    </div>
+
+    <h3 class="subsection-title">Types de contrôles de sécurité</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Type</th><th>Rôle</th><th>Exemple</th></tr></thead>
+        <tbody>
+          <tr><td>Préventif</td><td>Empêche l'incident</td><td>Firewall, MFA</td></tr>
+          <tr><td>Détective</td><td>Repère l'incident</td><td>IDS, SIEM</td></tr>
+          <tr><td>Correctif</td><td>Répare après incident</td><td>Restauration backup</td></tr>
+          <tr><td>Dissuasif</td><td>Décourage l'attaquant</td><td>Bannière légale, caméra</td></tr>
+          <tr><td>Compensatoire</td><td>Palliatif temporaire</td><td>Segmentation réseau en attendant un patch</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="subsection-title">Termes importants</h3>
+    <div class="meta-pills">
+      <span class="pill pill-cyan">CVE</span>
+      <span class="pill pill-amber">CVSS v3.1</span>
+      <span class="pill pill-purple">CWE</span>
+      <span class="pill pill-red">APT</span>
+      <span class="pill pill-blue">Zero-day</span>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section class="section" id="s2">
+    <div class="section-label">Module <span>02</span></div>
+    <h2 class="section-title">Footprinting et Reconnaissance</h2>
+
+    <p>
+      Première phase concrète d'un engagement : collecter un maximum d'informations sur la cible
+      sans interagir directement avec ses systèmes (passif), puis en interagissant légèrement (actif).
+    </p>
+
+    <h3 class="subsection-title">Ordinogramme — Méthodologie de reconnaissance</h3>
+    <div class="chain">
+      <span class="chain-node">OSINT passif (Whois, DNS, Google Dorks)</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Cartographie de l'organisation</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node highlight">Reconnaissance active (Shodan, Maltego)</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Vers le Scanning (M03)</span>
+    </div>
+
+    <h3 class="subsection-title">Footprinting passif</h3>
+    <ul class="plain">
+      <li>OSINT (Open Source Intelligence), Google Dorks, GHDB</li>
+      <li>Whois lookup (<code>whois.domaintools.com</code>, <code>whois.arin.net</code>)</li>
+      <li>DNS enumeration (<code>nslookup</code>, <code>dig</code>, <code>host</code>)</li>
+      <li>Reverse IP lookup (viewdns.info), email tracking</li>
+    </ul>
+
+    <h3 class="subsection-title">Footprinting actif — Outils essentiels</h3>
+    <div class="tool-grid">
+      <div class="tool-card">
+        <div class="tool-icon">🌾</div>
+        <div class="tool-name">theHarvester</div>
+        <div class="tool-desc">Collecte d'emails, sous-domaines et noms via moteurs de recherche publics.</div>
+        <div class="tool-cmd">theHarvester -d cible.com -b google,bing</div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon">🕸️</div>
+        <div class="tool-name">Maltego</div>
+        <div class="tool-desc">Cartographie relationnelle OSINT — personnes, domaines, infrastructures.</div>
+        <div class="tool-cmd">maltego (version community)</div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon">📡</div>
+        <div class="tool-name">Shodan / Censys</div>
+        <div class="tool-desc">Moteurs de recherche d'appareils et services exposés sur Internet.</div>
+        <div class="tool-cmd">shodan search apache city:"Paris"</div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon">🕰️</div>
+        <div class="tool-name">Wayback Machine</div>
+        <div class="tool-desc">Historique archivé d'un site — pages supprimées, anciennes versions.</div>
+        <div class="tool-cmd">archive.org/web</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section class="section" id="s3">
+    <div class="section-label">Module <span>03</span></div>
+    <h2 class="section-title">Scanning Réseaux</h2>
+
+    <p>
+      Une fois la cible cartographiée, le scanning identifie les hôtes actifs, les ports ouverts
+      et les services qui tournent dessus — la base de toute planification d'exploitation.
+    </p>
+
+    <div class="def-box">
+      <div class="def-term">Handshake TCP en 3 étapes</div>
+      <div class="def-body">
+        <code>SYN</code> → <code>SYN-ACK</code> → <code>ACK</code>. Nmap exploite ce mécanisme (et ses variantes
+        incomplètes) pour déterminer si un port est ouvert, fermé ou filtré sans établir de connexion complète.
+      </div>
+    </div>
+
+    <h3 class="subsection-title">Types de scan Nmap</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Option</th><th>Nom</th><th>Principe</th></tr></thead>
+        <tbody>
+          <tr><td>-sS</td><td>SYN scan</td><td>Furtif — n'achève jamais le handshake</td></tr>
+          <tr><td>-sT</td><td>Connect scan</td><td>Handshake complet — plus détectable</td></tr>
+          <tr><td>-sU</td><td>UDP scan</td><td>Ports UDP, lent et peu fiable</td></tr>
+          <tr><td>-sF/-sX/-sN</td><td>FIN/Xmas/Null</td><td>Contournement de pare-feu simples</td></tr>
+          <tr><td>-O</td><td>OS fingerprinting</td><td>Déduction du système d'exploitation cible</td></tr>
+          <tr><td>-sC / -sV</td><td>Scripts / Version</td><td>NSE et détection de version de service</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">Bash — Scan Nmap standard</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+      <pre><span class="cmt"># Scan SYN furtif avec détection de version et scripts par défaut</span>
+nmap -sS -sV -sC -O cible-autorisee.com</pre>
+    </div>
+
+    <h3 class="subsection-title">Ordinogramme — Techniques d'évasion de pare-feu</h3>
+    <div class="chain">
+      <span class="chain-node">Fragmentation (-f)</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">IP/MAC spoofing</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Decoy (-D)</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node highlight">Timing lent (-T0/-T1)</span>
+    </div>
+
+    <div class="warn-badge">Un scan agressif (-T4/-T5) sur un système non autorisé est détectable et illégal sans accord écrit</div>
+  </section>
+
+  <!-- 04 -->
+  <section class="section" id="s4">
+    <div class="section-label">Module <span>04</span></div>
+    <h2 class="section-title">Énumération</h2>
+
+    <p>
+      L'énumération pousse la découverte plus loin que le scan de ports : elle extrait des
+      informations précises sur les services (utilisateurs, partages, versions) via des
+      connexions actives, souvent authentifiées ou anonymes (null session).
+    </p>
+
+    <h3 class="subsection-title">Par service</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Service</th><th>Outils</th><th>Info exposée</th></tr></thead>
+        <tbody>
+          <tr><td>NetBIOS/SMB</td><td>enum4linux, nbtscan, SMBMap</td><td>Partages, utilisateurs, null sessions</td></tr>
+          <tr><td>SNMP</td><td>SNMPwalk, SNMPcheck</td><td>Config réseau via community strings</td></tr>
+          <tr><td>LDAP</td><td>LDAPsearch, JXplorer</td><td>Annuaire d'entreprise / Active Directory</td></tr>
+          <tr><td>DNS</td><td>DNSenum, Fierce, Dnsrecon</td><td>Zone transfer, sous-domaines</td></tr>
+          <tr><td>NFS</td><td>showmount, mount</td><td>Partages de fichiers exportés</td></tr>
+          <tr><td>SMTP</td><td>VRFY/EXPN, smtp-user-enum</td><td>Validité des comptes email</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="subsection-title">Windows &amp; Linux</h3>
+    <ul class="plain">
+      <li>Windows : <code>net user</code>, <code>net localgroup</code>, PsExec, WMI, PowerShell Remoting</li>
+      <li>Linux : <code>/etc/passwd</code>, <code>/etc/shadow</code>, <code>id</code>, <code>whoami</code>, <code>finger</code></li>
+    </ul>
+
+    <div class="result-badge">Une null session SMB mal désactivée peut révéler l'intégralité des comptes locaux d'une machine Windows</div>
+  </section>
+
+  <!-- 05 -->
+  <section class="section" id="s5">
+    <div class="section-label">Module <span>05</span></div>
+    <h2 class="section-title">Analyse de Vulnérabilités</h2>
+
+    <p>
+      Étape charnière entre la reconnaissance et l'exploitation : identifier, à l'aide de scanners
+      automatisés, les failles connues (CVE) présentes sur les actifs découverts, puis les prioriser.
+    </p>
+
+    <div class="def-box">
+      <div class="def-term">CVSS v3.1</div>
+      <div class="def-body">
+        Score de 0 à 10 mesurant la sévérité d'une vulnérabilité, décomposé en métriques d'exploitabilité
+        et d'impact. Exemple de vecteur : <code>AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H</code>.
+      </div>
+    </div>
+
+    <h3 class="subsection-title">Scanners</h3>
+    <div class="tool-grid">
+      <div class="tool-card"><div class="tool-icon">🔬</div><div class="tool-name">Nessus</div><div class="tool-desc">Scanner commercial de référence (Tenable) — base CVE massive.</div></div>
+      <div class="tool-card"><div class="tool-icon">🟢</div><div class="tool-name">OpenVAS</div><div class="tool-desc">Alternative open source et gratuite (Greenbone).</div></div>
+      <div class="tool-card"><div class="tool-icon">💠</div><div class="tool-name">QualysGuard</div><div class="tool-desc">Solution SaaS orientée conformité et reporting entreprise.</div></div>
+      <div class="tool-card"><div class="tool-icon">🔧</div><div class="tool-name">Nexpose</div><div class="tool-desc">Scanner Rapid7, intégré à Metasploit pour l'exploitation.</div></div>
+    </div>
+
+    <h3 class="subsection-title">Ordinogramme — Processus d'analyse</h3>
+    <div class="chain">
+      <span class="chain-node">Identification des actifs</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Scan des vulnérabilités</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Priorisation (faux positifs)</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node highlight">Reporting &amp; remédiation</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Rescan</span>
+    </div>
+  </section>
+
+  <!-- 06 -->
+  <section class="section" id="s6">
+    <div class="section-label">Module <span>06</span></div>
+    <h2 class="section-title">Hacking de Systèmes</h2>
+
+    <p>
+      Ce module couvre l'obtention et le maintien d'un accès : cracking d'authentification,
+      élévation de privilèges sur Linux et Windows, puis persistance et dissimulation.
+    </p>
+
+    <h3 class="subsection-title">Password cracking</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Outil</th><th>Usage</th></tr></thead>
+        <tbody>
+          <tr><td>John the Ripper</td><td>Wordlist, single, incremental, external</td></tr>
+          <tr><td>Hashcat</td><td>Cracking GPU — modes 0=MD5, 1000=NTLM, 1400=SHA256</td></tr>
+          <tr><td>Rainbow tables</td><td>Ophcrack, RainbowCrack — compromis temps/mémoire</td></tr>
+          <tr><td>Hydra / Medusa / Ncrack</td><td>Brute-force en ligne (services réseau)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="subsection-title">Ordinogramme — Élévation de privilèges Linux</h3>
+    <div class="chain">
+      <span class="chain-node">Accès utilisateur standard</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Énumération (SUID, sudo -l, cron)</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node highlight">Exploitation (PwnKit, Dirty Cow)</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node danger">root</span>
+    </div>
+
+    <h3 class="subsection-title">Élévation de privilèges Windows</h3>
+    <ul class="plain">
+      <li>AlwaysInstallElevated, unquoted service paths</li>
+      <li>DLL hijacking / DLL injection</li>
+      <li>Token stealing (SeImpersonatePrivilege, Potato exploits), UAC bypass</li>
+    </ul>
+
+    <h3 class="subsection-title">Contre-mesures</h3>
+    <ul class="rec-list">
+      <li><span class="rec-num">01</span><div><strong>GPO &amp; LAPS.</strong> Mots de passe administrateurs locaux uniques et rotatifs.</div></li>
+      <li><span class="rec-num">02</span><div><strong>Patch management régulier.</strong> Les kernel exploits comme PwnKit ciblent des versions non corrigées.</div></li>
+      <li><span class="rec-num">03</span><div><strong>AppLocker / Windows Defender.</strong> Limiter l'exécution de binaires non signés.</div></li>
+    </ul>
+  </section>
+
+  <!-- 07 -->
+  <section class="section" id="s7">
+    <div class="section-label">Module <span>07</span></div>
+    <h2 class="section-title">Malwares</h2>
+
+    <p>
+      Panorama des familles de logiciels malveillants et des méthodologies utilisées pour
+      les analyser en toute sécurité, sans les exécuter dans un environnement de production.
+    </p>
+
+    <h3 class="subsection-title">Types de malwares</h3>
+    <div class="meta-pills">
+      <span class="pill pill-red">Virus</span>
+      <span class="pill pill-amber">Worms</span>
+      <span class="pill pill-purple">Trojans (RAT)</span>
+      <span class="pill pill-red">Ransomware</span>
+      <span class="pill pill-blue">Rootkits</span>
+      <span class="pill pill-cyan">Fileless malware</span>
+    </div>
+
+    <h3 class="subsection-title">Ordinogramme — Méthodologie d'analyse</h3>
+    <div class="chain">
+      <span class="chain-node">Isolation en sandbox</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Analyse statique (hash, strings, PE headers)</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node highlight">Analyse dynamique (Cuckoo, Procmon)</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Rapport IOC</span>
+    </div>
+
+    <h3 class="subsection-title">Outils</h3>
+    <div class="tool-grid">
+      <div class="tool-card"><div class="tool-icon">🧪</div><div class="tool-name">VirusTotal</div><div class="tool-desc">Analyse multi-moteurs d'un hash ou fichier suspect.</div></div>
+      <div class="tool-card"><div class="tool-icon">🐒</div><div class="tool-name">Cuckoo / Any.Run</div><div class="tool-desc">Sandbox d'exécution automatisée et rapport comportemental.</div></div>
+      <div class="tool-card"><div class="tool-icon">🩻</div><div class="tool-name">x64dbg / Procmon</div><div class="tool-desc">Débogage et surveillance en temps réel des appels système.</div></div>
+    </div>
+
+    <div class="danger-badge">Ne jamais exécuter un échantillon suspect en dehors d'une VM isolée et sans accès réseau</div>
+  </section>
+
+  <!-- 08 -->
+  <section class="section" id="s8">
+    <div class="section-label">Module <span>08</span></div>
+    <h2 class="section-title">Sniffing</h2>
+
+    <p>
+      Interception du trafic réseau — passive sur un réseau non commuté, ou provoquée
+      activement via des attaques de couche 2 (ARP, DHCP, MAC) sur un réseau commuté moderne.
+    </p>
+
+    <h3 class="subsection-title">Ordinogramme — ARP Spoofing / MITM</h3>
+    <div class="chain">
+      <span class="chain-node">Attaquant sur le même LAN</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Empoisonnement ARP (Bettercap)</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node highlight">Trafic victime redirigé vers l'attaquant</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Interception / SSL stripping</span>
+    </div>
+
+    <h3 class="subsection-title">Attaques principales</h3>
+    <ul class="plain">
+      <li>ARP Spoofing/Poisoning (Arpspoof, Bettercap, Cain &amp; Abel)</li>
+      <li>MAC Flooding (Ettercap, Macof) — sature la table CAM du switch</li>
+      <li>DHCP Starvation / Rogue DHCP (Yersinia)</li>
+      <li>DNS Poisoning / Spoofing</li>
+    </ul>
+
+    <h3 class="subsection-title">Contre-mesures</h3>
+    <ul class="rec-list">
+      <li><span class="rec-num">01</span><div><strong>Dynamic ARP Inspection (DAI).</strong> Valide les correspondances IP/MAC sur le switch.</div></li>
+      <li><span class="rec-num">02</span><div><strong>Port Security.</strong> Limite le nombre d'adresses MAC par port.</div></li>
+      <li><span class="rec-num">03</span><div><strong>HTTPS everywhere / HSTS.</strong> Empêche le downgrade vers du trafic non chiffré.</div></li>
+    </ul>
+  </section>
+
+  <!-- 09 -->
+  <section class="section" id="s9">
+    <div class="section-label">Module <span>09</span></div>
+    <h2 class="section-title">Ingénierie Sociale</h2>
+
+    <p>
+      Le facteur humain reste le vecteur d'intrusion le plus efficace. Ce module couvre les
+      techniques de manipulation, leurs variantes (phishing, vishing, tailgating) et la manière
+      dont elles sont simulées de façon encadrée en entreprise.
+    </p>
+
+    <h3 class="subsection-title">Types d'attaques</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Type</th><th>Vecteur</th><th>Cible</th></tr></thead>
+        <tbody>
+          <tr><td>Phishing</td><td>Email massif</td><td>Grand public</td></tr>
+          <tr><td>Spear-phishing</td><td>Email ciblé</td><td>Individu précis</td></tr>
+          <tr><td>Whaling</td><td>Email ciblé</td><td>Cadres dirigeants</td></tr>
+          <tr><td>Vishing</td><td>Appel vocal</td><td>Individu</td></tr>
+          <tr><td>SMiShing</td><td>SMS</td><td>Individu</td></tr>
+          <tr><td>Pharming</td><td>Redirection DNS</td><td>Masse d'utilisateurs</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="subsection-title">Ordinogramme — Cadre professionnel d'une simulation</h3>
+    <div class="chain">
+      <span class="chain-node">Autorisation écrite (RoE)</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Reconnaissance OSINT ciblée</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Conception du pretexte</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node highlight">Simulation contrôlée</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Debrief &amp; formation</span>
+    </div>
+
+    <h3 class="subsection-title">Outils &amp; contre-mesures</h3>
+    <ul class="plain">
+      <li>Outils : SET (Kali), GoPhish, King Phisher, Evilginx (reverse proxy phishing)</li>
+      <li>Contre-mesures : MFA, SPF/DKIM/DMARC, filtrage email (Proofpoint, Mimecast), sensibilisation</li>
+    </ul>
+  </section>
+
+  <!-- 10 -->
+  <section class="section" id="s10">
+    <div class="section-label">Module <span>10</span></div>
+    <h2 class="section-title">Déni de Service (DoS/DDoS)</h2>
+
+    <p>
+      Attaques visant la disponibilité plutôt que la confidentialité ou l'intégrité — saturer
+      une ressource (bande passante, connexions, calcul) jusqu'à rendre le service inutilisable.
+    </p>
+
+    <h3 class="subsection-title">Catégories</h3>
+    <div class="glossary-grid">
+      <div class="glossary-card"><div class="glossary-term">Volume-based</div><div class="glossary-def">ICMP/UDP/SYN flood, Ping of Death — sature la bande passante.</div></div>
+      <div class="glossary-card"><div class="glossary-term">Protocol-based</div><div class="glossary-def">Smurf, Fraggle — exploite les faiblesses des protocoles réseau.</div></div>
+      <div class="glossary-card"><div class="glossary-term">Application-layer</div><div class="glossary-def">Slowloris, HTTP flood — épuise les ressources applicatives.</div></div>
+      <div class="glossary-card"><div class="glossary-term">Amplification</div><div class="glossary-def">NTP, DNS, SSDP — un petit paquet génère une réponse massive vers la victime.</div></div>
+    </div>
+
+    <h3 class="subsection-title">Ordinogramme — Attaque par réflexion/amplification</h3>
+    <div class="chain">
+      <span class="chain-node">Attaquant usurpe l'IP victime</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Requête vers serveurs ouverts (DNS/NTP)</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node highlight">Réponses amplifiées</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node danger">Victime saturée</span>
+    </div>
+
+    <h3 class="subsection-title">Contre-mesures</h3>
+    <ul class="rec-list">
+      <li><span class="rec-num">01</span><div><strong>Rate limiting.</strong> <code>iptables</code>, <code>nginx limit_req</code>.</div></li>
+      <li><span class="rec-num">02</span><div><strong>CDN / load balancers.</strong> Absorbent et répartissent le trafic entrant.</div></li>
+      <li><span class="rec-num">03</span><div><strong>SYN cookies.</strong> Protège contre le SYN flood sans épuiser le backlog TCP.</div></li>
+      <li><span class="rec-num">04</span><div><strong>WAF / IDS-IPS.</strong> ModSecurity, Snort, Suricata pour la détection en amont.</div></li>
+    </ul>
+  </section>
+
+  <!-- 11 -->
+  <section class="section" id="s11">
+    <div class="section-label">Module <span>11</span></div>
+    <h2 class="section-title">Vol de Session</h2>
+
+    <p>
+      Une session web authentifiée repose sur un identifiant (cookie, token) — le voler ou le
+      prédire permet d'usurper l'utilisateur sans connaître son mot de passe.
+    </p>
+
+    <h3 class="subsection-title">Ordinogramme — Vol de session via XSS</h3>
+    <div class="chain">
+      <span class="chain-node">Injection XSS stockée</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Victime charge la page piégée</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node highlight">Cookie exfiltré vers l'attaquant</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node danger">Session usurpée</span>
+    </div>
+
+    <h3 class="subsection-title">Attaques principales</h3>
+    <ul class="plain">
+      <li>Cookie stealing (XSS + vol de cookie), session fixation, session prediction</li>
+      <li>CSRF / XSRF (Cross-Site Request Forgery)</li>
+      <li>Man-in-the-Browser (MITB) via trojan bancaire</li>
+    </ul>
+
+    <h3 class="subsection-title">Contre-mesures</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Flag / mesure</th><th>Effet</th></tr></thead>
+        <tbody>
+          <tr><td>HttpOnly</td><td>Cookie inaccessible via JavaScript</td></tr>
+          <tr><td>Secure</td><td>Cookie transmis uniquement en HTTPS</td></tr>
+          <tr><td>SameSite</td><td>Bloque l'envoi cross-site (protection CSRF)</td></tr>
+          <tr><td>Token rotation</td><td>Limite la fenêtre d'exploitation d'un vol</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 12 -->
+  <section class="section" id="s12">
+    <div class="section-label">Module <span>12</span></div>
+    <h2 class="section-title">Évasion IDS / Pare-feu / Honeypots</h2>
+
+    <p>
+      Comprendre les mécanismes de détection pour, côté défenseur, les configurer correctement —
+      et côté attaquant CEH, comprendre leurs angles morts à des fins d'audit.
+    </p>
+
+    <h3 class="subsection-title">Défenses</h3>
+    <ul class="plain">
+      <li>NIDS (Snort, Suricata, Zeek) vs HIDS (OSSEC, Wazuh, Tripwire)</li>
+      <li>Détection par signature vs anomalie vs heuristique</li>
+      <li>Pare-feu : stateless, stateful, NGFW (Palo Alto, Fortinet), WAF, UTM</li>
+    </ul>
+
+    <h3 class="subsection-title">Ordinogramme — Techniques d'évasion</h3>
+    <div class="chain">
+      <span class="chain-node">Fragmentation des paquets</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Encodage/chiffrement du payload</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node highlight">Tunneling (DNS/ICMP/HTTP)</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Timing lent</span>
+    </div>
+
+    <div class="def-box">
+      <div class="def-term">Honeypot</div>
+      <div class="def-body">
+        Système leurre destiné à attirer un attaquant pour observer ses méthodes. Low-interaction
+        (Honeyd, Dionaea) simule des services ; high-interaction (Argos, Sebek) offre un vrai système
+        instrumenté. Un ensemble de honeypots forme un <code>honeynet</code>.
+      </div>
+    </div>
+  </section>
+
+  <!-- 13 -->
+  <section class="section" id="s13">
+    <div class="section-label">Module <span>13</span></div>
+    <h2 class="section-title">Hacking de Serveurs Web</h2>
+
+    <p>
+      Ciblage de l'infrastructure du serveur lui-même (Apache, Nginx, IIS, Tomcat) plutôt que
+      de l'application qu'il héberge — souvent via des erreurs de configuration.
+    </p>
+
+    <h3 class="subsection-title">Attaques principales</h3>
+    <ul class="plain">
+      <li>Directory traversal / Path traversal (<code>../../../etc/passwd</code>)</li>
+      <li>Abus des méthodes HTTP (PUT, DELETE, TRACE, CONNECT)</li>
+      <li>Identifiants par défaut (Tomcat admin, phpMyAdmin)</li>
+      <li>Server-Side Template Injection (SSTI), HTTP parameter pollution</li>
+    </ul>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">HTTP — Test de directory traversal</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+      <pre>GET /view?file=<span class="hl">../../../../etc/passwd</span> HTTP/1.1
+Host: cible-autorisee.com</pre>
+    </div>
+
+    <h3 class="subsection-title">Contre-mesures</h3>
+    <ul class="rec-list">
+      <li><span class="rec-num">01</span><div><strong>Hardening du serveur.</strong> Désactiver TRACE, PUT, DELETE inutiles.</div></li>
+      <li><span class="rec-num">02</span><div><strong>Configuration vhost correcte.</strong> Permissions minimales par répertoire.</div></li>
+      <li><span class="rec-num">03</span><div><strong>Patch management régulier</strong> et WAF en frontal.</div></li>
+    </ul>
+  </section>
+
+  <!-- 14 -->
+  <section class="section" id="s14">
+    <div class="section-label">Module <span>14</span></div>
+    <h2 class="section-title">Hacking d'Applications Web</h2>
+
+    <p>
+      Le cœur du volet web offensif du CEH — centré sur l'OWASP Top 10, avec un focus
+      approfondi sur l'injection SQL et le Cross-Site Scripting.
+    </p>
+
+    <h3 class="subsection-title">OWASP Top 10 (2021)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Catégorie</th></tr></thead>
+        <tbody>
+          <tr><td>A01</td><td>Broken Access Control</td></tr>
+          <tr><td>A02</td><td>Cryptographic Failures</td></tr>
+          <tr><td>A03</td><td>Injection</td></tr>
+          <tr><td>A05</td><td>Security Misconfiguration</td></tr>
+          <tr><td>A07</td><td>Identification and Authentication Failures</td></tr>
+          <tr><td>A10</td><td>Server-Side Request Forgery (SSRF)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="subsection-title">Ordinogramme — Méthodologie d'exploitation SQLi</h3>
+    <div class="chain">
+      <span class="chain-node">Détection du point d'injection</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Confirmation (' OR '1'='1)</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node highlight">Automatisation (sqlmap)</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Extraction / cassage de hashs</span>
+    </div>
+
+    <h3 class="subsection-title">XSS — Les 3 variantes</h3>
+    <div class="glossary-grid">
+      <div class="glossary-card"><div class="glossary-term">Reflected XSS</div><div class="glossary-def">Payload renvoyé immédiatement dans la réponse HTTP, non stocké.</div></div>
+      <div class="glossary-card"><div class="glossary-term">Stored XSS</div><div class="glossary-def">Payload enregistré côté serveur, exécuté pour chaque visiteur.</div></div>
+      <div class="glossary-card"><div class="glossary-term">DOM-based XSS</div><div class="glossary-def">Exécution entièrement côté client, sans passer par le serveur.</div></div>
+    </div>
+
+    <h3 class="subsection-title">Outils</h3>
+    <div class="tool-grid">
+      <div class="tool-card"><div class="tool-icon">🎯</div><div class="tool-name">Burp Suite</div><div class="tool-desc">Proxy, Repeater, Intruder — la référence pour l'audit manuel.</div></div>
+      <div class="tool-card"><div class="tool-icon">🤖</div><div class="tool-name">SQLMap</div><div class="tool-desc">Automatisation complète de la détection et exploitation SQLi.</div></div>
+      <div class="tool-card"><div class="tool-icon">📁</div><div class="tool-name">Gobuster / FFUF</div><div class="tool-desc">Découverte de répertoires et fichiers cachés par brute-force.</div></div>
+    </div>
+  </section>
+
+  <!-- 15 -->
+  <section class="section" id="s15">
+    <div class="section-label">Module <span>15</span></div>
+    <h2 class="section-title">Hacking de Bases de Données</h2>
+
+    <p>
+      Extension du module 14 vers la couche données elle-même — comment une injection SQL ou
+      NoSQL se transforme en extraction complète, voire en exécution de commandes système.
+    </p>
+
+    <h3 class="subsection-title">Techniques par SGBD</h3>
+    <ul class="plain">
+      <li>MSSQL : <code>XP_CMDSHELL</code> — exécution de commandes système via la base</li>
+      <li>MySQL/MariaDB, PostgreSQL, Oracle : extraction de credentials (<code>mysql.user</code>)</li>
+      <li>MongoDB / NoSQL : injection via l'opérateur <code>$ne</code>, JSON injection</li>
+    </ul>
+
+    <h3 class="subsection-title">Contre-mesures</h3>
+    <ul class="rec-list">
+      <li><span class="rec-num">01</span><div><strong>Prepared statements.</strong> La seule protection structurelle fiable contre l'injection.</div></li>
+      <li><span class="rec-num">02</span><div><strong>Least privilege.</strong> Comptes applicatifs sans droits DROP/ALTER inutiles.</div></li>
+      <li><span class="rec-num">03</span><div><strong>Encryption at rest (TDE).</strong> Protège les données même en cas d'exfiltration du fichier.</div></li>
+    </ul>
+  </section>
+
+  <!-- 16 -->
+  <section class="section" id="s16">
+    <div class="section-label">Module <span>16</span></div>
+    <h2 class="section-title">Hacking Sans Fil</h2>
+
+    <p>
+      Les réseaux Wi-Fi et Bluetooth ont leurs propres protocoles de chiffrement et donc leurs
+      propres failles — de WEP historiquement cassé à WPA3, en passant par les attaques Evil Twin.
+    </p>
+
+    <h3 class="subsection-title">Chiffrement Wi-Fi</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Protocole</th><th>Chiffrement</th><th>État</th></tr></thead>
+        <tbody>
+          <tr><td>WEP</td><td>RC4 64/128 bits</td><td>Cassé en minutes</td></tr>
+          <tr><td>WPA</td><td>TKIP/RC4</td><td>Vulnérable</td></tr>
+          <tr><td>WPA2</td><td>AES/CCMP</td><td>Vulnérable via KRACK</td></tr>
+          <tr><td>WPA3</td><td>SAE</td><td>Standard actuel recommandé</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="subsection-title">Ordinogramme — WPA2 handshake capture</h3>
+    <div class="chain">
+      <span class="chain-node">airmon-ng — mode monitor</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">airodump-ng — capture</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node highlight">deauth (aireplay-ng -0)</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Handshake capturé</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">aircrack-ng + dictionnaire</span>
+    </div>
+
+    <h3 class="subsection-title">Contre-mesures</h3>
+    <ul class="plain">
+      <li>Migration vers WPA3/AES, mode Enterprise (802.1X/RADIUS)</li>
+      <li>Désactiver WPS, VPN systématique sur Wi-Fi public</li>
+      <li>WIPS (Wireless Intrusion Prevention System)</li>
+    </ul>
+  </section>
+
+  <!-- 17 -->
+  <section class="section" id="s17">
+    <div class="section-label">Module <span>17</span></div>
+    <h2 class="section-title">Hacking Mobile</h2>
+
+    <p>
+      Android et iOS ont des modèles de sécurité très différents (sandboxing, code signing),
+      mais partagent des classes de vulnérabilités communes couvertes par l'OWASP Mobile Top 10.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Plateforme</th><th>Élévation</th><th>Reverse engineering</th></tr></thead>
+        <tbody>
+          <tr><td>Android</td><td>Rooting (Magisk, SuperSU)</td><td>APKTool, jadx-gui, MobSF, Drozer</td></tr>
+          <tr><td>iOS</td><td>Jailbreak (checkra1n, unc0ver)</td><td>class-dump, Hopper, Ghidra, Objection</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="subsection-title">Sécurité mobile</h3>
+    <ul class="plain">
+      <li>OWASP Mobile Top 10, MSTG (Mobile Security Testing Guide)</li>
+      <li>SSL Pinning, Android Keystore / iOS Keychain</li>
+      <li>Root / jailbreak detection côté application</li>
+    </ul>
+
+    <div class="warn-badge">Le sideloading et les profils de configuration malveillants restent le vecteur le plus fréquent sur iOS non jailbreaké</div>
+  </section>
+
+  <!-- 18 -->
+  <section class="section" id="s18">
+    <div class="section-label">Module <span>18</span></div>
+    <h2 class="section-title">IoT et OT Hacking</h2>
+
+    <p>
+      Les objets connectés (IoT) et les systèmes industriels (OT/SCADA) élargissent la surface
+      d'attaque au monde physique — firmware, bus matériels, et protocoles industriels dédiés.
+    </p>
+
+    <h3 class="subsection-title">Ordinogramme — Analyse de firmware</h3>
+    <div class="chain">
+      <span class="chain-node">Extraction (binwalk -Me)</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Analyse du filesystem (SquashFS)</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node highlight">Recherche de credentials en dur</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Backdoors / interfaces debug (UART, JTAG)</span>
+    </div>
+
+    <h3 class="subsection-title">OT / SCADA</h3>
+    <ul class="plain">
+      <li>Protocoles : Modbus, DNP3, IEC 61850, PROFINET</li>
+      <li>Cibles : PLC, RTU, HMI — outils : ModbusPal, OpenPLC</li>
+      <li>Exemples historiques : Stuxnet, TRITON, Industroyer</li>
+    </ul>
+
+    <div class="def-box">
+      <div class="def-term">Purdue Model</div>
+      <div class="def-body">
+        Modèle de référence pour segmenter un réseau industriel en niveaux (0-5), séparant strictement
+        le réseau IT de l'atelier OT — pilier de la norme <code>NIST SP 800-82</code>.
+      </div>
+    </div>
+  </section>
+
+  <!-- 19 -->
+  <section class="section" id="s19">
+    <div class="section-label">Module <span>19</span></div>
+    <h2 class="section-title">Cloud Computing</h2>
+
+    <p>
+      Les erreurs de configuration IAM et de stockage restent la cause n°1 des incidents cloud —
+      ce module couvre AWS, Azure, GCP ainsi que la sécurité des containers et du serverless.
+    </p>
+
+    <h3 class="subsection-title">Attaques par fournisseur</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Fournisseur</th><th>Vecteur principal</th><th>Outils</th></tr></thead>
+        <tbody>
+          <tr><td>AWS</td><td>S3 misconfiguration, IAM privesc, EC2 metadata (169.254.169.254)</td><td>Pacu, ScoutSuite</td></tr>
+          <tr><td>Azure</td><td>Azure AD misconfig, Key Vault extraction</td><td>Stormspotter, MicroBurst</td></tr>
+          <tr><td>GCP</td><td>GCS bucket misconfiguration, IAM roles abuse</td><td>GCPBucketBrute</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="subsection-title">Ordinogramme — Abus de metadata EC2</h3>
+    <div class="chain">
+      <span class="chain-node">SSRF applicatif</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Requête vers 169.254.169.254</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node highlight">Extraction des credentials IAM temporaires</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node danger">Accès au compte AWS</span>
+    </div>
+
+    <h3 class="subsection-title">Containers &amp; serverless</h3>
+    <ul class="plain">
+      <li>Docker : <code>--privileged</code>, host mount, vulnérabilités d'image (Trivy)</li>
+      <li>Kubernetes : etcd exposé, RBAC mal configuré, dashboard public (Kube-hunter)</li>
+      <li>Serverless : event injection, dependency poisoning (supply chain)</li>
+    </ul>
+  </section>
+
+  <!-- 20 -->
+  <section class="section" id="s20">
+    <div class="section-label">Module <span>20</span></div>
+    <h2 class="section-title">Cryptographie</h2>
+
+    <p>
+      Dernier module — les fondamentaux mathématiques qui protègent (ou trahissent) toutes
+      les couches précédentes : chiffrement symétrique, asymétrique, hachage et leurs attaques.
+    </p>
+
+    <h3 class="subsection-title">Symétrique vs asymétrique</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Type</th><th>Algorithmes</th><th>Usage</th></tr></thead>
+        <tbody>
+          <tr><td>Symétrique</td><td>AES (128/192/256), 3DES</td><td>Chiffrement de volume, rapide</td></tr>
+          <tr><td>Asymétrique</td><td>RSA, ECC, Diffie-Hellman</td><td>Échange de clés, signatures</td></tr>
+          <tr><td>Hachage</td><td>SHA-2, SHA-3</td><td>Intégrité, stockage de mots de passe (salé)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="danger-badge">MD5 et SHA-1 sont considérés cassés — à ne plus utiliser pour l'intégrité ni le stockage de mots de passe</div>
+
+    <h3 class="subsection-title">Ordinogramme — Cassage de hash par dictionnaire</h3>
+    <div class="chain">
+      <span class="chain-node">Hash MD5 extrait (ex: DB compromise)</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">Comparaison à une rainbow table</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node highlight">Correspondance trouvée</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node danger">Mot de passe en clair</span>
+    </div>
+
+    <h3 class="subsection-title">Attaques cryptographiques</h3>
+    <ul class="plain">
+      <li>Brute force, rainbow tables (compromis temps-mémoire)</li>
+      <li>Padding Oracle attack (ex: <code>CVE-2013-4790</code>)</li>
+      <li>Collision attack (SHA-1, MD5), Birthday attack</li>
+    </ul>
+
+    <h3 class="subsection-title">Références</h3>
+    <div class="ref-grid">
+      <a class="ref-card" href="https://owasp.org/www-project-top-ten/" target="_blank" rel="noopener">
+        <div class="ref-icon">🛡️</div><div class="ref-name">OWASP Top 10</div><div class="ref-url">owasp.org</div>
+      </a>
+      <a class="ref-card" href="https://nmap.org/book/man.html" target="_blank" rel="noopener">
+        <div class="ref-icon">🗺️</div><div class="ref-name">Nmap Reference Guide</div><div class="ref-url">nmap.org/book</div>
+      </a>
+      <a class="ref-card" href="https://www.eccouncil.org/train-certify/certified-ethical-hacker-ceh/" target="_blank" rel="noopener">
+        <div class="ref-icon">🎓</div><div class="ref-name">EC-Council — CEH v12</div><div class="ref-url">eccouncil.org</div>
+      </a>
+      <a class="ref-card" href="https://nvd.nist.gov/" target="_blank" rel="noopener">
+        <div class="ref-icon">📊</div><div class="ref-name">NVD — Base CVE officielle</div><div class="ref-url">nvd.nist.gov</div>
+      </a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-author">
+      Rédigé par <strong style="color: var(--cyan);">SPECTRA MZ</strong>
+      &nbsp;·&nbsp; Cours Complet &nbsp;·&nbsp; CEH v12 — 20 Modules
+      <br>
+      <a class="bottom-back" href="../index.html">← Retour à l'accueil</a>
+    </div>
+    <div class="footer-badge">
+      <span>CEH v12</span> · Révision 2026
+    </div>
+  </footer>
+
+</div>
+</main>
+
+<script>
+  function copyCode(btn) {
+    const pre = btn.closest('.code-wrap').querySelector('pre');
+    const text = pre.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'copié ✓';
+      btn.style.borderColor = 'var(--cyan)';
+      btn.style.color = 'var(--cyan)';
+      setTimeout(() => {
+        btn.textContent = 'copier';
+        btn.style.borderColor = '';
+        btn.style.color = '';
+      }, 1800);
+    });
+  }
+
+  const sections = document.querySelectorAll('.section[id]');
+  const dots = document.querySelectorAll('.phase-dot');
+  function updateActive() {
+    let current = '';
+    sections.forEach(sec => { if (window.scrollY + 200 >= sec.offsetTop) current = sec.id; });
+    dots.forEach(dot => dot.classList.toggle('active', dot.getAttribute('href') === '#' + current));
+  }
+  window.addEventListener('scroll', updateActive, { passive: true });
+  updateActive();
+</script>
+</body>
+</html>
