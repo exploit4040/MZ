@@ -245,6 +245,51 @@
   }
   .cert-bar { height: 100%; background: var(--amber); border-radius: 2px; }
 
+  /* ── COURSE (CEH) GRID ── */
+  .course-intro { color: var(--muted); font-size: .9rem; margin-bottom: 1.6rem; max-width: 620px; }
+  .course-overview {
+    display: flex; align-items: center; gap: 1rem;
+    background: var(--surface); border: 1px solid var(--cyan);
+    border-radius: 10px; padding: 1rem 1.3rem; margin-bottom: 1.5rem;
+    text-decoration: none; transition: all .2s;
+  }
+  .course-overview:hover { box-shadow: 0 0 20px var(--cyan-glow); transform: translateY(-2px); }
+  .course-overview-icon { font-size: 1.6rem; flex-shrink: 0; }
+  .course-overview-title { font-family: 'JetBrains Mono', monospace; font-size: .92rem; color: var(--cyan); font-weight: 700; }
+  .course-overview-desc { font-size: .8rem; color: var(--muted); margin-top: .2rem; }
+  .course-overview-arrow { margin-left: auto; color: var(--cyan); font-family: 'JetBrains Mono', monospace; }
+
+  .course-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: .9rem;
+  }
+  .course-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 1.1rem 1.2rem;
+    text-decoration: none; color: var(--text);
+    display: flex; flex-direction: column; gap: .55rem;
+    transition: all .2s;
+  }
+  .course-card:hover { border-color: var(--cyan); box-shadow: 0 0 18px var(--cyan-glow); transform: translateY(-2px); }
+  .course-card.locked { opacity: .45; cursor: default; }
+  .course-card.locked:hover { border-color: var(--border); box-shadow: none; transform: none; }
+  .course-top { display: flex; align-items: center; gap: .7rem; }
+  .course-num {
+    font-family: 'JetBrains Mono', monospace; font-size: .72rem; font-weight: 700;
+    color: var(--cyan); background: var(--cyan-dim); border: 1px solid var(--cyan);
+    border-radius: 5px; padding: .15rem .45rem; flex-shrink: 0;
+  }
+  .course-card.locked .course-num { color: var(--muted); background: var(--surface2); border-color: var(--border); }
+  .course-icon { font-size: 1rem; }
+  .course-name { font-family: 'JetBrains Mono', monospace; font-size: .85rem; font-weight: 600; color: var(--text); line-height: 1.35; }
+  .course-tags { display: flex; gap: .35rem; flex-wrap: wrap; }
+  .ctag {
+    font-family: 'JetBrains Mono', monospace; font-size: .62rem;
+    letter-spacing: .04em; text-transform: uppercase;
+    padding: .12rem .5rem; border-radius: 99px;
+    border: 1px solid var(--border); color: var(--muted);
+  }
+
   /* ── WRITE-UPS GRID ── */
   .writeups-intro { color: var(--muted); font-size: .9rem; margin-bottom: 2rem; max-width: 620px; }
 
@@ -399,6 +444,7 @@
     <div class="nav-links">
       <a href="#about">whoami</a>
       <a href="#skills">skills</a>
+      <a href="#cours-ceh">cours CEH</a>
       <a href="#writeups">write-ups</a>
       <a href="#repos">repos</a>
       <a href="#contact">contact</a>
@@ -546,6 +592,129 @@
           <div class="cert-bar-wrap"><div class="cert-bar" style="width:75%"></div></div>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- COURS CEH -->
+  <section class="section" id="cours-ceh">
+    <div class="section-label">// <span>formation</span></div>
+    <h2 class="section-title">Cours CEH v12 — 20 Modules</h2>
+    <p class="course-intro">
+      Notes de cours publiées au fil de ma progression sur la certification CEH v12 (EC-Council) —
+      objectifs, concepts clés, outils et contre-mesures pour chaque module. Fichiers rangés dans
+      <code style="font-family:'JetBrains Mono',monospace;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:.1em .4em;color:#c0cce8;">cours_ceh/</code>.
+    </p>
+
+    <a class="course-overview" href="cours_ceh/plan-general.html">
+      <span class="course-overview-icon">🗂️</span>
+      <div>
+        <div class="course-overview-title">Plan de Cours Complet</div>
+        <div class="course-overview-desc">Sommaire des 20 modules avec accès direct à chaque page.</div>
+      </div>
+      <span class="course-overview-arrow">→</span>
+    </a>
+
+    <div class="course-grid">
+      <a class="course-card" href="cours_ceh/module-01.html">
+        <div class="course-top"><span class="course-num">01</span><span class="course-icon">🛡️</span></div>
+        <div class="course-name">Introduction à l'Ethical Hacking</div>
+        <div class="course-tags"><span class="ctag">Concepts</span><span class="ctag">CIA Triad</span></div>
+      </a>
+      <a class="course-card" href="cours_ceh/module-02.html">
+        <div class="course-top"><span class="course-num">02</span><span class="course-icon">🔎</span></div>
+        <div class="course-name">Footprinting et Reconnaissance</div>
+        <div class="course-tags"><span class="ctag">OSINT</span><span class="ctag">Recon</span></div>
+      </a>
+      <a class="course-card" href="cours_ceh/module-03.html">
+        <div class="course-top"><span class="course-num">03</span><span class="course-icon">📡</span></div>
+        <div class="course-name">Scanning Réseaux</div>
+        <div class="course-tags"><span class="ctag">Nmap</span><span class="ctag">Network</span></div>
+      </a>
+      <a class="course-card" href="cours_ceh/module-04.html">
+        <div class="course-top"><span class="course-num">04</span><span class="course-icon">📋</span></div>
+        <div class="course-name">Énumération</div>
+        <div class="course-tags"><span class="ctag">SMB</span><span class="ctag">LDAP</span></div>
+      </a>
+      <a class="course-card" href="cours_ceh/module-05.html">
+        <div class="course-top"><span class="course-num">05</span><span class="course-icon">🧪</span></div>
+        <div class="course-name">Analyse de Vulnérabilités</div>
+        <div class="course-tags"><span class="ctag">CVSS</span><span class="ctag">Scanners</span></div>
+      </a>
+      <a class="course-card" href="cours_ceh/module-06.html">
+        <div class="course-top"><span class="course-num">06</span><span class="course-icon">🔓</span></div>
+        <div class="course-name">Hacking de Systèmes</div>
+        <div class="course-tags"><span class="ctag">Privesc</span><span class="ctag">Cracking</span></div>
+      </a>
+      <a class="course-card" href="cours_ceh/module-07.html">
+        <div class="course-top"><span class="course-num">07</span><span class="course-icon">🦠</span></div>
+        <div class="course-name">Malwares</div>
+        <div class="course-tags"><span class="ctag">Virus</span><span class="ctag">Ransomware</span></div>
+      </a>
+      <a class="course-card" href="cours_ceh/module-08.html">
+        <div class="course-top"><span class="course-num">08</span><span class="course-icon">🕵️</span></div>
+        <div class="course-name">Sniffing</div>
+        <div class="course-tags"><span class="ctag">ARP</span><span class="ctag">MITM</span></div>
+      </a>
+      <a class="course-card" href="cours_ceh/module-09.html">
+        <div class="course-top"><span class="course-num">09</span><span class="course-icon">🎭</span></div>
+        <div class="course-name">Ingénierie Sociale</div>
+        <div class="course-tags"><span class="ctag">Phishing</span><span class="ctag">OSINT</span></div>
+      </a>
+      <a class="course-card" href="cours_ceh/module-10.html">
+        <div class="course-top"><span class="course-num">10</span><span class="course-icon">💥</span></div>
+        <div class="course-name">Déni de Service (DoS/DDoS)</div>
+        <div class="course-tags"><span class="ctag">Botnets</span><span class="ctag">Flood</span></div>
+      </a>
+      <a class="course-card" href="cours_ceh/module-11.html">
+        <div class="course-top"><span class="course-num">11</span><span class="course-icon">🍪</span></div>
+        <div class="course-name">Vol de Session</div>
+        <div class="course-tags"><span class="ctag">Cookies</span><span class="ctag">CSRF</span></div>
+      </a>
+      <a class="course-card" href="cours_ceh/module-12.html">
+        <div class="course-top"><span class="course-num">12</span><span class="course-icon">🕳️</span></div>
+        <div class="course-name">Évasion IDS/Pare-feu/Honeypots</div>
+        <div class="course-tags"><span class="ctag">IDS</span><span class="ctag">Honeypot</span></div>
+      </a>
+      <a class="course-card" href="cours_ceh/module-13.html">
+        <div class="course-top"><span class="course-num">13</span><span class="course-icon">🌐</span></div>
+        <div class="course-name">Hacking de Serveurs Web</div>
+        <div class="course-tags"><span class="ctag">Apache</span><span class="ctag">IIS</span></div>
+      </a>
+      <a class="course-card" href="cours_ceh/module-14.html">
+        <div class="course-top"><span class="course-num">14</span><span class="course-icon">💉</span></div>
+        <div class="course-name">Hacking d'Applications Web</div>
+        <div class="course-tags"><span class="ctag">SQLi</span><span class="ctag">XSS</span></div>
+      </a>
+      <a class="course-card" href="cours_ceh/module-15.html">
+        <div class="course-top"><span class="course-num">15</span><span class="course-icon">🗄️</span></div>
+        <div class="course-name">Hacking de Bases de Données</div>
+        <div class="course-tags"><span class="ctag">SQL</span><span class="ctag">NoSQL</span></div>
+      </a>
+      <a class="course-card" href="cours_ceh/module-16.html">
+        <div class="course-top"><span class="course-num">16</span><span class="course-icon">📶</span></div>
+        <div class="course-name">Hacking Sans Fil</div>
+        <div class="course-tags"><span class="ctag">WiFi</span><span class="ctag">Bluetooth</span></div>
+      </a>
+      <a class="course-card" href="cours_ceh/module-17.html">
+        <div class="course-top"><span class="course-num">17</span><span class="course-icon">📱</span></div>
+        <div class="course-name">Hacking Mobile</div>
+        <div class="course-tags"><span class="ctag">Android</span><span class="ctag">iOS</span></div>
+      </a>
+      <a class="course-card" href="cours_ceh/module-18.html">
+        <div class="course-top"><span class="course-num">18</span><span class="course-icon">🏭</span></div>
+        <div class="course-name">IoT et OT Hacking</div>
+        <div class="course-tags"><span class="ctag">SCADA</span><span class="ctag">Firmware</span></div>
+      </a>
+      <a class="course-card" href="cours_ceh/module-19.html">
+        <div class="course-top"><span class="course-num">19</span><span class="course-icon">☁️</span></div>
+        <div class="course-name">Cloud Computing</div>
+        <div class="course-tags"><span class="ctag">AWS</span><span class="ctag">Azure</span></div>
+      </a>
+      <a class="course-card" href="cours_ceh/module-20.html">
+        <div class="course-top"><span class="course-num">20</span><span class="course-icon">🔐</span></div>
+        <div class="course-name">Cryptographie</div>
+        <div class="course-tags"><span class="ctag">AES</span><span class="ctag">Hashing</span></div>
+      </a>
     </div>
   </section>
 
