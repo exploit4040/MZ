@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 01 — Introduction à l'Ethical Hacking | CEH v12 | SPECTRA MZ</title>
+<meta name="description" content="CEH v12 Module 1 — Introduction à l'Ethical Hacking : types de hackers, 5 phases du pentest, CIA Triad, AAA, cadres légaux, termes fondamentaux.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #080c18;
+    --surface:   #0f1525;
+    --surface2:  #151d30;
+    --border:    #1e2a42;
+    --cyan:      #00d4aa;
+    --cyan-dim:  #00d4aa22;
+    --cyan-glow: #00d4aa44;
+    --red:       #ff4757;
+    --amber:     #ffa502;
+    --purple:    #a855f7;
+    --blue:      #2f9bff;
+    --text:      #e2e8f4;
+    --muted:     #6b7a99;
+    --code-bg:   #060a14;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,0,0,.08) 2px, rgba(0,0,0,.08) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  .back-home {
+    position: fixed; top: 1.2rem; left: 1.2rem; z-index: 600;
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .55rem 1rem;
+    background: rgba(15,21,37,.85); backdrop-filter: blur(10px);
+    border: 1px solid var(--border); border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace; font-size: .78rem; font-weight: 500;
+    color: var(--muted); text-decoration: none; transition: all .2s;
+  }
+  .back-home:hover { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 16px var(--cyan-glow); transform: translateX(-2px); }
+  .back-home svg { width: 14px; height: 14px; }
+  @media (max-width: 640px) { .back-home { top: .8rem; left: .8rem; padding: .45rem .8rem; font-size: .7rem; } }
+
+  .sidebar {
+    position: fixed; left: 0; top: 0; width: 60px; height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    z-index: 100; padding: 1.4rem 0; overflow-y: auto;
+  }
+  .sidebar::-webkit-scrollbar { width: 0; }
+  .sidebar-line { width: 1px; flex: 0 0 8px; background: var(--border); }
+  .phase-dot {
+    width: 26px; height: 26px; border-radius: 50%;
+    border: 1px solid var(--border); background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--muted);
+    cursor: pointer; transition: all .3s; text-decoration: none; flex-shrink: 0;
+  }
+  .phase-dot:hover, .phase-dot.active {
+    border-color: var(--cyan); color: var(--cyan);
+    box-shadow: 0 0 12px var(--cyan-glow); background: var(--cyan-dim);
+  }
+
+  main { margin-left: 60px; width: calc(100% - 60px); padding: 0 2rem 6rem; }
+  .inner { max-width: 900px; margin: 0 auto; }
+
+  .hero { padding: 5.5rem 0 3.5rem; }
+  .hero-eyebrow {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--cyan); margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: .75rem;
+  }
+  .hero-eyebrow::before { content:''; display:inline-block; width:24px; height:1px; background: var(--cyan); }
+  .hero-title {
+    font-family: 'JetBrains Mono', monospace; font-size: clamp(1.8rem, 4.2vw, 2.9rem);
+    font-weight: 700; line-height: 1.2; letter-spacing: -.02em; margin-bottom: 1rem;
+  }
+  .hero-title .accent { color: var(--cyan); }
+  .hero-sub { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; max-width: 640px; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 2rem; }
+  .pill {
+    padding: .3rem .9rem; border-radius: 99px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .08em; font-weight: 500;
+  }
+  .pill-cyan   { border:1px solid var(--cyan);   color:var(--cyan);   background:var(--cyan-dim); }
+  .pill-red    { border:1px solid var(--red);    color:var(--red);    background:#ff475711; }
+  .pill-amber  { border:1px solid var(--amber);  color:var(--amber);  background:#ffa50211; }
+  .pill-purple { border:1px solid var(--purple); color:var(--purple); background:#a855f711; }
+  .pill-blue   { border:1px solid var(--blue);   color:var(--blue);   background:#2f9bff11; }
+  .hero-divider {
+    width: 100%; height: 1px;
+    background: linear-gradient(90deg, var(--cyan) 0%, var(--border) 60%, transparent 100%);
+    margin-top: 2.5rem;
+  }
+
+  .toc { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem 1.8rem; margin: 2rem 0; }
+  .toc-title { font-family: 'JetBrains Mono', monospace; font-size: .75rem; letter-spacing: .15em; text-transform: uppercase; color: var(--cyan); margin-bottom: 1rem; }
+  .toc-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: .5rem 1.5rem; }
+  @media (max-width: 640px) { .toc-list { grid-template-columns: 1fr; } }
+  .toc-list a { font-size: .85rem; color: #b8c3d9; text-decoration: none; display: flex; align-items: baseline; gap: .5rem; transition: color .2s; }
+  .toc-list a:hover { color: var(--cyan); }
+  .toc-num { font-family: 'JetBrains Mono', monospace; font-size: .7rem; color: var(--muted); flex-shrink: 0; }
+
+  .section { padding: 3.2rem 0 1.6rem; border-bottom: 1px solid var(--border); }
+  .section:last-of-type { border-bottom: none; }
+  .section-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--cyan); margin-bottom: .6rem; display: flex; align-items: center; gap: .5rem;
+  }
+  .section-label span { color: var(--muted); }
+  .section-title { font-family: 'JetBrains Mono', monospace; font-size: 1.4rem; font-weight: 600; color: var(--text); margin-bottom: 1.4rem; line-height: 1.3; }
+  .subsection-title {
+    font-family: 'JetBrains Mono', monospace; font-size: 1.02rem; font-weight: 600; color: var(--cyan);
+    margin: 2rem 0 .9rem; padding-left: 1rem; border-left: 2px solid var(--cyan);
+  }
+
+  p { margin-bottom: 1.1rem; color: #b8c3d9; }
+  p strong { color: var(--text); font-weight: 600; }
+  ul.plain, ol.plain { margin: 0 0 1.1rem 1.3rem; color: #b8c3d9; }
+  ul.plain li, ol.plain li { margin-bottom: .4rem; }
+
+  .def-box {
+    background: linear-gradient(135deg, #2f9bff0a 0%, #2f9bff03 100%);
+    border: 1px solid var(--blue); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.2rem 0 1.6rem;
+  }
+  .def-term { display: flex; align-items: center; gap: .6rem; font-family: 'JetBrains Mono', monospace; font-size: .95rem; font-weight: 700; color: var(--blue); margin-bottom: .5rem; }
+  .def-term::before { content: '§'; font-size: 1.1rem; }
+  .def-body { color: #b8c3d9; font-size: .9rem; }
+  .def-body code { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: .1em .4em; color: #c0cce8; font-size: .85em; }
+
+  blockquote {
+    background: #00d4aa08; border-left: 3px solid var(--cyan);
+    border-radius: 0 6px 6px 0; padding: .9rem 1.2rem; margin: 1rem 0;
+    font-size: .88rem; color: #b8c3d9; font-style: italic;
+  }
+  blockquote strong { color: var(--cyan); font-style: normal; }
+
+  .glossary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+  .glossary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem; }
+  .glossary-term { font-family: 'JetBrains Mono', monospace; font-size: .85rem; font-weight: 700; color: var(--cyan); margin-bottom: .5rem; }
+  .glossary-def { font-size: .82rem; color: var(--muted); line-height: 1.55; }
+
+  /* Hacker type cards */
+  .hacker-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+  .hacker-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.3rem 1.4rem; transition: border-color .2s, transform .2s; }
+  .hacker-card:hover { border-color: var(--cyan); transform: translateY(-2px); }
+  .hacker-head { display: flex; align-items: center; gap: .6rem; margin-bottom: .6rem; }
+  .hacker-icon { font-size: 1.3rem; }
+  .hacker-name { font-family: 'JetBrains Mono', monospace; font-size: .92rem; font-weight: 700; color: var(--text); }
+  .hacker-legal {
+    margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: .62rem; letter-spacing: .06em;
+    text-transform: uppercase; padding: .15rem .5rem; border-radius: 99px; white-space: nowrap;
+  }
+  .hacker-legal.ok  { border: 1px solid var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+  .hacker-legal.bad { border: 1px solid var(--red);  color: var(--red); background: #ff475711; }
+  .hacker-legal.mid { border: 1px solid var(--amber);color: var(--amber); background: #ffa50211; }
+  .hacker-desc { font-size: .84rem; color: #b8c3d9; margin-bottom: .7rem; }
+  .hacker-card blockquote { margin: 0; font-size: .78rem; }
+
+  .code-wrap { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 1rem 0 1.5rem; }
+  .code-header { background: var(--surface2); padding: .45rem 1rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+  .code-lang { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--cyan); }
+  .copy-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: .2rem .6rem; border-radius: 4px; cursor: pointer; transition: all .2s; }
+  .copy-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+  .code-wrap pre { padding: 1.1rem 1.2rem; overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: .8rem; line-height: 1.7; color: #c0cce8; }
+  .code-wrap pre .cmt { color: var(--muted); font-style: italic; }
+  .code-wrap pre .hl { color: var(--amber); font-weight: 700; }
+
+  .result-badge { display: inline-flex; align-items: center; gap: .5rem; background: #00d4aa0f; border: 1px solid var(--cyan); border-radius: 6px; padding: .5rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--cyan); margin: .5rem 0 1rem; }
+  .result-badge::before { content: '✓'; font-weight: 700; }
+  .warn-badge { display: inline-flex; align-items: center; gap: .5rem; background: #ffa5020f; border: 1px solid var(--amber); border-radius: 6px; padding: .5rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--amber); margin: .5rem 0 1rem; }
+  .warn-badge::before { content: '⚠'; font-weight: 700; }
+  .danger-badge { display: inline-flex; align-items: center; gap: .5rem; background: #ff47570f; border: 1px solid var(--red); border-radius: 6px; padding: .5rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--red); margin: .5rem 0 1rem; }
+  .danger-badge::before { content: '✗'; font-weight: 700; }
+
+  .table-wrap { overflow-x: auto; margin: 1.2rem 0 1.8rem; border-radius: 8px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+  thead tr { background: var(--surface2); }
+  thead th { padding: .7rem 1rem; text-align: left; font-family: 'JetBrains Mono', monospace; font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--cyan); font-weight: 500; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface); }
+  tbody td { padding: .7rem 1rem; color: #b8c3d9; vertical-align: top; }
+  tbody td:first-child { font-family: 'JetBrains Mono', monospace; font-size: .78rem; color: var(--amber); }
+  td code, p code, li code { font-family: 'JetBrains Mono', monospace; font-size: .82em; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: .1em .4em; color: #c0cce8; }
+
+  /* ── ORGANIGRAMME / FLOWCHART ANIMÉ ── */
+  .chain {
+    display: flex; flex-wrap: wrap; align-items: center; gap: .5rem;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 1.3rem 1.4rem; margin: 1.2rem 0 1.6rem;
+  }
+  .chain-title { width: 100%; font-family: 'JetBrains Mono', monospace; font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: .7rem; }
+  .chain-node {
+    font-family: 'JetBrains Mono', monospace; font-size: .78rem; color: var(--text);
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: .4rem .8rem;
+  }
+  .chain-arrow { font-family: 'JetBrains Mono', monospace; font-size: .9rem; color: var(--cyan); }
+  .chain-node.highlight { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+  .chain-node.danger { border-color: var(--red); color: var(--red); }
+
+  @keyframes flowPulse {
+    0%, 100% { box-shadow: 0 0 0 rgba(0,212,170,0); border-color: var(--border); color: var(--text); background: var(--surface2); }
+    50%      { box-shadow: 0 0 18px var(--cyan-glow); border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+  }
+  .chain-node.flow { animation: flowPulse 4s ease-in-out infinite; }
+  @keyframes arrowFlow {
+    0%, 100% { opacity: .35; transform: translateX(0); }
+    50%      { opacity: 1;   transform: translateX(3px); }
+  }
+  .chain-arrow.flow { animation: arrowFlow 1.4s ease-in-out infinite; }
+
+  /* Grand ordinogramme vertical animé (5 phases pentest) */
+  .flow-vertical { display: flex; flex-direction: column; gap: 0; margin: 1.6rem 0 2rem; }
+  .flow-step {
+    display: flex; align-items: center; gap: 1rem;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.1rem 1.3rem; position: relative;
+    opacity: 0; transform: translateY(14px);
+    animation: stepIn .6s ease forwards;
+  }
+  .flow-step:nth-child(1) { animation-delay: .05s; }
+  .flow-step:nth-child(3) { animation-delay: .25s; }
+  .flow-step:nth-child(5) { animation-delay: .45s; }
+  .flow-step:nth-child(7) { animation-delay: .65s; }
+  .flow-step:nth-child(9) { animation-delay: .85s; }
+  @keyframes stepIn { to { opacity: 1; transform: translateY(0); } }
+  .flow-step:hover { border-color: var(--cyan); box-shadow: 0 0 20px var(--cyan-glow); }
+  .flow-num {
+    font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 1rem;
+    color: var(--bg); background: var(--cyan); min-width: 38px; height: 38px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    animation: numPulse 2.6s ease-in-out infinite;
+  }
+  @keyframes numPulse { 0%, 100% { box-shadow: 0 0 0 rgba(0,212,170,.4); } 50% { box-shadow: 0 0 14px rgba(0,212,170,.7); } }
+  .flow-body-title { font-family: 'JetBrains Mono', monospace; font-size: .92rem; font-weight: 700; color: var(--text); }
+  .flow-body-desc { font-size: .78rem; color: var(--muted); margin-top: .15rem; }
+  .flow-connector {
+    width: 2px; height: 22px; background: linear-gradient(var(--cyan), var(--border));
+    margin-left: 19px; position: relative; overflow: hidden;
+  }
+  .flow-connector::after {
+    content: ''; position: absolute; left: -2px; top: -100%; width: 6px; height: 40%;
+    background: var(--cyan); box-shadow: 0 0 8px var(--cyan);
+    animation: dropFlow 1.8s linear infinite;
+  }
+  @keyframes dropFlow { 0% { top: -40%; } 100% { top: 100%; } }
+
+  .tool-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+  .tool-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem; transition: border-color .2s, transform .2s; }
+  .tool-card:hover { border-color: var(--cyan); transform: translateY(-2px); }
+  .tool-icon { font-size: 1.3rem; margin-bottom: .5rem; }
+  .tool-name { font-family: 'JetBrains Mono', monospace; font-size: .88rem; font-weight: 700; color: var(--cyan); margin-bottom: .4rem; }
+  .tool-desc { font-size: .8rem; color: var(--muted); line-height: 1.5; }
+
+  .rec-list { list-style: none; margin: .5rem 0; }
+  .rec-list li { display: flex; gap: .8rem; align-items: flex-start; padding: .8rem 0; border-bottom: 1px solid var(--border); color: #b8c3d9; }
+  .rec-list li:last-child { border-bottom: none; }
+  .rec-num { font-family: 'JetBrains Mono', monospace; font-size: .72rem; color: var(--cyan); background: var(--cyan-dim); border: 1px solid var(--cyan); border-radius: 4px; padding: .1rem .5rem; flex-shrink: 0; margin-top: .1rem; }
+  .rec-check { color: var(--cyan); font-weight: 700; flex-shrink: 0; }
+
+  /* Quiz accordion */
+  .quiz-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: .8rem; overflow: hidden; }
+  .quiz-q { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.3rem; cursor: pointer; user-select: none; }
+  .quiz-q-num { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: .75rem; color: var(--bg); background: var(--purple); min-width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .quiz-q-text { font-size: .88rem; color: var(--text); font-weight: 500; flex: 1; }
+  .quiz-toggle { font-family: 'JetBrains Mono', monospace; color: var(--muted); transition: transform .25s; flex-shrink: 0; }
+  .quiz-item.open .quiz-toggle { transform: rotate(45deg); color: var(--cyan); }
+  .quiz-a { max-height: 0; overflow: hidden; transition: max-height .3s ease; }
+  .quiz-item.open .quiz-a { max-height: 200px; }
+  .quiz-a-inner { padding: 0 1.3rem 1.1rem 3.1rem; font-size: .84rem; color: var(--cyan); font-family: 'JetBrains Mono', monospace; }
+
+  footer { margin-top: 3.5rem; padding: 2rem 0; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+  .footer-author { font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--muted); }
+  .footer-badge { font-family: 'JetBrains Mono', monospace; font-size: .75rem; color: var(--muted); display: flex; align-items: center; gap: .4rem; }
+  .footer-badge span { color: var(--cyan); }
+  .bottom-back { display: inline-flex; align-items: center; gap: .5rem; padding: .7rem 1.3rem; margin-top: 1rem; border: 1px solid var(--cyan); border-radius: 8px; color: var(--cyan); text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: .82rem; background: var(--cyan-dim); transition: all .2s; }
+  .bottom-back:hover { box-shadow: 0 0 20px var(--cyan-glow); transform: translateY(-1px); }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  @media (max-width: 640px) {
+    .sidebar { display: none; }
+    main { margin-left: 0; padding: 0 1.2rem 4rem; }
+    .hero-title { font-size: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<a class="back-home" href="../index.html">
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9.5 3L4.5 8L9.5 13"/></svg>
+  Retour à l'accueil
+</a>
+
+<nav class="sidebar">
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#p1" title="Cybersécurité">01</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#p2" title="Types de hackers">02</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#p3" title="5 phases du pentest">03</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#p4" title="CIA Triad">04</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#p5" title="AAA">05</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#p6" title="Non-répudiation">06</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#p7" title="Contrôles de sécurité">07</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#p8" title="Cadres légaux">08</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#p9" title="Rules of Engagement">09</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#p10" title="Termes CEH">10</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#p11" title="Analyse de risque">11</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#p12" title="Vecteurs d'attaque">12</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#quiz" title="Quiz">Q</a>
+  <div class="sidebar-line"></div>
+</nav>
+
+<main>
+<div class="inner">
+
+  <header class="hero">
+    <div class="hero-eyebrow">CEH v12 · Module 01</div>
+    <h1 class="hero-title">Introduction à l'<span class="accent">Ethical Hacking</span></h1>
+    <p class="hero-sub">
+      Les fondations théoriques et légales de toute la certification : les types de hackers,
+      les 5 phases d'un test d'intrusion, la triade CIA, le modèle AAA, les cadres légaux
+      et les termes fondamentaux à connaître par cœur pour l'examen.
+    </p>
+    <div class="meta-pills">
+      <span class="pill pill-cyan">Module 01 / 20</span>
+      <span class="pill pill-blue">Concepts fondamentaux</span>
+      <span class="pill pill-amber">Base de l'examen</span>
+    </div>
+    <div class="hero-divider"></div>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">Sommaire du module</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">01</span><a href="#p1">Qu'est-ce que la cybersécurité ?</a></li>
+      <li><span class="toc-num">02</span><a href="#p2">Les types de hackers</a></li>
+      <li><span class="toc-num">03</span><a href="#p3">Les 5 phases d'un test d'intrusion</a></li>
+      <li><span class="toc-num">04</span><a href="#p4">La triade CIA</a></li>
+      <li><span class="toc-num">05</span><a href="#p5">AAA — Authentification, Autorisation, Comptabilité</a></li>
+      <li><span class="toc-num">06</span><a href="#p6">Non-répudiation</a></li>
+      <li><span class="toc-num">07</span><a href="#p7">Types de contrôles de sécurité</a></li>
+      <li><span class="toc-num">08</span><a href="#p8">Cadres légaux et réglementaires</a></li>
+      <li><span class="toc-num">09</span><a href="#p9">Rules of Engagement (RoE)</a></li>
+      <li><span class="toc-num">10</span><a href="#p10">Termes fondamentaux CEH</a></li>
+      <li><span class="toc-num">11</span><a href="#p11">Analyse de risque</a></li>
+      <li><span class="toc-num">12</span><a href="#p12">Vecteurs d'attaque courants</a></li>
+      <li><span class="toc-num">Q</span><a href="#quiz">Questions type examen</a></li>
+    </ul>
+  </div>
+
+  <!-- PARTIE 1 -->
+  <section class="section" id="p1">
+    <div class="section-label">Partie <span>01</span></div>
+    <h2 class="section-title">Qu'est-ce que la cybersécurité ?</h2>
+    <p>
+      La <strong>cybersécurité</strong>, c'est l'ensemble des pratiques, technologies et processus
+      conçus pour protéger les systèmes informatiques, les réseaux et les données contre les
+      attaques, les dommages ou les accès non autorisés.
+    </p>
+    <blockquote>
+      Imagine une banque : coffres, gardiens, caméras, codes secrets. La cybersécurité, c'est
+      exactement pareil mais dans le monde numérique — ton système est la banque, et
+      <strong>l'ethical hacker</strong> est le testeur de sécurité engagé pour trouver les failles
+      avant que les vrais voleurs ne le fassent.
+    </blockquote>
+  </section>
+
+  <!-- PARTIE 2 -->
+  <section class="section" id="p2">
+    <div class="section-label">Partie <span>02</span></div>
+    <h2 class="section-title">Les types de hackers</h2>
+    <p>
+      Le mot « hacker » ne signifie pas criminel — il désigne une maîtrise technique profonde
+      des systèmes. Ce qui différencie les hackers, c'est leur <strong>intention</strong> et
+      leur <strong>autorisation</strong>.
+    </p>
+
+    <div class="hacker-grid">
+      <div class="hacker-card">
+        <div class="hacker-head"><span class="hacker-icon">🎩</span><span class="hacker-name">White Hat</span><span class="hacker-legal ok">légal</span></div>
+        <div class="hacker-desc">Hacker éthique légal — travaille avec la permission de l'organisation cible pour trouver des vulnérabilités et les corriger. <strong>C'est le rôle du CEH.</strong></div>
+        <blockquote>Tu es embauché par une entreprise avec contrat et autorisation écrite pour tester leur système.</blockquote>
+      </div>
+      <div class="hacker-card">
+        <div class="hacker-head"><span class="hacker-icon">🎩</span><span class="hacker-name">Black Hat</span><span class="hacker-legal bad">illégal</span></div>
+        <div class="hacker-desc">Le cybercriminel — attaque sans autorisation pour voler des données, extorquer de l'argent ou causer des dommages.</div>
+        <blockquote>WannaCry (2017) : ransomware ayant infecté des centaines de milliers d'ordinateurs dans 150 pays.</blockquote>
+      </div>
+      <div class="hacker-card">
+        <div class="hacker-head"><span class="hacker-icon">🎩</span><span class="hacker-name">Grey Hat</span><span class="hacker-legal mid">zone grise</span></div>
+        <div class="hacker-desc">Pirate sans autorisation mais sans mauvaise intention — signale parfois la faille après l'avoir exploitée. <strong>Toujours illégal</strong>, même sans intention de nuire.</div>
+        <blockquote>Découvre une faille, l'exploite pour la prouver, puis contacte l'entreprise pour la signaler ou la vendre.</blockquote>
+      </div>
+      <div class="hacker-card">
+        <div class="hacker-head"><span class="hacker-icon">🎩</span><span class="hacker-name">Script Kiddie</span><span class="hacker-legal bad">niveau 0</span></div>
+        <div class="hacker-desc">Utilise des outils créés par d'autres sans comprendre leur fonctionnement — aucune compétence technique réelle.</div>
+        <blockquote>Télécharger un outil de DDoS trouvé en ligne et l'utiliser sans aucune compréhension.</blockquote>
+      </div>
+      <div class="hacker-card">
+        <div class="hacker-head"><span class="hacker-icon">🎩</span><span class="hacker-name">Hacktivist</span><span class="hacker-legal mid">idéologique</span></div>
+        <div class="hacker-desc">Motivé par une idéologie politique ou sociale — utilise ses compétences pour défendre une cause.</div>
+        <blockquote>Anonymous — groupe connu pour attaquer des gouvernements et organisations jugées injustes.</blockquote>
+      </div>
+      <div class="hacker-card">
+        <div class="hacker-head"><span class="hacker-icon">🎩</span><span class="hacker-name">State-Sponsored</span><span class="hacker-legal bad">étatique</span></div>
+        <div class="hacker-desc">Financé et dirigé par un gouvernement — attaques très sophistiquées avec des ressources énormes.</div>
+        <blockquote>Lazarus Group (Corée du Nord), APT28/Fancy Bear (Russie), APT41 (Chine).</blockquote>
+      </div>
+      <div class="hacker-card">
+        <div class="hacker-head"><span class="hacker-icon">🎩</span><span class="hacker-name">Insider Threat</span><span class="hacker-legal bad">interne</span></div>
+        <div class="hacker-desc">Menace venant de l'intérieur — employé malveillant ou accès compromis. Très dangereux car il connaît déjà le système.</div>
+        <blockquote>Un administrateur système mécontent supprime des bases de données avant de partir.</blockquote>
+      </div>
+    </div>
+  </section>
+
+  <!-- PARTIE 3 -->
+  <section class="section" id="p3">
+    <div class="section-label">Partie <span>03</span></div>
+    <h2 class="section-title">Les 5 phases d'un test d'intrusion</h2>
+    <p>C'est le cœur du Module 1 — à connaître par cœur. Chaque attaque, éthique ou criminelle, suit ces 5 phases.</p>
+
+    <div class="chain">
+      <div class="chain-title">Ordinogramme animé — vue d'ensemble</div>
+      <span class="chain-node flow" style="animation-delay:0s">Reconnaissance</span>
+      <span class="chain-arrow flow" style="animation-delay:.2s">→</span>
+      <span class="chain-node flow" style="animation-delay:.4s">Scanning</span>
+      <span class="chain-arrow flow" style="animation-delay:.6s">→</span>
+      <span class="chain-node flow" style="animation-delay:.8s">Gaining Access</span>
+      <span class="chain-arrow flow" style="animation-delay:1s">→</span>
+      <span class="chain-node flow" style="animation-delay:1.2s">Maintaining Access</span>
+      <span class="chain-arrow flow" style="animation-delay:1.4s">→</span>
+      <span class="chain-node flow" style="animation-delay:1.6s">Covering Tracks</span>
+    </div>
+
+    <div class="flow-vertical">
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <div><div class="flow-body-title">Reconnaissance (Footprinting)</div>
+        <div class="flow-body-desc">Collecte d'informations — passive (Google Dorks, WHOIS, Shodan) ou active (ping, DNS zone transfer). Aucune attaque encore.</div></div>
+      </div>
+      <div class="flow-connector"></div>
+      <div class="flow-step">
+        <div class="flow-num">2</div>
+        <div><div class="flow-body-title">Scanning</div>
+        <div class="flow-body-desc">Recherche des « portes ouvertes » — ports, services, OS, vulnérabilités. Outils : Nmap, Masscan, Nessus, OpenVAS.</div></div>
+      </div>
+      <div class="flow-connector"></div>
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <div><div class="flow-body-title">Gaining Access (Exploitation)</div>
+        <div class="flow-body-desc">Exploitation d'une vulnérabilité pour entrer dans le système — Metasploit, dictionnaire, injections SQL.</div></div>
+      </div>
+      <div class="flow-connector"></div>
+      <div class="flow-step">
+        <div class="flow-num">4</div>
+        <div><div class="flow-body-title">Maintaining Access (Persistance)</div>
+        <div class="flow-body-desc">Installation d'une backdoor, d'un rootkit ou d'un RAT pour rester dans le système même après redémarrage.</div></div>
+      </div>
+      <div class="flow-connector"></div>
+      <div class="flow-step">
+        <div class="flow-num">5</div>
+        <div><div class="flow-body-title">Covering Tracks (Effacement des traces)</div>
+        <div class="flow-body-desc">Suppression des logs, historique bash, événements système — preuves du passage effacées.</div></div>
+      </div>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">Bash — Effacement de traces (Phase 5)</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+      <pre><span class="cmt"># Efface l'historique bash</span>
+history -c
+<span class="cmt"># Vide le log d'authentification</span>
+echo "" > /var/log/auth.log</pre>
+    </div>
+
+    <div class="warn-badge">Note CEH importante : dans un pentest éthique, on ne couvre PAS ses traces — on documente tout pour le rapport final</div>
+  </section>
+
+  <!-- PARTIE 4 -->
+  <section class="section" id="p4">
+    <div class="section-label">Partie <span>04</span></div>
+    <h2 class="section-title">La triade CIA</h2>
+    <p>Le fondement de toute la cybersécurité — trois principes à connaître par cœur.</p>
+
+    <div class="glossary-grid">
+      <div class="glossary-card">
+        <div class="glossary-term">🔒 C — Confidentialité</div>
+        <div class="glossary-def">L'information n'est accessible qu'aux personnes autorisées. Violation : vol de la base clients d'une banque. Mécanismes : chiffrement, contrôle d'accès, VPN, authentification.</div>
+      </div>
+      <div class="glossary-card">
+        <div class="glossary-term">🔒 I — Intégrité</div>
+        <div class="glossary-def">L'information ne doit pas être modifiée sans autorisation. Violation : modification d'un montant de virement en transit. Mécanismes : hash, signatures numériques, checksums.</div>
+      </div>
+      <div class="glossary-card">
+        <div class="glossary-term">🔒 A — Disponibilité</div>
+        <div class="glossary-def">Systèmes et données accessibles quand nécessaire. Violation : attaque DDoS mettant hors ligne un site 24h. Mécanismes : load balancers, sauvegardes, plans de continuité.</div>
+      </div>
+    </div>
+
+    <h3 class="subsection-title">Le triangle CIA en pratique</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Attaque</th><th>Pilier CIA violé</th></tr></thead>
+        <tbody>
+          <tr><td>Vol de données</td><td>Confidentialité</td></tr>
+          <tr><td>Modification de fichiers</td><td>Intégrité</td></tr>
+          <tr><td>DDoS</td><td>Disponibilité</td></tr>
+          <tr><td>Ransomware</td><td>Intégrité + Disponibilité</td></tr>
+          <tr><td>Phishing</td><td>Confidentialité</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- PARTIE 5 -->
+  <section class="section" id="p5">
+    <div class="section-label">Partie <span>05</span></div>
+    <h2 class="section-title">AAA — Authentification, Autorisation, Comptabilité</h2>
+
+    <div class="glossary-grid">
+      <div class="glossary-card">
+        <div class="glossary-term">🔑 Authentication — « Qui es-tu ? »</div>
+        <div class="glossary-def">Vérifie l'identité via 3 facteurs : ce que tu sais (mot de passe), ce que tu as (token OTP), ce que tu es (biométrie). Le <code>MFA</code> combine au moins 2 facteurs.</div>
+      </div>
+      <div class="glossary-card">
+        <div class="glossary-term">🔑 Authorization — « Qu'as-tu le droit de faire ? »</div>
+        <div class="glossary-def">Vérifie les permissions après authentification. Modèles : <code>RBAC</code> (par rôle), <code>DAC</code> (propriétaire décide), <code>MAC</code> (politique centrale imposée).</div>
+      </div>
+      <div class="glossary-card">
+        <div class="glossary-term">🔑 Accounting — « Qu'as-tu fait ? »</div>
+        <div class="glossary-def">Traçabilité complète des actions pour les investigations forensiques. Outils : Syslog, Windows Event Viewer, SIEM (Splunk, ELK Stack).</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PARTIE 6 -->
+  <section class="section" id="p6">
+    <div class="section-label">Partie <span>06</span></div>
+    <h2 class="section-title">Non-répudiation</h2>
+    <div class="def-box">
+      <div class="def-term">Non-répudiation</div>
+      <div class="def-body">
+        Garantit qu'une personne ne peut pas nier avoir effectué une action. Mécanismes : signatures
+        numériques (<code>RSA</code>, <code>DSA</code>, <code>ECDSA</code>), journaux d'audit signés, <code>PKI</code> (Public Key Infrastructure).
+      </div>
+    </div>
+    <blockquote>Un email signé numériquement — la signature cryptographique prouve que c'est bien toi qui l'as envoyé, tu ne peux pas le nier.</blockquote>
+  </section>
+
+  <!-- PARTIE 7 -->
+  <section class="section" id="p7">
+    <div class="section-label">Partie <span>07</span></div>
+    <h2 class="section-title">Types de contrôles de sécurité</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Type</th><th>Définition</th><th>Exemple</th></tr></thead>
+        <tbody>
+          <tr><td>Préventif</td><td>Empêche l'attaque</td><td>Pare-feu, chiffrement, contrôle d'accès</td></tr>
+          <tr><td>Détective</td><td>Détecte l'attaque en cours</td><td>IDS, antivirus, logs</td></tr>
+          <tr><td>Correctif</td><td>Répare après l'attaque</td><td>Backup/restore, patch</td></tr>
+          <tr><td>Dissuasif</td><td>Décourage l'attaquant</td><td>Caméras, panneaux d'avertissement</td></tr>
+          <tr><td>Compensatoire</td><td>Compense une faiblesse</td><td>Double validation si MFA impossible</td></tr>
+          <tr><td>Directif</td><td>Impose une règle</td><td>Politiques de sécurité, procédures</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- PARTIE 8 -->
+  <section class="section" id="p8">
+    <div class="section-label">Partie <span>08</span></div>
+    <h2 class="section-title">Cadres légaux et réglementaires</h2>
+    <p>L'ethical hacker travaille toujours dans un cadre légal — voici les principaux frameworks.</p>
+
+    <div class="tool-grid">
+      <div class="tool-card"><div class="tool-icon">📜</div><div class="tool-name">ISO/IEC 27001</div><div class="tool-desc">Standard international de gestion de la sécurité de l'information (ISMS).</div></div>
+      <div class="tool-card"><div class="tool-icon">💳</div><div class="tool-name">PCI DSS</div><div class="tool-desc">Obligatoire pour toute organisation traitant des données de cartes bancaires — 12 exigences.</div></div>
+      <div class="tool-card"><div class="tool-icon">🏥</div><div class="tool-name">HIPAA</div><div class="tool-desc">Loi américaine protégeant les données médicales des patients (hôpitaux, assurances).</div></div>
+      <div class="tool-card"><div class="tool-icon">🇪🇺</div><div class="tool-name">GDPR</div><div class="tool-desc">Règlement européen sur les données personnelles — amendes jusqu'à 4% du CA mondial.</div></div>
+      <div class="tool-card"><div class="tool-icon">📊</div><div class="tool-name">SOX</div><div class="tool-desc">Loi américaine sur la transparence financière des entreprises cotées en bourse.</div></div>
+    </div>
+  </section>
+
+  <!-- PARTIE 9 -->
+  <section class="section" id="p9">
+    <div class="section-label">Partie <span>09</span></div>
+    <h2 class="section-title">Rules of Engagement (RoE)</h2>
+    <p>Document signé avant tout pentest entre l'ethical hacker et le client — le plus important du processus.</p>
+    <ul class="plain">
+      <li><strong>Scope</strong> — quels systèmes sont autorisés à tester</li>
+      <li><strong>Période</strong> — quand le test peut être effectué</li>
+      <li><strong>Méthodes</strong> — quelles techniques sont autorisées</li>
+      <li><strong>Contacts d'urgence</strong> — qui appeler en cas de problème</li>
+      <li><strong>Limitations</strong> — ce qui est strictement interdit</li>
+    </ul>
+    <div class="result-badge">Sans RoE signé, tu es un criminel. Avec RoE signé, tu es un professionnel</div>
+
+    <h3 class="subsection-title">Types de pentests selon la connaissance préalable</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Type</th><th>Connaissance préalable</th></tr></thead>
+        <tbody>
+          <tr><td>Black Box</td><td>Aucune information — attaque comme un hacker externe</td></tr>
+          <tr><td>White Box</td><td>Accès total (code source, schémas réseau, credentials)</td></tr>
+          <tr><td>Grey Box</td><td>Informations partielles — le plus réaliste</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- PARTIE 10 -->
+  <section class="section" id="p10">
+    <div class="section-label">Partie <span>10</span></div>
+    <h2 class="section-title">Termes fondamentaux CEH</h2>
+
+    <div class="def-box">
+      <div class="def-term">CVE — Common Vulnerabilities and Exposures</div>
+      <div class="def-body">Identifiant unique pour chaque vulnérabilité connue publiquement, au format <code>CVE-ANNÉE-NUMÉRO</code>. Exemple : CVE-2021-44228 = Log4Shell. Base de données : <code>nvd.nist.gov</code>.</div>
+    </div>
+
+    <h3 class="subsection-title">CVSS v3.1 — Notation des vulnérabilités</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Score</th><th>Criticité</th></tr></thead>
+        <tbody>
+          <tr><td>0.0</td><td>Aucune</td></tr>
+          <tr><td>0.1 – 3.9</td><td>Faible</td></tr>
+          <tr><td>4.0 – 6.9</td><td>Moyenne</td></tr>
+          <tr><td>7.0 – 8.9</td><td>Haute</td></tr>
+          <tr><td>9.0 – 10.0</td><td>Critique</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">Vecteur CVSS</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+      <pre>AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H</pre>
+    </div>
+    <ul class="plain">
+      <li><code>AV:N</code> — Attack Vector: Network (exploitable à distance)</li>
+      <li><code>AC:L</code> — Attack Complexity: Low (facile)</li>
+      <li><code>PR:N</code> — Privileges Required: None</li>
+      <li><code>UI:N</code> — User Interaction: None</li>
+      <li><code>C:H/I:H/A:H</code> — Impact CIA élevé sur les trois piliers</li>
+    </ul>
+
+    <div class="glossary-grid">
+      <div class="glossary-card">
+        <div class="glossary-term">CWE — Common Weakness Enumeration</div>
+        <div class="glossary-def">Catalogue des types de faiblesses. Différence : CWE = le type (ex: CWE-79 = XSS en général) ; CVE = l'instance spécifique dans un logiciel donné.</div>
+      </div>
+      <div class="glossary-card">
+        <div class="glossary-term">APT — Advanced Persistent Threat</div>
+        <div class="glossary-def">Attaque longue durée, sophistiquée, souvent étatique — ciblée, persistante, furtive. Exemples : APT28, APT41, Lazarus Group.</div>
+      </div>
+    </div>
+
+    <h3 class="subsection-title">Zero-Day — Ordinogramme de la timeline</h3>
+    <div class="chain">
+      <span class="chain-node flow" style="animation-delay:0s">Découverte par le hacker</span>
+      <span class="chain-arrow flow" style="animation-delay:.3s">→</span>
+      <span class="chain-node danger flow" style="animation-delay:.6s">Exploitation active (zero-day)</span>
+      <span class="chain-arrow flow" style="animation-delay:.9s">→</span>
+      <span class="chain-node flow" style="animation-delay:1.2s">Fabricant informé (N-day)</span>
+      <span class="chain-arrow flow" style="animation-delay:1.5s">→</span>
+      <span class="chain-node highlight flow" style="animation-delay:1.8s">Patch publié</span>
+    </div>
+    <p style="font-size:.85rem;color:var(--muted);">« Zero-day » signifie que le fabricant a eu zéro jour pour réagir avant l'exploitation. Très précieuse sur le marché noir.</p>
+  </section>
+
+  <!-- PARTIE 11 -->
+  <section class="section" id="p11">
+    <div class="section-label">Partie <span>11</span></div>
+    <h2 class="section-title">Analyse de risque</h2>
+    <p>Le pilier stratégique de toute organisation sécurisée.</p>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">Formule</span></div>
+      <pre>RISQUE = MENACE × VULNÉRABILITÉ × IMPACT</pre>
+    </div>
+
+    <div class="glossary-grid">
+      <div class="glossary-card"><div class="glossary-term">Actif (Asset)</div><div class="glossary-def">Ce qu'on protège — données clients, serveurs, réputation.</div></div>
+      <div class="glossary-card"><div class="glossary-term">Menace (Threat)</div><div class="glossary-def">Ce qui peut causer un dommage — hacker, incendie, erreur humaine.</div></div>
+      <div class="glossary-card"><div class="glossary-term">Vulnérabilité</div><div class="glossary-def">La faiblesse exploitable — port ouvert, mot de passe faible.</div></div>
+      <div class="glossary-card"><div class="glossary-term">Impact</div><div class="glossary-def">Les conséquences si l'attaque réussit — perte financière, réputation, données.</div></div>
+    </div>
+
+    <h3 class="subsection-title">Les 4 réponses au risque</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Réponse</th><th>Définition</th><th>Exemple</th></tr></thead>
+        <tbody>
+          <tr><td>Éviter</td><td>Supprimer l'activité risquée</td><td>Ne pas connecter un système critique à internet</td></tr>
+          <tr><td>Réduire</td><td>Mettre en place des contrôles</td><td>Pare-feu, patchs</td></tr>
+          <tr><td>Transférer</td><td>Partager le risque</td><td>Cyber-assurance</td></tr>
+          <tr><td>Accepter</td><td>Vivre avec le risque résiduel</td><td>Coût de correction supérieur à l'impact</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- PARTIE 12 -->
+  <section class="section" id="p12">
+    <div class="section-label">Partie <span>12</span></div>
+    <h2 class="section-title">Vecteurs d'attaque courants</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Vecteur</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>Phishing</td><td>Email frauduleux pour voler des credentials</td></tr>
+          <tr><td>Malware</td><td>Logiciel malveillant (virus, trojan, ransomware)</td></tr>
+          <tr><td>Exploitation de vulnérabilité</td><td>Exploiter un bug non patché</td></tr>
+          <tr><td>Ingénierie sociale</td><td>Manipuler psychologiquement un humain</td></tr>
+          <tr><td>Insider threat</td><td>Attaque depuis l'intérieur</td></tr>
+          <tr><td>Physical access</td><td>Accès physique au matériel</td></tr>
+          <tr><td>Supply chain</td><td>Compromettre un fournisseur de confiance</td></tr>
+          <tr><td>Credential stuffing</td><td>Utiliser des mots de passe volés ailleurs</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="subsection-title">Résumé — ce que l'examen va tester</h3>
+    <ul class="rec-list">
+      <li><span class="rec-check">✓</span><div>Les 7 types de hackers et leurs motivations</div></li>
+      <li><span class="rec-check">✓</span><div>Les 5 phases du pentest dans l'ordre</div></li>
+      <li><span class="rec-check">✓</span><div>CIA Triad — définition et exemples pour chaque pilier</div></li>
+      <li><span class="rec-check">✓</span><div>AAA — distinction claire entre les 3 concepts</div></li>
+      <li><span class="rec-check">✓</span><div>CVE vs CVSS vs CWE — ne pas les confondre</div></li>
+      <li><span class="rec-check">✓</span><div>Score CVSS — lire un vecteur et identifier la criticité</div></li>
+      <li><span class="rec-check">✓</span><div>APT — caractéristiques distinctives</div></li>
+      <li><span class="rec-check">✓</span><div>Zero-day — définition et timeline</div></li>
+      <li><span class="rec-check">✓</span><div>Black/White/Grey box — différences</div></li>
+      <li><span class="rec-check">✓</span><div>RoE — pourquoi c'est indispensable</div></li>
+      <li><span class="rec-check">✓</span><div>Les 6 types de contrôles</div></li>
+      <li><span class="rec-check">✓</span><div>Les cadres légaux (ISO 27001, PCI DSS, GDPR, HIPAA, SOX)</div></li>
+    </ul>
+  </section>
+
+  <!-- QUIZ -->
+  <section class="section" id="quiz">
+    <div class="section-label">// <span>auto-évaluation</span></div>
+    <h2 class="section-title">Questions type examen — Module 1</h2>
+    <p style="font-size:.85rem;color:var(--muted);margin-bottom:1.5rem;">Clique sur une question pour révéler la réponse.</p>
+
+    <div class="quiz-list">
+      <div class="quiz-item">
+        <div class="quiz-q"><span class="quiz-q-num">Q1</span><span class="quiz-q-text">Un consultant en sécurité est engagé sans aucune information préalable sur le réseau cible. Quel type de pentest effectue-t-il ?</span><span class="quiz-toggle">+</span></div>
+        <div class="quiz-a"><div class="quiz-a-inner">→ Black Box</div></div>
+      </div>
+      <div class="quiz-item">
+        <div class="quiz-q"><span class="quiz-q-num">Q2</span><span class="quiz-q-text">Une vulnérabilité a un score CVSS de 9.8. Quelle est sa criticité ?</span><span class="quiz-toggle">+</span></div>
+        <div class="quiz-a"><div class="quiz-a-inner">→ Critique</div></div>
+      </div>
+      <div class="quiz-item">
+        <div class="quiz-q"><span class="quiz-q-num">Q3</span><span class="quiz-q-text">Quelle phase du pentest consiste à supprimer les logs système ?</span><span class="quiz-toggle">+</span></div>
+        <div class="quiz-a"><div class="quiz-a-inner">→ Phase 5 — Covering Tracks</div></div>
+      </div>
+      <div class="quiz-item">
+        <div class="quiz-q"><span class="quiz-q-num">Q4</span><span class="quiz-q-text">Un attaquant reste discrètement dans un réseau pendant 8 mois pour exfiltrer des données. Comment appelle-t-on ce type d'attaque ?</span><span class="quiz-toggle">+</span></div>
+        <div class="quiz-a"><div class="quiz-a-inner">→ APT (Advanced Persistent Threat)</div></div>
+      </div>
+      <div class="quiz-item">
+        <div class="quiz-q"><span class="quiz-q-num">Q5</span><span class="quiz-q-text">Quel élément garantit qu'un utilisateur ne peut pas nier avoir effectué une action ?</span><span class="quiz-toggle">+</span></div>
+        <div class="quiz-a"><div class="quiz-a-inner">→ Non-répudiation</div></div>
+      </div>
+      <div class="quiz-item">
+        <div class="quiz-q"><span class="quiz-q-num">Q6</span><span class="quiz-q-text">Une attaque DDoS affecte quel pilier de la CIA Triad ?</span><span class="quiz-toggle">+</span></div>
+        <div class="quiz-a"><div class="quiz-a-inner">→ Disponibilité (Availability)</div></div>
+      </div>
+      <div class="quiz-item">
+        <div class="quiz-q"><span class="quiz-q-num">Q7</span><span class="quiz-q-text">Quel framework légal concerne spécifiquement les données de cartes bancaires ?</span><span class="quiz-toggle">+</span></div>
+        <div class="quiz-a"><div class="quiz-a-inner">→ PCI DSS</div></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-author">
+      Rédigé par <strong style="color: var(--cyan);">SPECTRA MZ</strong> &nbsp;·&nbsp; CEH v12 — Module 01 / 20
+      <br>
+      <a class="bottom-back" href="../index.html#cours-ceh">← Retour au sommaire du cours</a>
+    </div>
+    <div class="footer-badge"><span>Module 01</span> · Révision 2026</div>
+  </footer>
+
+</div>
+</main>
+
+<script>
+  function copyCode(btn) {
+    const pre = btn.closest('.code-wrap').querySelector('pre');
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+      btn.textContent = 'copié ✓';
+      btn.style.borderColor = 'var(--cyan)'; btn.style.color = 'var(--cyan)';
+      setTimeout(() => { btn.textContent = 'copier'; btn.style.borderColor = ''; btn.style.color = ''; }, 1800);
+    });
+  }
+
+  const sections = document.querySelectorAll('.section[id]');
+  const dots = document.querySelectorAll('.phase-dot');
+  function updateActive() {
+    let current = '';
+    sections.forEach(sec => { if (window.scrollY + 200 >= sec.offsetTop) current = sec.id; });
+    dots.forEach(dot => dot.classList.toggle('active', dot.getAttribute('href') === '#' + current));
+  }
+  window.addEventListener('scroll', updateActive, { passive: true });
+  updateActive();
+
+  document.querySelectorAll('.quiz-q').forEach(q => {
+    q.addEventListener('click', () => q.parentElement.classList.toggle('open'));
+  });
+</script>
+</body>
+</html>
