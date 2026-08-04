@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 04 — Énumération | CEH v12 | SPECTRA MZ</title>
+<meta name="description" content="CEH v12 Module 4 — Énumération : NetBIOS/SMB, SNMP, LDAP, DNS, SMTP, NFS, Net Commands Windows, énumération Linux, avec sorties de commandes réelles complètes et méthodologie professionnelle.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #080c18;
+    --surface:   #0f1525;
+    --surface2:  #151d30;
+    --border:    #1e2a42;
+    --cyan:      #00d4aa;
+    --cyan-dim:  #00d4aa22;
+    --cyan-glow: #00d4aa44;
+    --red:       #ff4757;
+    --amber:     #ffa502;
+    --purple:    #a855f7;
+    --blue:      #2f9bff;
+    --text:      #e2e8f4;
+    --muted:     #6b7a99;
+    --code-bg:   #060a14;
+  }
+
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-size: 16px; line-height: 1.7; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.08) 2px, rgba(0,0,0,.08) 4px); pointer-events: none; z-index: 9999; }
+
+  .back-home { position: fixed; top: 1.2rem; left: 1.2rem; z-index: 600; display: inline-flex; align-items: center; gap: .5rem; padding: .55rem 1rem; background: rgba(15,21,37,.85); backdrop-filter: blur(10px); border: 1px solid var(--border); border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: .78rem; font-weight: 500; color: var(--muted); text-decoration: none; transition: all .2s; }
+  .back-home:hover { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 16px var(--cyan-glow); transform: translateX(-2px); }
+  .back-home svg { width: 14px; height: 14px; }
+  @media (max-width: 640px) { .back-home { top: .8rem; left: .8rem; padding: .45rem .8rem; font-size: .7rem; } }
+
+  .sidebar { position: fixed; left: 0; top: 0; width: 60px; height: 100vh; display: flex; flex-direction: column; align-items: center; z-index: 100; padding: 1.2rem 0; overflow-y: auto; }
+  .sidebar::-webkit-scrollbar { width: 0; }
+  .sidebar-line { width: 1px; flex: 0 0 6px; background: var(--border); }
+  .phase-dot { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 7.5px; color: var(--muted); cursor: pointer; transition: all .3s; text-decoration: none; flex-shrink: 0; }
+  .phase-dot:hover, .phase-dot.active { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 12px var(--cyan-glow); background: var(--cyan-dim); }
+
+  main { margin-left: 60px; width: calc(100% - 60px); padding: 0 2rem 6rem; }
+  .inner { max-width: 940px; margin: 0 auto; }
+
+  .hero { padding: 5.5rem 0 3.5rem; }
+  .hero-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--cyan); margin-bottom: 1.5rem; display: flex; align-items: center; gap: .75rem; }
+  .hero-eyebrow::before { content:''; display:inline-block; width:24px; height:1px; background: var(--cyan); }
+  .hero-title { font-family: 'JetBrains Mono', monospace; font-size: clamp(1.7rem, 4vw, 2.7rem); font-weight: 700; line-height: 1.2; letter-spacing: -.02em; margin-bottom: 1rem; }
+  .hero-title .accent { color: var(--cyan); }
+  .hero-sub { font-size: 1.02rem; color: var(--muted); margin-bottom: 2rem; max-width: 660px; }
+  .meta-pills { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 2rem; }
+  .pill { padding: .3rem .9rem; border-radius: 99px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .08em; font-weight: 500; }
+  .pill-cyan   { border:1px solid var(--cyan);   color:var(--cyan);   background:var(--cyan-dim); }
+  .pill-red    { border:1px solid var(--red);    color:var(--red);    background:#ff475711; }
+  .pill-amber  { border:1px solid var(--amber);  color:var(--amber);  background:#ffa50211; }
+  .pill-purple { border:1px solid var(--purple); color:var(--purple); background:#a855f711; }
+  .pill-blue   { border:1px solid var(--blue);   color:var(--blue);   background:#2f9bff11; }
+  .hero-divider { width: 100%; height: 1px; background: linear-gradient(90deg, var(--cyan) 0%, var(--border) 60%, transparent 100%); margin-top: 2.5rem; }
+
+  .toc { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem 1.8rem; margin: 2rem 0; }
+  .toc-title { font-family: 'JetBrains Mono', monospace; font-size: .75rem; letter-spacing: .15em; text-transform: uppercase; color: var(--cyan); margin-bottom: 1rem; }
+  .toc-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: .5rem 1.5rem; }
+  @media (max-width: 640px) { .toc-list { grid-template-columns: 1fr; } }
+  .toc-list a { font-size: .84rem; color: #b8c3d9; text-decoration: none; display: flex; align-items: baseline; gap: .5rem; transition: color .2s; }
+  .toc-list a:hover { color: var(--cyan); }
+  .toc-num { font-family: 'JetBrains Mono', monospace; font-size: .68rem; color: var(--muted); flex-shrink: 0; }
+
+  .section { padding: 3.2rem 0 1.6rem; border-bottom: 1px solid var(--border); }
+  .section:last-of-type { border-bottom: none; }
+  .section-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--cyan); margin-bottom: .6rem; display: flex; align-items: center; gap: .5rem; }
+  .section-label span { color: var(--muted); }
+  .section-title { font-family: 'JetBrains Mono', monospace; font-size: 1.35rem; font-weight: 600; color: var(--text); margin-bottom: 1.4rem; line-height: 1.3; }
+  .subsection-title { font-family: 'JetBrains Mono', monospace; font-size: 1rem; font-weight: 600; color: var(--cyan); margin: 2rem 0 .9rem; padding-left: 1rem; border-left: 2px solid var(--cyan); }
+  .subsub-title { font-family: 'JetBrains Mono', monospace; font-size: .86rem; font-weight: 700; color: var(--amber); margin: 1.6rem 0 .7rem; }
+
+  p { margin-bottom: 1.1rem; color: #b8c3d9; }
+  p strong { color: var(--text); font-weight: 600; }
+  ul.plain, ol.plain { margin: 0 0 1.1rem 1.3rem; color: #b8c3d9; }
+  ul.plain li, ol.plain li { margin-bottom: .4rem; }
+
+  .def-box { background: linear-gradient(135deg, #2f9bff0a 0%, #2f9bff03 100%); border: 1px solid var(--blue); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.2rem 0 1.6rem; }
+  .def-term { display: flex; align-items: center; gap: .6rem; font-family: 'JetBrains Mono', monospace; font-size: .95rem; font-weight: 700; color: var(--blue); margin-bottom: .5rem; }
+  .def-term::before { content: '§'; font-size: 1.1rem; }
+  .def-body { color: #b8c3d9; font-size: .9rem; }
+  .def-body code { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: .1em .4em; color: #c0cce8; font-size: .85em; }
+
+  blockquote { background: #00d4aa08; border-left: 3px solid var(--cyan); border-radius: 0 6px 6px 0; padding: .9rem 1.2rem; margin: 1rem 0; font-size: .88rem; color: #b8c3d9; font-style: italic; }
+  blockquote strong { color: var(--cyan); font-style: normal; }
+
+  .glossary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+  .glossary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem; }
+  .glossary-term { font-family: 'JetBrains Mono', monospace; font-size: .85rem; font-weight: 700; color: var(--cyan); margin-bottom: .5rem; }
+  .glossary-def { font-size: .82rem; color: var(--muted); line-height: 1.55; }
+
+  .code-wrap { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 1rem 0 1.5rem; }
+  .code-header { background: var(--surface2); padding: .45rem 1rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+  .code-lang { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--cyan); }
+  .copy-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: .2rem .6rem; border-radius: 4px; cursor: pointer; transition: all .2s; }
+  .copy-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+  .code-wrap pre { padding: 1.1rem 1.2rem; overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: .77rem; line-height: 1.7; color: #c0cce8; }
+  .code-wrap pre .cmt { color: var(--muted); font-style: italic; }
+  .code-wrap pre .hl { color: var(--amber); font-weight: 700; }
+
+  .terminal-frame { background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 1.1rem 0 1.5rem; box-shadow: 0 8px 32px rgba(0,0,0,.35); }
+  .terminal-bar { background: var(--surface2); padding: .55rem .9rem; display: flex; align-items: center; gap: .5rem; border-bottom: 1px solid var(--border); }
+  .t-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .t-dot-red { background: #ff5f57; } .t-dot-amber { background: #ffbd2e; } .t-dot-green { background: #28c840; }
+  .terminal-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); margin-left: .4rem; }
+  .terminal-frame pre { padding: 1.1rem 1.3rem; overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: .73rem; line-height: 1.65; color: #c0cce8; }
+  .terminal-frame pre .prompt { color: var(--cyan); }
+  .terminal-frame pre .cmt { color: var(--muted); font-style: italic; }
+  .terminal-frame pre .grn { color: #7ce38b; }
+  .terminal-frame pre .amb { color: var(--amber); }
+  .terminal-frame pre .red { color: var(--red); font-weight: 700; }
+  .terminal-frame pre .cyn { color: var(--cyan); }
+  .terminal-frame pre .pur { color: var(--purple); }
+
+  .result-badge { display: inline-flex; align-items: center; gap: .5rem; background: #00d4aa0f; border: 1px solid var(--cyan); border-radius: 6px; padding: .5rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--cyan); margin: .5rem 0 1rem; }
+  .result-badge::before { content: '✓'; font-weight: 700; }
+  .warn-badge { display: inline-flex; align-items: center; gap: .5rem; background: #ffa5020f; border: 1px solid var(--amber); border-radius: 6px; padding: .5rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--amber); margin: .5rem 0 1rem; }
+  .warn-badge::before { content: '⚠'; font-weight: 700; }
+  .danger-badge { display: inline-flex; align-items: center; gap: .5rem; background: #ff47570f; border: 1px solid var(--red); border-radius: 6px; padding: .5rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--red); margin: .5rem 0 1rem; }
+  .danger-badge::before { content: '✗'; font-weight: 700; }
+
+  .table-wrap { overflow-x: auto; margin: 1.2rem 0 1.8rem; border-radius: 8px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+  thead tr { background: var(--surface2); }
+  thead th { padding: .65rem .9rem; text-align: left; font-family: 'JetBrains Mono', monospace; font-size: .66rem; letter-spacing: .1em; text-transform: uppercase; color: var(--cyan); font-weight: 500; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface); }
+  tbody td { padding: .65rem .9rem; color: #b8c3d9; vertical-align: top; }
+  tbody td:first-child { font-family: 'JetBrains Mono', monospace; font-size: .76rem; color: var(--amber); }
+  td code, p code, li code { font-family: 'JetBrains Mono', monospace; font-size: .82em; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: .1em .4em; color: #c0cce8; }
+
+  .tool-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+  .tool-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem; transition: border-color .2s, transform .2s; }
+  .tool-card:hover { border-color: var(--cyan); transform: translateY(-2px); }
+  .tool-icon { font-size: 1.2rem; margin-bottom: .5rem; }
+  .tool-name { font-family: 'JetBrains Mono', monospace; font-size: .85rem; font-weight: 700; color: var(--cyan); margin-bottom: .4rem; }
+  .tool-desc { font-size: .78rem; color: var(--muted); line-height: 1.5; }
+
+  /* ── ORGANIGRAMME ANIMÉ (chain) ── */
+  .chain { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.3rem 1.4rem; margin: 1.2rem 0 1.6rem; }
+  .chain-title { width: 100%; font-family: 'JetBrains Mono', monospace; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: .7rem; }
+  .chain-node { font-family: 'JetBrains Mono', monospace; font-size: .77rem; color: var(--text); background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: .4rem .8rem; }
+  .chain-arrow { font-family: 'JetBrains Mono', monospace; font-size: .9rem; color: var(--cyan); }
+  .chain-node.highlight { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+  .chain-node.danger { border-color: var(--red); color: var(--red); }
+  .chain-node.amber { border-color: var(--amber); color: var(--amber); }
+  @keyframes flowPulse { 0%, 100% { box-shadow: 0 0 0 rgba(0,212,170,0); border-color: var(--border); color: var(--text); background: var(--surface2); } 50% { box-shadow: 0 0 18px var(--cyan-glow); border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); } }
+  .chain-node.flow { animation: flowPulse 4s ease-in-out infinite; }
+  @keyframes flowPulseDanger { 0%, 100% { box-shadow: 0 0 0 rgba(255,71,87,0); border-color: var(--border); color: var(--text); background: var(--surface2); } 50% { box-shadow: 0 0 18px rgba(255,71,87,.4); border-color: var(--red); color: var(--red); background: #ff475711; } }
+  .chain-node.flow-danger { animation: flowPulseDanger 3s ease-in-out infinite; }
+  @keyframes arrowFlow { 0%, 100% { opacity: .35; transform: translateX(0); } 50% { opacity: 1; transform: translateX(3px); } }
+  .chain-arrow.flow { animation: arrowFlow 1.4s ease-in-out infinite; }
+
+  /* Grand ordinogramme vertical animé */
+  .flow-vertical { display: flex; flex-direction: column; gap: 0; margin: 1.6rem 0 2rem; }
+  .flow-step { display: flex; align-items: flex-start; gap: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.2rem; position: relative; opacity: 0; transform: translateY(14px); animation: stepIn .6s ease forwards; }
+  .flow-step:nth-child(1) { animation-delay: .05s; } .flow-step:nth-child(3) { animation-delay: .2s; } .flow-step:nth-child(5) { animation-delay: .35s; } .flow-step:nth-child(7) { animation-delay: .5s; } .flow-step:nth-child(9) { animation-delay: .65s; } .flow-step:nth-child(11) { animation-delay: .8s; } .flow-step:nth-child(13) { animation-delay: .95s; }
+  @keyframes stepIn { to { opacity: 1; transform: translateY(0); } }
+  .flow-step:hover { border-color: var(--cyan); box-shadow: 0 0 20px var(--cyan-glow); }
+  .flow-num { font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: .85rem; color: var(--bg); background: var(--cyan); min-width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; animation: numPulse 2.6s ease-in-out infinite; }
+  @keyframes numPulse { 0%, 100% { box-shadow: 0 0 0 rgba(0,212,170,.4); } 50% { box-shadow: 0 0 14px rgba(0,212,170,.7); } }
+  .flow-body-title { font-family: 'JetBrains Mono', monospace; font-size: .85rem; font-weight: 700; color: var(--text); }
+  .flow-body-desc { font-size: .74rem; color: var(--muted); margin-top: .3rem; line-height: 1.6; }
+  .flow-connector { width: 2px; height: 16px; background: linear-gradient(var(--cyan), var(--border)); margin-left: 15px; position: relative; overflow: hidden; }
+  .flow-connector::after { content: ''; position: absolute; left: -2px; top: -100%; width: 6px; height: 40%; background: var(--cyan); box-shadow: 0 0 8px var(--cyan); animation: dropFlow 1.8s linear infinite; }
+  @keyframes dropFlow { 0% { top: -40%; } 100% { top: 100%; } }
+
+  /* Stack architecture (SMB/NetBIOS) */
+  .stack-wrap { display: flex; flex-direction: column; gap: .4rem; margin: 1.4rem 0 1.8rem; }
+  .stack-layer { display: flex; align-items: center; gap: .8rem; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: .6rem 1rem; opacity: 0; animation: stepIn .4s ease forwards; font-family: 'JetBrains Mono', monospace; font-size: .8rem; }
+  .stack-layer:nth-child(1){animation-delay:0s;} .stack-layer:nth-child(2){animation-delay:.15s;} .stack-layer:nth-child(3){animation-delay:.3s;} .stack-layer:nth-child(4){animation-delay:.45s;}
+  .stack-layer:hover { border-color: var(--cyan); }
+  .stack-arrow-down { text-align: center; color: var(--cyan); font-family: 'JetBrains Mono', monospace; font-size: .8rem; opacity: 0; animation: stepIn .4s ease forwards; }
+  .stack-arrow-down:nth-of-type(1){animation-delay:.08s;} .stack-arrow-down:nth-of-type(2){animation-delay:.23s;} .stack-arrow-down:nth-of-type(3){animation-delay:.38s;}
+
+  .rec-list { list-style: none; margin: .5rem 0; }
+  .rec-list li { display: flex; gap: .8rem; align-items: flex-start; padding: .75rem 0; border-bottom: 1px solid var(--border); color: #b8c3d9; }
+  .rec-list li:last-child { border-bottom: none; }
+  .rec-check { color: var(--cyan); font-weight: 700; flex-shrink: 0; }
+
+  .quiz-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: .8rem; overflow: hidden; }
+  .quiz-q { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.3rem; cursor: pointer; user-select: none; }
+  .quiz-q-num { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: .72rem; color: var(--bg); background: var(--purple); min-width: 30px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .quiz-q-text { font-size: .85rem; color: var(--text); font-weight: 500; flex: 1; }
+  .quiz-toggle { font-family: 'JetBrains Mono', monospace; color: var(--muted); transition: transform .25s; flex-shrink: 0; }
+  .quiz-item.open .quiz-toggle { transform: rotate(45deg); color: var(--cyan); }
+  .quiz-a { max-height: 0; overflow: hidden; transition: max-height .3s ease; }
+  .quiz-item.open .quiz-a { max-height: 220px; }
+  .quiz-a-inner { padding: 0 1.3rem 1.1rem 3.4rem; font-size: .81rem; color: var(--cyan); font-family: 'JetBrains Mono', monospace; }
+
+  footer { margin-top: 3.5rem; padding: 2rem 0; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+  .footer-author { font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--muted); }
+  .footer-badge { font-family: 'JetBrains Mono', monospace; font-size: .75rem; color: var(--muted); display: flex; align-items: center; gap: .4rem; }
+  .footer-badge span { color: var(--cyan); }
+  .bottom-back { display: inline-flex; align-items: center; gap: .5rem; padding: .7rem 1.3rem; margin-top: 1rem; border: 1px solid var(--cyan); border-radius: 8px; color: var(--cyan); text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: .82rem; background: var(--cyan-dim); transition: all .2s; }
+  .bottom-back:hover { box-shadow: 0 0 20px var(--cyan-glow); transform: translateY(-1px); }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  @media (max-width: 640px) {
+    .sidebar { display: none; }
+    main { margin-left: 0; padding: 0 1.2rem 4rem; }
+    .hero-title { font-size: 1.4rem; }
+  }
+</style>
+</head>
+<body>
+
+<a class="back-home" href="../index.html">
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9.5 3L4.5 8L9.5 13"/></svg>
+  Retour à l'accueil
+</a>
+
+<nav class="sidebar">
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#intro" title="Introduction">I</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#p1" title="NetBIOS/SMB">01</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#p2" title="SNMP">02</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#p3" title="LDAP">03</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#p4" title="DNS">04</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#p5" title="SMTP">05</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#p6" title="NFS">06</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#p7" title="Windows Net">07</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#p8" title="Linux">08</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#p9" title="Workflow complet">09</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#resume" title="Résumé">R</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#quiz" title="Quiz">Q</a>
+  <div class="sidebar-line"></div>
+</nav>
+
+<main>
+<div class="inner">
+
+  <header class="hero">
+    <div class="hero-eyebrow">CEH v12 · Module 04</div>
+    <h1 class="hero-title">Énumération</h1>
+    <p class="hero-sub">
+      Si le scanning te dit « la porte est ouverte », l'énumération te dit « voici les noms de
+      tous ceux qui vivent dedans, leurs clés, leurs habitudes, et le plan de la maison ».
+      NetBIOS/SMB, SNMP, LDAP, DNS, SMTP, NFS, Net Commands Windows et énumération Linux —
+      avec les sorties de commandes réelles complètes, telles qu'elles apparaissent sur le terrain.
+    </p>
+    <div class="meta-pills">
+      <span class="pill pill-cyan">Module 04 / 20</span>
+      <span class="pill pill-blue">Énumération active</span>
+      <span class="pill pill-amber">enum4linux</span>
+      <span class="pill pill-purple">Metasploitable 2</span>
+    </div>
+    <div class="hero-divider"></div>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">Sommaire du module</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">I</span><a href="#intro">La phase qui décide tout</a></li>
+      <li><span class="toc-num">01</span><a href="#p1">Énumération NetBIOS et SMB</a></li>
+      <li><span class="toc-num">02</span><a href="#p2">Énumération SNMP</a></li>
+      <li><span class="toc-num">03</span><a href="#p3">Énumération LDAP</a></li>
+      <li><span class="toc-num">04</span><a href="#p4">Énumération DNS</a></li>
+      <li><span class="toc-num">05</span><a href="#p5">Énumération SMTP</a></li>
+      <li><span class="toc-num">06</span><a href="#p6">Énumération NFS</a></li>
+      <li><span class="toc-num">07</span><a href="#p7">Windows — Net Commands</a></li>
+      <li><span class="toc-num">08</span><a href="#p8">Énumération Linux</a></li>
+      <li><span class="toc-num">09</span><a href="#p9">Workflow complet professionnel</a></li>
+      <li><span class="toc-num">R</span><a href="#resume">Résumé final</a></li>
+      <li><span class="toc-num">Q</span><a href="#quiz">Questions type examen</a></li>
+    </ul>
+  </div>
+
+  <!-- INTRO -->
+  <section class="section" id="intro">
+    <div class="section-label">// <span>introduction</span></div>
+    <h2 class="section-title">L'énumération, la phase qui décide tout</h2>
+    <p>
+      L'énumération est la <strong>Phase 2 du scanning</strong> mais beaucoup plus profonde. Tu
+      passes d'une liste de ports ouverts à une <strong>cartographie complète des ressources
+      internes</strong> : utilisateurs, groupes, partages, politiques de mots de passe, services,
+      versions exactes.
+    </p>
+    <div class="chain">
+      <div class="chain-title">Différence fondamentale</div>
+      <span class="chain-node flow" style="animation-delay:0s">Scanning : « quel port est ouvert ? »</span>
+      <span class="chain-arrow flow" style="animation-delay:.3s">→</span>
+      <span class="chain-node highlight flow" style="animation-delay:.6s">Énumération : « qui tourne dessus, comment c'est configuré, quels comptes existent ? »</span>
+    </div>
+    <div class="warn-badge">L'énumération est active par nature — tu interagis directement avec les services, donc détectable si un monitoring est en place</div>
+  </section>
+
+  <!-- P1 -->
+  <section class="section" id="p1">
+    <div class="section-label">Partie <span>01</span></div>
+    <h2 class="section-title">Énumération NetBIOS et SMB</h2>
+    <p><strong>NetBIOS</strong> (1983, IBM) reste massivement présent dans les environnements Windows. <strong>SMB</strong> tourne au-dessus pour le partage de fichiers/imprimantes — version moderne : port 445 TCP direct.</p>
+
+    <h3 class="subsection-title">Architecture (ordinogramme animé)</h3>
+    <div class="stack-wrap">
+      <div class="stack-layer">📁 Application (partage fichier)</div>
+      <div class="stack-arrow-down">↓</div>
+      <div class="stack-layer">📡 SMB</div>
+      <div class="stack-arrow-down">↓</div>
+      <div class="stack-layer">🔌 NetBIOS (port 139) ou Direct (port 445)</div>
+      <div class="stack-arrow-down">↓</div>
+      <div class="stack-layer">🌐 TCP/IP</div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Port</th><th>Protocole</th><th>Service</th></tr></thead>
+        <tbody>
+          <tr><td>137</td><td>UDP</td><td>NetBIOS Name Service (NBNS) — résolution de noms</td></tr>
+          <tr><td>138</td><td>UDP</td><td>NetBIOS Datagram Service — sans connexion</td></tr>
+          <tr><td>139</td><td>TCP</td><td>NetBIOS Session Service — avec connexion</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="subsub-title">nbtstat — table NetBIOS locale</h3>
+    <div class="terminal-frame">
+      <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-label">C:\&gt; nbtstat -n</span></div>
+      <pre><span class="prompt">C:\&gt;</span> nbtstat -n
+
+Wireless Network Connection:
+Node IpAddress: [192.168.1.50] Scope Id: []
+
+                NetBIOS Local Name Table
+
+       Name               Type         Status
+    -----------------------------------------------------
+    WORKSTATION-01 &lt;00&gt;  UNIQUE      Registered
+    WORKGROUP      &lt;00&gt;  GROUP       Registered
+    WORKSTATION-01 &lt;20&gt;  <span class="amb">UNIQUE      Registered</span>
+    WORKGROUP      &lt;1E&gt;  GROUP       Registered
+    WORKGROUP      &lt;1D&gt;  UNIQUE      Registered
+    ..__MSBROWSE__.&lt;01&gt;  GROUP       Registered</pre>
+    </div>
+
+    <h3 class="subsection-title">Décodage des suffixes NetBIOS — critique pour le CEH</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Suffixe</th><th>Type</th><th>Signification</th></tr></thead>
+        <tbody>
+          <tr><td>&lt;00&gt;</td><td>UNIQUE</td><td>Nom de l'ordinateur (Workstation)</td></tr>
+          <tr><td>&lt;00&gt;</td><td>GROUP</td><td>Nom du domaine/workgroup</td></tr>
+          <tr><td>&lt;03&gt;</td><td>UNIQUE</td><td>Service Messenger (utilisateur connecté)</td></tr>
+          <tr><td>&lt;1B&gt;</td><td>UNIQUE</td><td>Domain Master Browser (PDC)</td></tr>
+          <tr><td>&lt;1C&gt;</td><td>GROUP</td><td>Domain Controllers du domaine</td></tr>
+          <tr><td>&lt;1D&gt;</td><td>UNIQUE</td><td>Master Browser local subnet</td></tr>
+          <tr><td>&lt;20&gt;</td><td>UNIQUE</td><td>File Server Service (partage actif !)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="result-badge">Point clé CEH : voir &lt;20&gt; = le service de partage de fichiers est actif → cible prioritaire pour l'énumération SMB</div>
+
+    <h3 class="subsub-title">nbtstat -A — table distante</h3>
+    <div class="terminal-frame">
+      <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-label">C:\&gt; nbtstat -A 192.168.1.10</span></div>
+      <pre><span class="prompt">C:\&gt;</span> nbtstat -A 192.168.1.10
+
+NetBIOS Remote Machine Name Table
+
+       Name               Type         Status
+    -----------------------------------------------------
+    METASPLOITABLE &lt;00&gt;  UNIQUE      Registered
+    METASPLOITABLE &lt;03&gt;  UNIQUE      Registered
+    METASPLOITABLE &lt;20&gt;  <span class="amb">UNIQUE      Registered</span>
+    WORKGROUP      &lt;00&gt;  GROUP       Registered
+    WORKGROUP      &lt;1E&gt;  GROUP       Registered
+
+    MAC Address = 08:00:27:A1:BC:DE</pre>
+    </div>
+    <div class="def-box">
+      <div class="def-term">Analyse professionnelle</div>
+      <div class="def-body">
+        Nom machine : METASPLOITABLE · Workgroup (pas de domaine AD → réseau simple) · &lt;20&gt;
+        présent → SMB énumérable · &lt;03&gt; présent → utilisateur connecté · MAC 08:00:27 → Oracle
+        VirtualBox (VM confirmée). Prochaine étape : énumération SMB complète.
+      </div>
+    </div>
+
+    <h3 class="subsub-title">nbtscan — scan réseau NetBIOS</h3>
+    <div class="terminal-frame">
+      <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-label">~ — nbtscan 192.168.1.0/24</span></div>
+      <pre><span class="prompt">$</span> nbtscan 192.168.1.0/24
+
+Doing NBT name scan for addresses from 192.168.1.0/24
+
+IP address       NetBIOS Name     Server    User             MAC address
+------------------------------------------------------------------------------
+192.168.1.1      ROUTEUR          &lt;server&gt;  &lt;unknown&gt;        c8:d7:19:ab:12:3f
+192.168.1.10     METASPLOITABLE   &lt;server&gt;  METASPLOITABLE   08:00:27:a1:bc:de
+192.168.1.15     WIN-SERVER01     &lt;server&gt;  <span class="red">Administrateur</span>   00:50:56:c0:00:08
+192.168.1.20     WIN7-CLIENT      &lt;server&gt;  <span class="amb">jean.muamba</span>      52:54:00:12:34:56
+192.168.1.50     LAPTOP-ML        &lt;server&gt;  exploit4040      b8:27:eb:a1:23:45</pre>
+    </div>
+    <div class="danger-badge">192.168.1.15 → connecté en tant qu'Administrateur ! 192.168.1.20 → jean.muamba (nom réel exploitable pour bruteforce)</div>
+
+    <h3 class="subsub-title">enum4linux — énumération SMB complète (sortie réelle)</h3>
+    <div class="terminal-frame">
+      <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-label">~ — enum4linux -a 192.168.1.10</span></div>
+      <pre><span class="prompt">$</span> enum4linux -a 192.168.1.10
+
+Starting enum4linux v0.9.1 ( http://labs.portcullis.co.uk/application/enum4linux/ )
+ ==========================
+|    Target Information    |
+ ==========================
+Target ........... 192.168.1.10
+RID Range ........ 500-550,1000-1050
+Username ......... ''
+Password ......... ''
+Known Usernames .. administrator, guest, krbtgt, domain admins, root, bin, none
+
+ ====================================================
+|    Enumerating Workgroup/Domain on 192.168.1.10    |
+ ====================================================
+[+] Got domain/workgroup name: WORKGROUP
+
+ ===================================
+|    Session Check on 192.168.1.10  |
+ ===================================
+<span class="red">[+] Server 192.168.1.10 allows sessions using username '',
+    password '' (NULL session!)</span>
+
+ ===================================
+|    Users on 192.168.1.10          |
+ ===================================
+index: 0x1 RID: 0x3f2 acb: 0x00000011 Account: games    Name: games
+index: 0x2 RID: 0x1f5 acb: 0x00000011 Account: root     Name: root
+index: 0x3 RID: 0x4ba acb: 0x00000011 Account: sys      Name: sys
+index: 0x6 RID: 0x4c4 acb: 0x00000011 Account: user     Name: just a user,,,
+index: 0x7 RID: 0x4c5 acb: 0x00000011 Account: www-data Name: www-data
+index: 0xa RID: 0x4ce acb: 0x00000011 Account: <span class="amb">msfadmin</span> Name: msfadmin,,,
+index: 0xb RID: 0x4d0 acb: 0x00000011 Account: postgres Name: PostgreSQL admin,,,
+index: 0xd RID: 0x4d4 acb: 0x00000011 Account: mysql    Name: MySQL Server
+index: 0xe RID: 0x4d6 acb: 0x00000011 Account: tomcat55 Name: (null)
+
+[+] Password Info for Domain: WORKGROUP
+        [+] Minimum password length: None
+        [+] Password Complexity Flags: 000000
+
+ ======================================
+|    Share Enumeration on 192.168.1.10 |
+ ======================================
+        Sharename       Type      Comment
+        ---------       ----      -------
+        print$          Disk      Printer Drivers
+        tmp             Disk      oh noes!
+        opt             Disk
+        IPC$            IPC       IPC Service
+
+[+] Attempting to map shares on 192.168.1.10
+//192.168.1.10/print$    Mapping: DENIED Listing: N/A
+<span class="red">//192.168.1.10/tmp       Mapping: OK Listing: OK   ← ACCESSIBLE !</span>
+//192.168.1.10/opt       Mapping: DENIED Listing: N/A
+
+ =====================================================
+|    Password Policy Information for 192.168.1.10    |
+ =====================================================
+[+] Attaching to 192.168.1.10 using a NULL session
+[+] Password Info for Domain: WORKGROUP
+        <span class="red">Minimum password length: 0   ← PAS DE MINIMUM !</span>
+        <span class="red">Password history length: 0   ← PAS D'HISTORIQUE !</span>
+        <span class="red">Password Complexity:     Disabled   ← PAS DE COMPLEXITÉ !</span>
+        <span class="red">Account lockout threshold: None  ← PAS DE VERROUILLAGE !</span>
+
+enum4linux complete on Fri Nov 15 15:45:23 2024</pre>
+    </div>
+
+    <div class="chain">
+      <div class="chain-title">Ordinogramme — exploitation d'une NULL session</div>
+      <span class="chain-node flow-danger" style="animation-delay:0s">Session anonyme (user='' pass='')</span>
+      <span class="chain-arrow flow" style="animation-delay:.3s">→</span>
+      <span class="chain-node flow-danger" style="animation-delay:.6s">enum4linux -a</span>
+      <span class="chain-arrow flow" style="animation-delay:.9s">→</span>
+      <span class="chain-node danger flow-danger" style="animation-delay:1.2s">14 comptes + partages + policy exposés</span>
+    </div>
+
+    <div class="danger-badge">Résultat explosif : NULL session active, 14 comptes découverts, partage /tmp en lecture/écriture, politique mot de passe catastrophique (longueur 0, pas de verrouillage), Samba 3.0.20 → CVE-2007-2447 RCE</div>
+
+    <h3 class="subsub-title">smbmap — cartographier les partages</h3>
+    <div class="terminal-frame">
+      <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-label">~ — smbmap -H 192.168.1.10</span></div>
+      <pre><span class="prompt">$</span> smbmap -H 192.168.1.10
+
+[+] IP: 192.168.1.10:445    Name: metasploitable
+        Disk                                           Permissions    Comment
+        ----                                           -----------    -------
+        print$                                         NO ACCESS      Printer Drivers
+        tmp                                            <span class="red">READ, WRITE</span>    oh noes!
+        opt                                            NO ACCESS
+        IPC$                                           NO ACCESS      IPC Service
+
+<span class="prompt">$</span> smbmap -H 192.168.1.10 -r tmp
+
+[+] IP: 192.168.1.10:445    Name: metasploitable
+        dr--r--r--  0  Fri Nov 15 14:23:11 2024    .
+        dr--r--r--  0  Fri Nov 15 14:23:11 2024    ..
+        -rwxrwxrwx 12  Fri Nov 15 11:34:22 2024    <span class="red">backup_passwords.txt</span>
+        -rwxrwxrwx  0  Fri Nov 15 09:15:01 2024    vmware-root</pre>
+    </div>
+    <blockquote><strong>backup_passwords.txt</strong> en accès libre → téléchargement immédiat avec <code>smbmap -H 192.168.1.10 --download 'tmp/backup_passwords.txt'</code></blockquote>
+
+    <h3 class="subsub-title">smbclient — session interactive</h3>
+    <div class="terminal-frame">
+      <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-label">~ — smbclient //192.168.1.10/tmp -N</span></div>
+      <pre><span class="prompt">$</span> smbclient //192.168.1.10/tmp -N
+
+Try "help" to get a list of possible commands.
+smb: \&gt; ls
+  .                                   D        0  Fri Nov 15 14:23:11 2024
+  ..                                  D        0  Fri Nov 15 14:23:11 2024
+  backup_passwords.txt                A       12  Fri Nov 15 11:34:22 2024
+
+                7282168 blocks of size 1024. 5446492 blocks available
+
+smb: \&gt; get backup_passwords.txt
+getting file \backup_passwords.txt of size 12 as backup_passwords.txt
+(5.9 KiloBytes/sec)
+
+smb: \&gt; exit</pre>
+    </div>
+
+    <h3 class="subsub-title">rpcclient — énumération RPC approfondie</h3>
+    <div class="terminal-frame">
+      <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-label">~ — rpcclient -U "" -N 192.168.1.10</span></div>
+      <pre><span class="prompt">$</span> rpcclient -U "" -N 192.168.1.10
+
+<span class="pur">rpcclient $&gt;</span> srvinfo
+        METASPLOITABLE Wk Sv PrQ Unx NT SNT metasploitable server
+        platform_id     :       500
+        os version      :       4.9
+
+<span class="pur">rpcclient $&gt;</span> enumdomusers
+user:[games] rid:[0x3f2]
+user:[root] rid:[0x1f5]
+user:[msfadmin] rid:[0x4ce]
+user:[postgres] rid:[0x4d0]
+user:[mysql] rid:[0x4d4]
+user:[tomcat55] rid:[0x4d6]
+
+<span class="pur">rpcclient $&gt;</span> enumdomgroups
+group:[root] rid:[0x200]
+group:[sudo] rid:[0x20a]
+group:[admin] rid:[0x20b]
+
+<span class="pur">rpcclient $&gt;</span> queryuser 0x1f5
+        User Name   :   root
+        Password last set Time   :      Wed, 27 May 2012 10:58:09 CAT
+        bad_password_count:     0x00000000
+        logon_count:    0x00000003
+
+<span class="pur">rpcclient $&gt;</span> getdompwinfo
+min_password_length: 0
+password_properties: 0x00000000</pre>
+    </div>
+  </section>
+
+  <!-- P2 -->
+  <section class="section" id="p2">
+    <div class="section-label">Partie <span>02</span></div>
+    <h2 class="section-title">Énumération SNMP</h2>
+    <p><strong>SNMP</strong> surveille et gère les équipements réseau (routeurs, switches, serveurs, imprimantes) sur le port 161/UDP.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Version</th><th>Sécurité</th><th>Statut</th></tr></thead>
+        <tbody>
+          <tr><td>SNMPv1</td><td>Community string</td><td>Obsolète, très dangereux</td></tr>
+          <tr><td>SNMPv2c</td><td>Community string</td><td>Courant, encore dangereux</td></tr>
+          <tr><td>SNMPv3</td><td>Auth + Chiffrement</td><td>Sécurisé, recommandé</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <blockquote><strong>"public"</strong> → lecture seule (défaut universel) &nbsp;·&nbsp; <strong>"private"</strong> → lecture/écriture (défaut dangereux)</blockquote>
+
+    <h3 class="subsection-title">OIDs importants</h3>
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">OIDs — MIB</span></div>
+      <pre>1.3.6.1.2.1.1.1.0    → sysDescr    (description du système)
+1.3.6.1.2.1.1.3.0    → sysUpTime   (durée de fonctionnement)
+1.3.6.1.2.1.1.5.0    → sysName     (nom du système)
+1.3.6.1.4.1.77.1.2.25→ hrSWRunName (logiciels en cours d'exécution)</pre>
+    </div>
+
+    <h3 class="subsub-title">snmpwalk — parcourir toute la MIB</h3>
+    <div class="terminal-frame">
+      <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-label">~ — snmpwalk -c public -v1 192.168.1.10</span></div>
+      <pre><span class="prompt">$</span> snmpwalk -c public -v1 192.168.1.10
+
+iso.3.6.1.2.1.1.1.0 = STRING: "Linux metasploitable 2.6.24-16-server #1 SMP"
+iso.3.6.1.2.1.1.4.0 = STRING: "<span class="amb">msfadmin@metasploitable</span>"
+iso.3.6.1.2.1.1.5.0 = STRING: "metasploitable"
+iso.3.6.1.2.1.1.6.0 = STRING: "Hack the Planet"
+iso.3.6.1.2.1.2.2.1.2.2 = STRING: "eth0"
+iso.3.6.1.2.1.4.20.1.1.192.168.1.10 = IpAddress: 192.168.1.10
+iso.3.6.1.2.1.25.4.2.1.2.588 = STRING: "apache2"
+iso.3.6.1.2.1.25.4.2.1.2.602 = STRING: "sshd"
+iso.3.6.1.2.1.25.4.2.1.2.614 = STRING: "vsftpd"
+iso.3.6.1.2.1.25.4.2.1.2.621 = STRING: "mysqld"
+iso.3.6.1.2.1.25.4.2.1.2.645 = STRING: "named"
+iso.3.6.1.2.1.25.4.2.1.2.658 = STRING: "smbd"
+iso.3.6.1.2.1.25.6.3.1.2.3 = STRING: "<span class="red">apache2-2.2.8-1ubuntu0.14</span>"
+iso.3.6.1.2.1.25.6.3.1.2.4 = STRING: "<span class="red">openssh-server-1:4.7p1-8ubuntu1</span>"
+iso.3.6.1.2.1.25.6.3.1.2.5 = STRING: "<span class="red">vsftpd-2.3.4</span>"
+iso.3.6.1.2.1.25.6.3.1.2.6 = STRING: "<span class="red">mysql-server-5.0.51a</span>"
+iso.3.6.1.2.1.25.6.3.1.2.7 = STRING: "<span class="red">samba-3.0.20-Debian</span>"</pre>
+    </div>
+    <div class="def-box">
+      <div class="def-term">Analyse professionnelle</div>
+      <div class="def-body">
+        Contact admin (msfadmin@metasploitable), tous les processus actifs, et surtout les
+        <strong>versions exactes des logiciels installés</strong> — vsftpd 2.3.4 (backdoor connue),
+        samba 3.0.20 (RCE connue). SNMP mal configuré révèle autant qu'un accès shell.
+      </div>
+    </div>
+
+    <h3 class="subsub-title">snmp-check — rapport structuré</h3>
+    <div class="terminal-frame">
+      <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-label">~ — snmp-check 192.168.1.10 -c public</span></div>
+      <pre><span class="prompt">$</span> snmp-check 192.168.1.10 -c public
+
+snmp-check v1.9 - SNMP enumerator
+
+[*] Try to connect to 192.168.1.10:161 using SNMPv1 and community 'public'
+
+[*] System information:
+  Hostname                      : metasploitable
+  Description                   : Linux metasploitable 2.6.24-16-server
+  Contact                       : msfadmin@metasploitable
+  Location                      : Hack the Planet
+
+[*] Network interfaces:
+  Interface                     : eth0
+  Mac Address                   : 08:00:27:a1:bc:de
+  Speed                         : 1000 Mbps
+
+[*] TCP connections and listening ports:
+  Local port          21   ftp     listen
+  Local port          22   ssh     listen
+  Local port          445  smb     listen
+  Local port          3306 mysql   listen
+
+[*] Software components:
+  2   apache2 2.2.8-1ubuntu0.14
+  3   openssh-server 4.7p1-8ubuntu1
+  4   <span class="red">vsftpd 2.3.4</span>
+  6   samba 3.0.20-Debian
+
+[*] User accounts:
+  root
+  msfadmin
+  postgres
+  mysql
+  tomcat55</pre>
+    </div>
+  </section>
+
+  <!-- P3 -->
+  <section class="section" id="p3">
+    <div class="section-label">Partie <span>03</span></div>
+    <h2 class="section-title">Énumération LDAP</h2>
+    <p><strong>LDAP</strong> donne accès aux annuaires d'entreprise — dans un environnement Windows, c'est le protocole vers Active Directory. Port 389 (clair) / 636 (LDAPS chiffré).</p>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">Structure LDAP</span></div>
+      <pre>DC=corp,DC=com           ← Domaine racine
+├── OU=Users             ← Unité organisationnelle
+│   ├── CN=Jean Muamba   ← Utilisateur
+│   └── CN=Administrateur
+└── OU=Groups
+    └── CN=Domain Admins</pre>
+    </div>
+
+    <h3 class="subsub-title">ldapsearch — requête anonyme</h3>
+    <div class="terminal-frame">
+      <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-label">~ — ldapsearch -x -H ldap://192.168.1.15 -b "dc=corp,dc=com"</span></div>
+      <pre><span class="prompt">$</span> ldapsearch -x -H ldap://192.168.1.15 -b "dc=corp,dc=com"
+
+# extended LDIF
+# LDAPv3
+# base &lt;dc=corp,dc=com&gt; with scope subtree
+
+dn: cn=Jean Muamba,ou=Users,dc=corp,dc=com
+objectClass: person
+cn: Jean Muamba
+sAMAccountName: <span class="amb">jean.muamba</span>
+userPrincipalName: jean.muamba@corp.com
+mail: jean.muamba@corp.com
+telephoneNumber: +243 81 234 5678
+department: Informatique
+title: Administrateur Système
+memberOf: cn=IT-Security,ou=Groups,dc=corp,dc=com
+
+dn: cn=Administrateur,ou=Users,dc=corp,dc=com
+objectClass: user
+sAMAccountName: Administrateur
+memberOf: <span class="red">cn=Domain Admins,ou=Groups,dc=corp,dc=com</span>
+userAccountControl: 66048
+
+dn: cn=Domain Admins,ou=Groups,dc=corp,dc=com
+objectClass: group
+member: cn=Administrateur,ou=Users,dc=corp,dc=com
+member: <span class="red">cn=exploit4040,ou=Users,dc=corp,dc=com</span>
+
+# numResponses: 15
+# numEntries: 14</pre>
+    </div>
+    <div class="danger-badge">Domain Admins → contrôle total du domaine AD. Téléphone, poste, email, groupes — tout est exposé sans authentification</div>
+
+    <h3 class="subsub-title">Requête filtrée — utilisateurs uniquement</h3>
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">Bash</span></div>
+      <pre>ldapsearch -x -H ldap://192.168.1.15 -b "dc=corp,dc=com" \
+           "(objectClass=user)" sAMAccountName userPrincipalName memberOf</pre>
+    </div>
+  </section>
+
+  <!-- P4 -->
+  <section class="section" id="p4">
+    <div class="section-label">Partie <span>04</span></div>
+    <h2 class="section-title">Énumération DNS</h2>
+    <p>Complément au Module 2/3 — ici on énumère méthodiquement pour construire la carte complète des sous-domaines et services.</p>
+
+    <h3 class="subsub-title">dnsrecon — énumération générale</h3>
+    <div class="terminal-frame">
+      <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-label">~ — dnsrecon -d example.com -t std</span></div>
+      <pre><span class="prompt">$</span> dnsrecon -d example.com -t std
+
+[*] std: Performing General Enumeration against: example.com
+[+] SOA ns1.example.com 93.184.216.100
+[+] MX mail.example.com 93.184.216.50
+[+]      A www.example.com 93.184.216.34
+[+]      A ftp.example.com 93.184.216.60
+[+]      A <span class="amb">dev.example.com 93.184.216.70</span>
+[+]      A <span class="amb">staging.example.com 93.184.216.75</span>
+[+]      A vpn.example.com 93.184.216.80
+[+]      A <span class="red">admin.example.com 93.184.216.90</span>
+[+]      TXT example.com "v=spf1 include:_spf.google.com ~all"</pre>
+    </div>
+    <div class="def-box">
+      <div class="def-term">Sous-domaines à haute valeur</div>
+      <div class="def-body">dev/staging → environnements souvent moins sécurisés que la prod · admin → interface d'administration, cible prioritaire · vpn → accès distant.</div>
+    </div>
+
+    <h3 class="subsub-title">dnsenum — zone transfer + bruteforce</h3>
+    <div class="terminal-frame">
+      <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-label">~ — dnsenum --enum example.com -f wordlist.txt</span></div>
+      <pre><span class="prompt">$</span> dnsenum --dnsserver 8.8.8.8 --enum example.com -f /usr/share/wordlists/dnsmap.txt
+
+Trying Zone Transfer for example.com on ns1.example.com ...
+
+example.com.         3600 IN A   93.184.216.34
+internal.example.com.3600 IN A   <span class="red">10.0.0.100</span>
+db.example.com.      3600 IN A   <span class="red">10.0.0.200</span>
+
+<span class="red">⚠️  Zone Transfer réussi ! Toute l'infrastructure exposée !</span>
+
+Brute forcing with dnsmap.txt:
+api.example.com.     3600 IN A   93.184.216.85
+beta.example.com.    3600 IN A   93.184.216.86</pre>
+    </div>
+  </section>
+
+  <!-- P5 -->
+  <section class="section" id="p5">
+    <div class="section-label">Partie <span>05</span></div>
+    <h2 class="section-title">Énumération SMTP</h2>
+    <p>SMTP (port 25) supporte des commandes qui permettent de vérifier l'existence d'utilisateurs sans authentification sur les serveurs mal configurés.</p>
+
+    <div class="chain">
+      <div class="chain-title">Commandes d'énumération SMTP</div>
+      <span class="chain-node flow" style="animation-delay:0s">VRFY &lt;user&gt;</span>
+      <span class="chain-arrow">|</span>
+      <span class="chain-node flow" style="animation-delay:.3s">EXPN &lt;liste&gt;</span>
+      <span class="chain-arrow">|</span>
+      <span class="chain-node flow" style="animation-delay:.6s">RCPT TO:&lt;user&gt;</span>
+    </div>
+
+    <h3 class="subsub-title">Netcat — énumération manuelle</h3>
+    <div class="terminal-frame">
+      <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-label">~ — nc -nv 192.168.1.10 25</span></div>
+      <pre><span class="prompt">$</span> nc -nv 192.168.1.10 25
+
+(UNKNOWN) [192.168.1.10] 25 (smtp) open
+220 metasploitable.localdomain ESMTP Postfix (Ubuntu)
+
+HELO attaquant.com
+250 metasploitable.localdomain
+
+VRFY root
+<span class="grn">252 2.0.0 root</span>
+
+VRFY msfadmin
+<span class="grn">252 2.0.0 msfadmin</span>
+
+VRFY administrateur
+<span class="red">550 5.1.1 &lt;administrateur&gt;: Recipient address rejected: User unknown</span>
+
+EXPN developers
+250-2.0.0 Jean Muamba &lt;jean.muamba@corp.com&gt;
+250-2.0.0 Alice Dupont &lt;alice.dupont@corp.com&gt;
+250 2.0.0 Bob Martin &lt;bob.martin@corp.com&gt;
+
+QUIT
+221 2.0.0 Bye</pre>
+    </div>
+    <div class="result-badge">3 nouveaux emails découverts via EXPN — root, msfadmin et jean.muamba confirmés existants via VRFY</div>
+
+    <h3 class="subsub-title">smtp-user-enum — automatisation</h3>
+    <div class="terminal-frame">
+      <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-label">~ — smtp-user-enum -M VRFY -U unix_users.txt -t 192.168.1.10</span></div>
+      <pre><span class="prompt">$</span> smtp-user-enum -M VRFY -U /usr/share/wordlists/metasploit/unix_users.txt -t 192.168.1.10
+
+Starting smtp-user-enum v1.2
+Username count .... 168
+Target TCP port ... 25
+
+######## Scan started at Fri Nov 15 16:00:12 2024 #########
+192.168.1.10: root exists
+192.168.1.10: msfadmin exists
+192.168.1.10: postgres exists
+192.168.1.10: mysql exists
+192.168.1.10: tomcat55 exists
+######## Scan completed at Fri Nov 15 16:00:48 2024 #########
+<span class="grn">12 results.</span>
+168 queries in 36 seconds (4.7 queries/sec)</pre>
+    </div>
+  </section>
+
+  <!-- P6 -->
+  <section class="section" id="p6">
+    <div class="section-label">Partie <span>06</span></div>
+    <h2 class="section-title">Énumération NFS</h2>
+    <p><strong>NFS</strong> permet le partage de répertoires entre systèmes Unix/Linux (port 2049). Un serveur mal configuré peut permettre de monter des partages sans authentification.</p>
+
+    <h3 class="subsub-title">showmount — lister les exports</h3>
+    <div class="terminal-frame">
+      <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-label">~ — showmount -e 192.168.1.10</span></div>
+      <pre><span class="prompt">$</span> showmount -e 192.168.1.10
+
+Export list for 192.168.1.10:
+/                      *
+/home                  *
+/etc                   <span class="red">*</span>
+/var/www               192.168.1.0/24
+/opt/backups           10.0.0.0/8</pre>
+    </div>
+    <div class="danger-badge">CRITIQUE — / racine accessible par tout le monde, /etc contient shadow, /opt/backups contient des données sensibles</div>
+
+    <h3 class="subsub-title">mount — montage et extraction de /etc/shadow</h3>
+    <div class="chain">
+      <div class="chain-title">Ordinogramme — de l'export NFS au hash de mot de passe</div>
+      <span class="chain-node flow-danger" style="animation-delay:0s">showmount -e</span>
+      <span class="chain-arrow flow" style="animation-delay:.3s">→</span>
+      <span class="chain-node flow-danger" style="animation-delay:.6s">mount -t nfs .../ /tmp/nfs</span>
+      <span class="chain-arrow flow" style="animation-delay:.9s">→</span>
+      <span class="chain-node danger flow-danger" style="animation-delay:1.2s">cat /tmp/nfs/etc/shadow</span>
+      <span class="chain-arrow flow" style="animation-delay:1.5s">→</span>
+      <span class="chain-node danger flow-danger" style="animation-delay:1.8s">John the Ripper / Hashcat</span>
+    </div>
+    <div class="terminal-frame">
+      <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-label">~ — montage et lecture de /etc/shadow</span></div>
+      <pre><span class="prompt">$</span> mkdir /tmp/nfs_mount
+<span class="prompt">$</span> sudo mount -t nfs 192.168.1.10:/ /tmp/nfs_mount -o nolock
+<span class="prompt">$</span> cat /tmp/nfs_mount/etc/shadow
+
+root:$1$SLBRi7.0$XTZv...:15525:0:99999:7:::
+msfadmin:<span class="red">$1$XN10Zj2c$Rt/zzCW3mLtUWA.ihZjA5/</span>:14684:0:99999:7:::
+user:<span class="red">$1$HESu9xrH$k.o3G93DGoXIiQKkPmUgZ0</span>:14684:0:99999:7:::
+postgres:$1$Rw35ik.x$MgX...::14684:0:99999:7:::</pre>
+    </div>
+    <blockquote>On a les hashes des mots de passe → <strong>John the Ripper</strong> ou <strong>Hashcat</strong> pour les casser.</blockquote>
+  </section>
+
+  <!-- P7 -->
+  <section class="section" id="p7">
+    <div class="section-label">Partie <span>07</span></div>
+    <h2 class="section-title">Windows — Net Commands</h2>
+    <p>Sur une machine Windows compromise ou depuis un compte de domaine, les commandes <code>net</code> permettent une énumération complète.</p>
+
+    <div class="terminal-frame">
+      <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-label">C:\&gt; net user</span></div>
+      <pre><span class="prompt">C:\&gt;</span> net user
+
+User accounts for \\WIN-SERVER01
+-------------------------------------------------------------------------------
+Administrateur           exploit4040              Guest
+jean.muamba              alice.dupont             svc_backup
+svc_sql                  svc_web
+
+The command completed successfully.</pre>
+    </div>
+
+    <div class="terminal-frame">
+      <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-label">C:\&gt; net user Administrateur</span></div>
+      <pre><span class="prompt">C:\&gt;</span> net user Administrateur
+
+User name                    Administrateur
+Account active               Yes
+Password last set            10/03/2024 08:45:12
+Password expires             Never
+Last logon                   15/11/2024 09:12:44
+Local Group Memberships      *Administrateurs    *Utilisateurs
+
+The command completed successfully.</pre>
+    </div>
+
+    <div class="terminal-frame">
+      <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-label">C:\&gt; net localgroup Administrateurs</span></div>
+      <pre><span class="prompt">C:\&gt;</span> net localgroup Administrateurs
+
+Alias name     Administrateurs
+Comment        Les administrateurs ont un accès complet et illimité
+
+Members
+-------------------------------------------------------------------------------
+Administrateur
+jean.muamba
+<span class="amb">exploit4040</span>
+
+The command completed successfully.</pre>
+    </div>
+
+    <div class="terminal-frame">
+      <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-label">C:\&gt; net share</span></div>
+      <pre><span class="prompt">C:\&gt;</span> net share
+
+Share name   Resource                        Remark
+-------------------------------------------------------------------------------
+C$           C:\                             Default share
+ADMIN$       C:\Windows                      Remote Admin
+Backups      C:\Backups\Entreprise           Sauvegardes serveurs
+WebApp       C:\inetpub\wwwroot              Site web interne
+<span class="red">HR_Data      C:\Data\RH                      CONFIDENTIEL RH</span>
+
+The command completed successfully.</pre>
+    </div>
+    <div class="danger-badge">HR_Data marqué CONFIDENTIEL → cible prioritaire pour l'exfiltration</div>
+
+    <div class="terminal-frame">
+      <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-label">C:\&gt; net view /domain:CORP</span></div>
+      <pre><span class="prompt">C:\&gt;</span> net view /domain:CORP
+
+Server Name            Remark
+-------------------------------------------------------------------------------
+\\DC01                 Contrôleur de domaine principal
+\\WIN-SERVER01         Serveur de fichiers
+\\WEB-SERVER           Serveur web interne
+\\DB-SERVER            Serveur base de données
+\\BACKUP-SERVER        Serveur de sauvegarde
+
+The command completed successfully.</pre>
+    </div>
+  </section>
+
+  <!-- P8 -->
+  <section class="section" id="p8">
+    <div class="section-label">Partie <span>08</span></div>
+    <h2 class="section-title">Énumération Linux</h2>
+    <p>Sur un système Linux compromis, voici l'énumération complète post-accès.</p>
+
+    <div class="terminal-frame">
+      <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-label">~ — id && whoami</span></div>
+      <pre><span class="prompt">$</span> id && whoami
+
+uid=1000(msfadmin) gid=1000(msfadmin) groups=1000(msfadmin),4(adm),
+20(dialout),24(cdrom),29(audio),44(video),110(netdev),
+111(lpadmin),<span class="amb">112(admin)</span>,113(sambashare)
+
+msfadmin</pre>
+    </div>
+    <div class="result-badge">Membre du groupe admin → sudo potentiellement disponible !</div>
+
+    <div class="terminal-frame">
+      <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-label">~ — cat /etc/passwd</span></div>
+      <pre><span class="prompt">$</span> cat /etc/passwd
+
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/bin/sh
+<span class="amb">msfadmin:x:1000:1000:msfadmin,,,:/home/msfadmin:/bin/bash</span>
+user:x:1001:1001:just a user,,,:/home/user:/bin/bash
+service:x:1002:1002:,,,:/home/service:/bin/bash
+postgres:x:108:117:PostgreSQL admin,,,:/var/lib/postgresql:/bin/bash
+mysql:x:109:117:MySQL Server,,,:/var/lib/mysql:/bin/false
+tomcat55:x:110:65534::/usr/share/tomcat5.5:/bin/false</pre>
+    </div>
+
+    <div class="terminal-frame">
+      <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-label">~ — sudo -l</span></div>
+      <pre><span class="prompt">$</span> sudo -l
+
+Matching Defaults entries for msfadmin on this host:
+    env_reset, mail_badpass
+
+User msfadmin may run the following commands on this host:
+    (ALL : ALL) ALL
+    (ALL) NOPASSWD: /usr/bin/find
+    (ALL) NOPASSWD: /usr/bin/python
+    <span class="red">(ALL) NOPASSWD: /bin/bash</span></pre>
+    </div>
+    <div class="danger-badge">(ALL) NOPASSWD: /bin/bash → escalade de privilèges immédiate ! `sudo bash` = root sans mot de passe</div>
+
+    <div class="terminal-frame">
+      <div class="terminal-bar"><div class="t-dot t-dot-red"></div><div class="t-dot t-dot-amber"></div><div class="t-dot t-dot-green"></div><span class="terminal-label">~ — netstat -tulnp</span></div>
+      <pre><span class="prompt">$</span> netstat -tulnp
+
+Proto Recv-Q Send-Q Local Address    Foreign Address   State    PID/Program
+tcp        0      0 0.0.0.0:21      0.0.0.0:*         LISTEN   614/vsftpd
+tcp        0      0 0.0.0.0:22      0.0.0.0:*         LISTEN   602/sshd
+tcp        0      0 0.0.0.0:23      0.0.0.0:*         LISTEN   589/telnetd
+tcp        0      0 0.0.0.0:445     0.0.0.0:*         LISTEN   658/smbd
+tcp        0      0 0.0.0.0:3306    0.0.0.0:*         LISTEN   621/mysqld
+tcp        0      0 192.168.1.10:22 192.168.1.50:48123 ESTABLISHED 812/sshd
+udp        0      0 0.0.0.0:161     0.0.0.0:*                  523/snmpd</pre>
+    </div>
+  </section>
+
+  <!-- P9 -->
+  <section class="section" id="p9">
+    <div class="section-label">Partie <span>09</span></div>
+    <h2 class="section-title">Workflow complet d'énumération professionnel</h2>
+    <p>La méthodologie complète, phase par phase, qu'un ethical hacker suit pendant l'énumération.</p>
+
+    <div class="flow-vertical">
+      <div class="flow-step"><div class="flow-num">1</div><div><div class="flow-body-title">NetBIOS/SMB</div><div class="flow-body-desc"><code>nbtscan 192.168.1.0/24 &gt; recon/netbios_scan.txt</code><br><code>enum4linux -a 192.168.1.10 &gt; recon/smb_enum.txt</code><br><code>smbmap -H 192.168.1.10 &gt; recon/smb_shares.txt</code></div></div></div>
+      <div class="flow-connector"></div>
+      <div class="flow-step"><div class="flow-num">2</div><div><div class="flow-body-title">SNMP</div><div class="flow-body-desc"><code>snmpwalk -c public -v1 192.168.1.10 &gt; recon/snmp_walk.txt</code><br><code>onesixtyone -c dict.txt 192.168.1.10</code> (bruteforce community string)</div></div></div>
+      <div class="flow-connector"></div>
+      <div class="flow-step"><div class="flow-num">3</div><div><div class="flow-body-title">DNS</div><div class="flow-body-desc"><code>dnsrecon -d target.com -t std</code><br><code>dnsrecon -d target.com -t axfr</code></div></div></div>
+      <div class="flow-connector"></div>
+      <div class="flow-step"><div class="flow-num">4</div><div><div class="flow-body-title">SMTP</div><div class="flow-body-desc"><code>smtp-user-enum -M VRFY -U unix_users.txt -t 192.168.1.10 &gt; recon/smtp_users.txt</code></div></div></div>
+      <div class="flow-connector"></div>
+      <div class="flow-step"><div class="flow-num">5</div><div><div class="flow-body-title">NFS</div><div class="flow-body-desc"><code>showmount -e 192.168.1.10 &gt; recon/nfs_exports.txt</code></div></div></div>
+      <div class="flow-connector"></div>
+      <div class="flow-step"><div class="flow-num">6</div><div><div class="flow-body-title">Rapport consolidé</div><div class="flow-body-desc">Utilisateurs découverts, partages accessibles, vulnérabilités immédiates — compilés en un seul document pour la phase d'exploitation.</div></div></div>
+    </div>
+  </section>
+
+  <!-- RESUME -->
+  <section class="section" id="resume">
+    <div class="section-label">// <span>synthèse</span></div>
+    <h2 class="section-title">Résumé final — ce que l'examen va tester</h2>
+    <ul class="rec-list">
+      <li><span class="rec-check">✓</span><div>Suffixes NetBIOS &lt;00&gt;, &lt;20&gt;, &lt;1B&gt;, &lt;1C&gt;, &lt;1D&gt; et leur signification</div></li>
+      <li><span class="rec-check">✓</span><div>NULL session SMB — ce que c'est et pourquoi c'est dangereux</div></li>
+      <li><span class="rec-check">✓</span><div>enum4linux — ce qu'il énumère (users, shares, password policy)</div></li>
+      <li><span class="rec-check">✓</span><div>Community strings SNMP — public/private et versions SNMPv1/v2c/v3</div></li>
+      <li><span class="rec-check">✓</span><div>OIDs SNMP importants — sysDescr, sysName, processus</div></li>
+      <li><span class="rec-check">✓</span><div>LDAP — structure DN/OU/CN et requêtes ldapsearch</div></li>
+      <li><span class="rec-check">✓</span><div>VRFY vs EXPN vs RCPT TO — différences et usage SMTP</div></li>
+      <li><span class="rec-check">✓</span><div>Zone Transfer AXFR — pourquoi c'est critique</div></li>
+      <li><span class="rec-check">✓</span><div>showmount -e — exposer les partages NFS</div></li>
+      <li><span class="rec-check">✓</span><div>Net commands Windows — net user, net localgroup, net share</div></li>
+      <li><span class="rec-check">✓</span><div>Fichiers Linux sensibles — /etc/passwd, /etc/shadow, /etc/group</div></li>
+      <li><span class="rec-check">✓</span><div>sudo -l — identifier les escalades de privilèges</div></li>
+      <li><span class="rec-check">✓</span><div>netstat -tulnp — services en écoute</div></li>
+    </ul>
+  </section>
+
+  <!-- QUIZ -->
+  <section class="section" id="quiz">
+    <div class="section-label">// <span>auto-évaluation</span></div>
+    <h2 class="section-title">Questions type examen — Module 4</h2>
+    <p style="font-size:.85rem;color:var(--muted);margin-bottom:1.5rem;">Clique sur une question pour révéler la réponse.</p>
+
+    <div class="quiz-list">
+      <div class="quiz-item"><div class="quiz-q"><span class="quiz-q-num">Q1</span><span class="quiz-q-text">Quel suffixe NetBIOS indique que le service de partage de fichiers (File Server) est actif ?</span><span class="quiz-toggle">+</span></div><div class="quiz-a"><div class="quiz-a-inner">→ &lt;20&gt; — UNIQUE</div></div></div>
+      <div class="quiz-item"><div class="quiz-q"><span class="quiz-q-num">Q2</span><span class="quiz-q-text">Une NULL session SMB permet à un attaquant de faire quoi sans authentification ?</span><span class="quiz-toggle">+</span></div><div class="quiz-a"><div class="quiz-a-inner">→ Énumérer les utilisateurs, groupes, partages et la politique de mot de passe</div></div></div>
+      <div class="quiz-item"><div class="quiz-q"><span class="quiz-q-num">Q3</span><span class="quiz-q-text">Quelle community string SNMP donne accès en lecture/écriture par défaut ?</span><span class="quiz-toggle">+</span></div><div class="quiz-a"><div class="quiz-a-inner">→ "private"</div></div></div>
+      <div class="quiz-item"><div class="quiz-q"><span class="quiz-q-num">Q4</span><span class="quiz-q-text">Quelle version de SNMP offre authentification ET chiffrement ?</span><span class="quiz-toggle">+</span></div><div class="quiz-a"><div class="quiz-a-inner">→ SNMPv3</div></div></div>
+      <div class="quiz-item"><div class="quiz-q"><span class="quiz-q-num">Q5</span><span class="quiz-q-text">Quelle commande SMTP permet de vérifier si un utilisateur existe ?</span><span class="quiz-toggle">+</span></div><div class="quiz-a"><div class="quiz-a-inner">→ VRFY</div></div></div>
+      <div class="quiz-item"><div class="quiz-q"><span class="quiz-q-num">Q6</span><span class="quiz-q-text">Quelle commande affiche les répertoires NFS exportés par un serveur ?</span><span class="quiz-toggle">+</span></div><div class="quiz-a"><div class="quiz-a-inner">→ showmount -e &lt;IP&gt;</div></div></div>
+      <div class="quiz-item"><div class="quiz-q"><span class="quiz-q-num">Q7</span><span class="quiz-q-text">Sur Linux, quel fichier contient les hashes des mots de passe des utilisateurs ?</span><span class="quiz-toggle">+</span></div><div class="quiz-a"><div class="quiz-a-inner">→ /etc/shadow</div></div></div>
+      <div class="quiz-item"><div class="quiz-q"><span class="quiz-q-num">Q8</span><span class="quiz-q-text">sudo -l retourne (ALL) NOPASSWD: /bin/bash. Que peut faire l'attaquant ?</span><span class="quiz-toggle">+</span></div><div class="quiz-a"><div class="quiz-a-inner">→ Exécuter sudo bash pour obtenir un shell root sans mot de passe</div></div></div>
+      <div class="quiz-item"><div class="quiz-q"><span class="quiz-q-num">Q9</span><span class="quiz-q-text">Quel outil Linux combine smbclient, rpcclient et nmblookup pour énumérer automatiquement SMB ?</span><span class="quiz-toggle">+</span></div><div class="quiz-a"><div class="quiz-a-inner">→ enum4linux</div></div></div>
+      <div class="quiz-item"><div class="quiz-q"><span class="quiz-q-num">Q10</span><span class="quiz-q-text">Dans un Distinguished Name LDAP cn=Jean Muamba,ou=Users,dc=corp,dc=com, que signifie "ou" ?</span><span class="quiz-toggle">+</span></div><div class="quiz-a"><div class="quiz-a-inner">→ Organizational Unit — unité organisationnelle (conteneur logique dans l'annuaire)</div></div></div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-author">
+      Rédigé par <strong style="color: var(--cyan);">SPECTRA MZ</strong> &nbsp;·&nbsp; CEH v12 — Module 04 / 20
+      <br>
+      <a class="bottom-back" href="../index.html#cours-ceh">← Retour au sommaire du cours</a>
+    </div>
+    <div class="footer-badge"><span>Module 04</span> · Révision 2026</div>
+  </footer>
+
+</div>
+</main>
+
+<script>
+  function copyCode(btn) {
+    const pre = btn.closest('.code-wrap').querySelector('pre');
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+      btn.textContent = 'copié ✓';
+      btn.style.borderColor = 'var(--cyan)'; btn.style.color = 'var(--cyan)';
+      setTimeout(() => { btn.textContent = 'copier'; btn.style.borderColor = ''; btn.style.color = ''; }, 1800);
+    });
+  }
+
+  const sections = document.querySelectorAll('.section[id]');
+  const dots = document.querySelectorAll('.phase-dot');
+  function updateActive() {
+    let current = '';
+    sections.forEach(sec => { if (window.scrollY + 200 >= sec.offsetTop) current = sec.id; });
+    dots.forEach(dot => dot.classList.toggle('active', dot.getAttribute('href') === '#' + current));
+  }
+  window.addEventListener('scroll', updateActive, { passive: true });
+  updateActive();
+
+  document.querySelectorAll('.quiz-q').forEach(q => {
+    q.addEventListener('click', () => q.parentElement.classList.toggle('open'));
+  });
+</script>
+</body>
+</html>
