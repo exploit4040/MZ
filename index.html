@@ -449,7 +449,7 @@ main { max-width: 1140px; margin: 0 auto; padding: 0 2rem; position: relative; z
 /* ── WRITE-UPS ── */
 .writeups-intro { color: var(--muted); font-size: .9rem; max-width: 620px; }
 
-/* NEW badge */
+/* Badges NEW / ANCIEN */
 .new-badge {
   font-family: 'JetBrains Mono', monospace; font-size: .58rem; font-weight: 700;
   letter-spacing: .06em; text-transform: uppercase;
@@ -460,6 +460,13 @@ main { max-width: 1140px; margin: 0 auto; padding: 0 2rem; position: relative; z
 }
 @keyframes badge-pulse {
   0%,100% { opacity: 1; } 50% { opacity: .75; }
+}
+.old-badge {
+  font-family: 'JetBrains Mono', monospace; font-size: .58rem; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase;
+  padding: .15rem .55rem; border-radius: 4px;
+  background: var(--border2);
+  color: var(--muted); vertical-align: middle;
 }
 
 .writeup-section-group { margin-bottom: 2rem; }
@@ -495,6 +502,15 @@ main { max-width: 1140px; margin: 0 auto; padding: 0 2rem; position: relative; z
   height: 2px;
   background: linear-gradient(90deg, var(--cyan), var(--cyan2), transparent);
 }
+.writeup-card.is-old {
+  border-color: rgba(255,255,255,.05);
+}
+.writeup-card.is-old::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border2), transparent);
+}
 .writeup-card:hover {
   border-color: rgba(0,229,184,.5);
   box-shadow: 0 12px 40px rgba(0,229,184,.1);
@@ -515,7 +531,7 @@ main { max-width: 1140px; margin: 0 auto; padding: 0 2rem; position: relative; z
 }
 .writeup-thumb-icon { font-size: 2.2rem; z-index: 1; }
 .writeup-body { padding: 1.2rem 1.3rem 1.4rem; display: flex; flex-direction: column; gap: .6rem; flex: 1; }
-.writeup-tags { display: flex; gap: .4rem; flex-wrap: wrap; }
+.writeup-tags { display: flex; gap: .4rem; flex-wrap: wrap; align-items: center; }
 .wtag {
   font-family: 'JetBrains Mono', monospace; font-size: .62rem;
   letter-spacing: .05em; text-transform: uppercase;
@@ -928,155 +944,16 @@ footer {
 
     <div class="collapsible-wrap is-open" id="wrap-wu-all">
 
-      <!-- TOUS LES WRITE-UPS SONT NOUVEAUX — publiés le 29 août 2026 -->
       <div class="writeup-section-group">
         <div class="writeup-group-label">
           <span class="line-l"></span>
-          🆕 Publiés aujourd'hui · 29 août 2026 · 19 write-ups
+          📚 Tous les write-ups · 19 articles
           <span class="line-r"></span>
         </div>
         <div class="writeup-grid">
 
-          <a class="writeup-card is-new" href="writeups/ssti2-picoctf2025.html">
-            <div class="writeup-thumb"><span class="writeup-thumb-icon">🧬</span></div>
-            <div class="writeup-body">
-              <div class="writeup-tags">
-                <span class="wtag cyan">Jinja2</span><span class="wtag red">RCE</span><span class="wtag amber">WAF Bypass</span>
-                <span class="new-badge">NEW</span>
-              </div>
-              <div class="writeup-title">SSTI2 — picoCTF 2025</div>
-              <div class="writeup-desc">Contournement d'un WAF Jinja2 via hex-encoding et le filtre attr() jusqu'à la RCE complète.</div>
-              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>29 août 2026</div>
-              <div class="writeup-footer"><span>Web Exploitation · 200 pts</span><span class="writeup-arrow">→</span></div>
-            </div>
-          </a>
-
-          <a class="writeup-card is-new" href="writeups/power-cookie-picoctf2022.html">
-            <div class="writeup-thumb"><span class="writeup-thumb-icon">🍪</span></div>
-            <div class="writeup-body">
-              <div class="writeup-tags">
-                <span class="wtag cyan">Burp Suite</span><span class="wtag red">Access Control</span>
-                <span class="new-badge">NEW</span>
-              </div>
-              <div class="writeup-title">Power Cookie — picoCTF 2022</div>
-              <div class="writeup-desc">Contournement d'un contrôle d'accès basé sur un cookie côté client via Burp Suite Repeater.</div>
-              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>29 août 2026</div>
-              <div class="writeup-footer"><span>Web Exploitation · 200 pts</span><span class="writeup-arrow">→</span></div>
-            </div>
-          </a>
-
-          <a class="writeup-card is-new" href="writeups/roboto-sans-picoctf2022.html">
-            <div class="writeup-thumb"><span class="writeup-thumb-icon">🤖</span></div>
-            <div class="writeup-body">
-              <div class="writeup-tags">
-                <span class="wtag cyan">robots.txt</span><span class="wtag red">Info Disclosure</span><span class="wtag amber">Base64</span>
-                <span class="new-badge">NEW</span>
-              </div>
-              <div class="writeup-title">Roboto Sans — picoCTF 2022</div>
-              <div class="writeup-desc">Reconnaissance via robots.txt, code source HTML et décodage Base64 pour dénicher un flag caché.</div>
-              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>29 août 2026</div>
-              <div class="writeup-footer"><span>Web Exploitation · 200 pts</span><span class="writeup-arrow">→</span></div>
-            </div>
-          </a>
-
-          <a class="writeup-card is-new" href="writeups/java-rmi-metasploitable2.html">
-            <div class="writeup-thumb"><span class="writeup-thumb-icon">☕</span></div>
-            <div class="writeup-body">
-              <div class="writeup-tags">
-                <span class="wtag cyan">Metasploit</span><span class="wtag red">RCE</span><span class="wtag amber">Meterpreter</span>
-                <span class="new-badge">NEW</span>
-              </div>
-              <div class="writeup-title">Java RMI Registry — Metasploitable 2</div>
-              <div class="writeup-desc">Cours complet : reconnaissance nmap, exploitation RMI non authentifiée, architecture C2 et post-exploitation Meterpreter.</div>
-              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>29 août 2026</div>
-              <div class="writeup-footer"><span>Lab Pentest · CVE-2011-3556</span><span class="writeup-arrow">→</span></div>
-            </div>
-          </a>
-
-          <a class="writeup-card is-new" href="writeups/findme-picoctf2023.html">
-            <div class="writeup-thumb"><span class="writeup-thumb-icon">↪️</span></div>
-            <div class="writeup-body">
-              <div class="writeup-tags">
-                <span class="wtag cyan">HTTP Redirect</span><span class="wtag red">Info Disclosure</span><span class="wtag amber">Base64</span>
-                <span class="new-badge">NEW</span>
-              </div>
-              <div class="writeup-title">findme — picoCTF 2023</div>
-              <div class="writeup-desc">Interception d'une chaîne de redirections HTTP avec Burp Suite pour révéler un flag encodé en Base64.</div>
-              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>29 août 2026</div>
-              <div class="writeup-footer"><span>Web Exploitation · 100 pts</span><span class="writeup-arrow">→</span></div>
-            </div>
-          </a>
-
-          <a class="writeup-card is-new" href="writeups/termux-pentest-guide.html">
-            <div class="writeup-thumb"><span class="writeup-thumb-icon">📱</span></div>
-            <div class="writeup-body">
-              <div class="writeup-tags">
-                <span class="wtag cyan">Termux</span><span class="wtag amber">Guide Débutant</span><span class="wtag red">Pentest Mobile</span>
-                <span class="new-badge">NEW</span>
-              </div>
-              <div class="writeup-title">Termux pour le Pentest</div>
-              <div class="writeup-desc">Guide complet : installation d'outils, recon réseau, exploitation web, brute-force et OSINT en CLI.</div>
-              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>29 août 2026</div>
-              <div class="writeup-footer"><span>Guide · Cours complet</span><span class="writeup-arrow">→</span></div>
-            </div>
-          </a>
-
-          <a class="writeup-card is-new" href="writeups/nosql-injection-picoctf2024.html">
-            <div class="writeup-thumb"><span class="writeup-thumb-icon">🍃</span></div>
-            <div class="writeup-body">
-              <div class="writeup-tags">
-                <span class="wtag cyan">MongoDB</span><span class="wtag red">NoSQL Injection</span><span class="wtag amber">Source Review</span>
-                <span class="new-badge">NEW</span>
-              </div>
-              <div class="writeup-title">No Sql Injection — picoCTF 2024</div>
-              <div class="writeup-desc">Cours complet : architecture MongoDB (BSON, documents, collections), audit de code source, et exploitation de l'opérateur $ne.</div>
-              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>29 août 2026</div>
-              <div class="writeup-footer"><span>Web Exploitation · 200 pts</span><span class="writeup-arrow">→</span></div>
-            </div>
-          </a>
-
-          <a class="writeup-card is-new" href="writeups/sqlilite-picoctf2022.html">
-            <div class="writeup-thumb"><span class="writeup-thumb-icon">🗄️</span></div>
-            <div class="writeup-body">
-              <div class="writeup-tags">
-                <span class="wtag cyan">SQLite</span><span class="wtag red">SQL Injection</span><span class="wtag amber">Auth Bypass</span>
-                <span class="new-badge">NEW</span>
-              </div>
-              <div class="writeup-title">SQLiLite — picoCTF 2022</div>
-              <div class="writeup-desc">Cours complet : architecture SQLite, injection SQL par commentaire, et panorama des techniques avancées (UNION, blind, time-based).</div>
-              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>29 août 2026</div>
-              <div class="writeup-footer"><span>Web Exploitation · 300 pts</span><span class="writeup-arrow">→</span></div>
-            </div>
-          </a>
-
-          <a class="writeup-card is-new" href="writeups/sql1-picoctf2026.html">
-            <div class="writeup-thumb"><span class="writeup-thumb-icon">🤖</span></div>
-            <div class="writeup-body">
-              <div class="writeup-tags">
-                <span class="wtag cyan">sqlmap</span><span class="wtag red">SQL Injection</span><span class="wtag amber">MD5 Cracking</span>
-                <span class="new-badge">NEW</span>
-              </div>
-              <div class="writeup-title">Sql1 — picoCTF 2026</div>
-              <div class="writeup-desc">Cours complet : automatisation sqlmap, extraction de tables SQLite, cassage de hashs MD5 par dictionnaire.</div>
-              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>29 août 2026</div>
-              <div class="writeup-footer"><span>Web Exploitation · 300 pts</span><span class="writeup-arrow">→</span></div>
-            </div>
-          </a>
-
-          <a class="writeup-card is-new" href="writeups/Three.html">
-            <div class="writeup-thumb"><span class="writeup-thumb-icon">☁️</span></div>
-            <div class="writeup-body">
-              <div class="writeup-tags">
-                <span class="wtag cyan">S3 Bucket</span><span class="wtag red">AWS CLI</span><span class="wtag amber">Reverse Shell</span>
-                <span class="new-badge">NEW</span>
-              </div>
-              <div class="writeup-title">Three — HackTheBox</div>
-              <div class="writeup-desc">Exploitation d'un bucket S3 mal configuré pour obtenir un reverse shell et compromettre la machine Linux. Architecture C2, upload de shell PHP.</div>
-              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>29 août 2026</div>
-              <div class="writeup-footer"><span>HackTheBox · Linux · Easy</span><span class="writeup-arrow">→</span></div>
-            </div>
-          </a>
-
+          <!-- ====== NOUVEAUX (NEW) : ROOT-ME ====== -->
+          <!-- NTLM - 01 juin 2026 -->
           <a class="writeup-card is-new" href="NTLM__Authentification.html">
             <div class="writeup-thumb"><span class="writeup-thumb-icon">🔐</span></div>
             <div class="writeup-body">
@@ -1086,11 +963,12 @@ footer {
               </div>
               <div class="writeup-title">NTLM — Authentification</div>
               <div class="writeup-desc">Extraction et cracking d'un hash NetNTLMv2 depuis une capture Wireshark. hashcat + wordlist.</div>
-              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>29 août 2026</div>
+              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>01 juin 2026</div>
               <div class="writeup-footer"><span>Root-Me · Réseau</span><span class="writeup-arrow">→</span></div>
             </div>
           </a>
 
+          <!-- Kerberos - 03 juin 2026 -->
           <a class="writeup-card is-new" href="Kerberos__Authentificatio.html">
             <div class="writeup-thumb"><span class="writeup-thumb-icon">🎫</span></div>
             <div class="writeup-body">
@@ -1100,11 +978,12 @@ footer {
               </div>
               <div class="writeup-title">Kerberos — Authentification</div>
               <div class="writeup-desc">Analyse AS-REQ dans Wireshark, extraction du hash Kerberos et cracking avec hashcat.</div>
-              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>29 août 2026</div>
+              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>03 juin 2026</div>
               <div class="writeup-footer"><span>Root-Me · Réseau</span><span class="writeup-arrow">→</span></div>
             </div>
           </a>
 
+          <!-- LDAP null bind - 06 juin 2026 -->
           <a class="writeup-card is-new" href="LDAP_null_bind.html">
             <div class="writeup-thumb"><span class="writeup-thumb-icon">📂</span></div>
             <div class="writeup-body">
@@ -1114,11 +993,12 @@ footer {
               </div>
               <div class="writeup-title">LDAP — Null Bind</div>
               <div class="writeup-desc">Connexion anonyme à un annuaire LDAP via null bind et extraction des entrées avec ldapsearch.</div>
-              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>29 août 2026</div>
+              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>06 juin 2026</div>
               <div class="writeup-footer"><span>Root-Me · Service réseau</span><span class="writeup-arrow">→</span></div>
             </div>
           </a>
 
+          <!-- DNS transfert - 08 juin 2026 -->
           <a class="writeup-card is-new" href="DNS_Transfert_de_zone.html">
             <div class="writeup-thumb"><span class="writeup-thumb-icon">🌐</span></div>
             <div class="writeup-body">
@@ -1128,11 +1008,12 @@ footer {
               </div>
               <div class="writeup-title">DNS — Transfert de zone</div>
               <div class="writeup-desc">Exploitation d'un transfert de zone DNS mal configuré (AXFR) pour récupérer tous les enregistrements.</div>
-              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>29 août 2026</div>
+              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>08 juin 2026</div>
               <div class="writeup-footer"><span>Root-Me · Service réseau</span><span class="writeup-arrow">→</span></div>
             </div>
           </a>
 
+          <!-- Cisco - 11 juin 2026 -->
           <a class="writeup-card is-new" href="CISCO_mot_de_passe.html">
             <div class="writeup-thumb"><span class="writeup-thumb-icon">🔧</span></div>
             <div class="writeup-body">
@@ -1142,11 +1023,12 @@ footer {
               </div>
               <div class="writeup-title">CISCO — Mot de passe</div>
               <div class="writeup-desc">Déchiffrement d'un mot de passe Cisco Type 7 (XOR) et cracking d'un hash MD5-crypt avec openssl.</div>
-              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>29 août 2026</div>
+              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>11 juin 2026</div>
               <div class="writeup-footer"><span>Root-Me · Réseau</span><span class="writeup-arrow">→</span></div>
             </div>
           </a>
 
+          <!-- Bluetooth - 14 juin 2026 -->
           <a class="writeup-card is-new" href="Bluetooth_Fichier_inconnu.html">
             <div class="writeup-thumb"><span class="writeup-thumb-icon">📶</span></div>
             <div class="writeup-body">
@@ -1156,11 +1038,12 @@ footer {
               </div>
               <div class="writeup-title">Bluetooth — Fichier inconnu</div>
               <div class="writeup-desc">Analyse d'une capture Bluetooth HCI dans Wireshark pour identifier un fichier et en extraire le hash SHA-1.</div>
-              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>29 août 2026</div>
+              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>14 juin 2026</div>
               <div class="writeup-footer"><span>Root-Me · Réseau</span><span class="writeup-arrow">→</span></div>
             </div>
           </a>
 
+          <!-- Authentification Twitter - 17 juin 2026 -->
           <a class="writeup-card is-new" href="Authentification_twitter.html">
             <div class="writeup-thumb"><span class="writeup-thumb-icon">🐦</span></div>
             <div class="writeup-body">
@@ -1170,11 +1053,12 @@ footer {
               </div>
               <div class="writeup-title">Authentification Twitter</div>
               <div class="writeup-desc">Extraction d'identifiants HTTP Basic Auth encodés en Base64 depuis une capture réseau Wireshark.</div>
-              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>29 août 2026</div>
+              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>17 juin 2026</div>
               <div class="writeup-footer"><span>Root-Me · Réseau</span><span class="writeup-arrow">→</span></div>
             </div>
           </a>
 
+          <!-- IP TTL - 20 juin 2026 -->
           <a class="writeup-card is-new" href="IP_Time_To_Live.html">
             <div class="writeup-thumb"><span class="writeup-thumb-icon">⏱️</span></div>
             <div class="writeup-body">
@@ -1184,11 +1068,12 @@ footer {
               </div>
               <div class="writeup-title">IP — Time To Live</div>
               <div class="writeup-desc">Analyse des valeurs TTL dans une capture ICMP pour reconstituer la topologie réseau et identifier les sauts.</div>
-              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>29 août 2026</div>
+              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>20 juin 2026</div>
               <div class="writeup-footer"><span>Root-Me · Analyse capture</span><span class="writeup-arrow">→</span></div>
             </div>
           </a>
 
+          <!-- RH Trame - 23 juin 2026 -->
           <a class="writeup-card is-new" href="RH_Trame.html">
             <div class="writeup-thumb"><span class="writeup-thumb-icon">📡</span></div>
             <div class="writeup-body">
@@ -1198,8 +1083,159 @@ footer {
               </div>
               <div class="writeup-title">RH Trame — Extraction identifiants</div>
               <div class="writeup-desc">Analyse de trame HTTP dans Wireshark, identification et décodage des identifiants Basic Auth en Base64.</div>
-              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>29 août 2026</div>
+              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>23 juin 2026</div>
               <div class="writeup-footer"><span>Root-Me · Analyse réseau</span><span class="writeup-arrow">→</span></div>
+            </div>
+          </a>
+
+          <!-- ====== ANCIENS (ANCIEN) : picoCTF / HackTheBox ====== -->
+          <!-- SSTI2 - 07 juil. 2026 -->
+          <a class="writeup-card is-old" href="writeups/ssti2-picoctf2025.html">
+            <div class="writeup-thumb"><span class="writeup-thumb-icon">🧬</span></div>
+            <div class="writeup-body">
+              <div class="writeup-tags">
+                <span class="wtag cyan">Jinja2</span><span class="wtag red">RCE</span><span class="wtag amber">WAF Bypass</span>
+                <span class="old-badge">ANCIEN</span>
+              </div>
+              <div class="writeup-title">SSTI2 — picoCTF 2025</div>
+              <div class="writeup-desc">Contournement d'un WAF Jinja2 via hex-encoding et le filtre attr() jusqu'à la RCE complète.</div>
+              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>07 juil. 2026</div>
+              <div class="writeup-footer"><span>Web Exploitation · 200 pts</span><span class="writeup-arrow">→</span></div>
+            </div>
+          </a>
+
+          <!-- Power Cookie - 09 juil. 2026 -->
+          <a class="writeup-card is-old" href="writeups/power-cookie-picoctf2022.html">
+            <div class="writeup-thumb"><span class="writeup-thumb-icon">🍪</span></div>
+            <div class="writeup-body">
+              <div class="writeup-tags">
+                <span class="wtag cyan">Burp Suite</span><span class="wtag red">Access Control</span>
+                <span class="old-badge">ANCIEN</span>
+              </div>
+              <div class="writeup-title">Power Cookie — picoCTF 2022</div>
+              <div class="writeup-desc">Contournement d'un contrôle d'accès basé sur un cookie côté client via Burp Suite Repeater.</div>
+              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>09 juil. 2026</div>
+              <div class="writeup-footer"><span>Web Exploitation · 200 pts</span><span class="writeup-arrow">→</span></div>
+            </div>
+          </a>
+
+          <!-- Roboto Sans - 10 juil. 2026 -->
+          <a class="writeup-card is-old" href="writeups/roboto-sans-picoctf2022.html">
+            <div class="writeup-thumb"><span class="writeup-thumb-icon">🤖</span></div>
+            <div class="writeup-body">
+              <div class="writeup-tags">
+                <span class="wtag cyan">robots.txt</span><span class="wtag red">Info Disclosure</span><span class="wtag amber">Base64</span>
+                <span class="old-badge">ANCIEN</span>
+              </div>
+              <div class="writeup-title">Roboto Sans — picoCTF 2022</div>
+              <div class="writeup-desc">Reconnaissance via robots.txt, code source HTML et décodage Base64 pour dénicher un flag caché.</div>
+              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>10 juil. 2026</div>
+              <div class="writeup-footer"><span>Web Exploitation · 200 pts</span><span class="writeup-arrow">→</span></div>
+            </div>
+          </a>
+
+          <!-- Java RMI - 10 juil. 2026 -->
+          <a class="writeup-card is-old" href="writeups/java-rmi-metasploitable2.html">
+            <div class="writeup-thumb"><span class="writeup-thumb-icon">☕</span></div>
+            <div class="writeup-body">
+              <div class="writeup-tags">
+                <span class="wtag cyan">Metasploit</span><span class="wtag red">RCE</span><span class="wtag amber">Meterpreter</span>
+                <span class="old-badge">ANCIEN</span>
+              </div>
+              <div class="writeup-title">Java RMI Registry — Metasploitable 2</div>
+              <div class="writeup-desc">Cours complet : reconnaissance nmap, exploitation RMI non authentifiée, architecture C2 et post-exploitation Meterpreter.</div>
+              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>10 juil. 2026</div>
+              <div class="writeup-footer"><span>Lab Pentest · CVE-2011-3556</span><span class="writeup-arrow">→</span></div>
+            </div>
+          </a>
+
+          <!-- findme - 13 juil. 2026 -->
+          <a class="writeup-card is-old" href="writeups/findme-picoctf2023.html">
+            <div class="writeup-thumb"><span class="writeup-thumb-icon">↪️</span></div>
+            <div class="writeup-body">
+              <div class="writeup-tags">
+                <span class="wtag cyan">HTTP Redirect</span><span class="wtag red">Info Disclosure</span><span class="wtag amber">Base64</span>
+                <span class="old-badge">ANCIEN</span>
+              </div>
+              <div class="writeup-title">findme — picoCTF 2023</div>
+              <div class="writeup-desc">Interception d'une chaîne de redirections HTTP avec Burp Suite pour révéler un flag encodé en Base64.</div>
+              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>13 juil. 2026</div>
+              <div class="writeup-footer"><span>Web Exploitation · 100 pts</span><span class="writeup-arrow">→</span></div>
+            </div>
+          </a>
+
+          <!-- Termux - 10 juil. 2026 -->
+          <a class="writeup-card is-old" href="writeups/termux-pentest-guide.html">
+            <div class="writeup-thumb"><span class="writeup-thumb-icon">📱</span></div>
+            <div class="writeup-body">
+              <div class="writeup-tags">
+                <span class="wtag cyan">Termux</span><span class="wtag amber">Guide Débutant</span><span class="wtag red">Pentest Mobile</span>
+                <span class="old-badge">ANCIEN</span>
+              </div>
+              <div class="writeup-title">Termux pour le Pentest</div>
+              <div class="writeup-desc">Guide complet : installation d'outils, recon réseau, exploitation web, brute-force et OSINT en CLI.</div>
+              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>10 juil. 2026</div>
+              <div class="writeup-footer"><span>Guide · Cours complet</span><span class="writeup-arrow">→</span></div>
+            </div>
+          </a>
+
+          <!-- NoSQL - 13 juil. 2026 -->
+          <a class="writeup-card is-old" href="writeups/nosql-injection-picoctf2024.html">
+            <div class="writeup-thumb"><span class="writeup-thumb-icon">🍃</span></div>
+            <div class="writeup-body">
+              <div class="writeup-tags">
+                <span class="wtag cyan">MongoDB</span><span class="wtag red">NoSQL Injection</span><span class="wtag amber">Source Review</span>
+                <span class="old-badge">ANCIEN</span>
+              </div>
+              <div class="writeup-title">No Sql Injection — picoCTF 2024</div>
+              <div class="writeup-desc">Cours complet : architecture MongoDB (BSON, documents, collections), audit de code source, et exploitation de l'opérateur $ne.</div>
+              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>13 juil. 2026</div>
+              <div class="writeup-footer"><span>Web Exploitation · 200 pts</span><span class="writeup-arrow">→</span></div>
+            </div>
+          </a>
+
+          <!-- SQLiLite - 15 juil. 2026 -->
+          <a class="writeup-card is-old" href="writeups/sqlilite-picoctf2022.html">
+            <div class="writeup-thumb"><span class="writeup-thumb-icon">🗄️</span></div>
+            <div class="writeup-body">
+              <div class="writeup-tags">
+                <span class="wtag cyan">SQLite</span><span class="wtag red">SQL Injection</span><span class="wtag amber">Auth Bypass</span>
+                <span class="old-badge">ANCIEN</span>
+              </div>
+              <div class="writeup-title">SQLiLite — picoCTF 2022</div>
+              <div class="writeup-desc">Cours complet : architecture SQLite, injection SQL par commentaire, et panorama des techniques avancées (UNION, blind, time-based).</div>
+              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>15 juil. 2026</div>
+              <div class="writeup-footer"><span>Web Exploitation · 300 pts</span><span class="writeup-arrow">→</span></div>
+            </div>
+          </a>
+
+          <!-- Sql1 - 16 juil. 2026 -->
+          <a class="writeup-card is-old" href="writeups/sql1-picoctf2026.html">
+            <div class="writeup-thumb"><span class="writeup-thumb-icon">🤖</span></div>
+            <div class="writeup-body">
+              <div class="writeup-tags">
+                <span class="wtag cyan">sqlmap</span><span class="wtag red">SQL Injection</span><span class="wtag amber">MD5 Cracking</span>
+                <span class="old-badge">ANCIEN</span>
+              </div>
+              <div class="writeup-title">Sql1 — picoCTF 2026</div>
+              <div class="writeup-desc">Cours complet : automatisation sqlmap, extraction de tables SQLite, cassage de hashs MD5 par dictionnaire.</div>
+              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>16 juil. 2026</div>
+              <div class="writeup-footer"><span>Web Exploitation · 300 pts</span><span class="writeup-arrow">→</span></div>
+            </div>
+          </a>
+
+          <!-- Three - 21 juil. 2026 -->
+          <a class="writeup-card is-old" href="writeups/Three.html">
+            <div class="writeup-thumb"><span class="writeup-thumb-icon">☁️</span></div>
+            <div class="writeup-body">
+              <div class="writeup-tags">
+                <span class="wtag cyan">S3 Bucket</span><span class="wtag red">AWS CLI</span><span class="wtag amber">Reverse Shell</span>
+                <span class="old-badge">ANCIEN</span>
+              </div>
+              <div class="writeup-title">Three — HackTheBox</div>
+              <div class="writeup-desc">Exploitation d'un bucket S3 mal configuré pour obtenir un reverse shell et compromettre la machine Linux. Architecture C2, upload de shell PHP.</div>
+              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>21 juil. 2026</div>
+              <div class="writeup-footer"><span>HackTheBox · Linux · Easy</span><span class="writeup-arrow">→</span></div>
             </div>
           </a>
 
