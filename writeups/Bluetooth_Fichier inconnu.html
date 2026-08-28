@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>ROOTME — Bluetooth - Fichier inconnu — Write-up</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* --- Style identique aux pages précédentes --- */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        :root {
+            --bg:        #080c18;
+            --surface:   #0f1525;
+            --surface2:  #151d30;
+            --border:    #1e2a42;
+            --cyan:      #00d4aa;
+            --cyan-dim:  #00d4aa22;
+            --cyan-glow: #00d4aa44;
+            --red:       #ff4757;
+            --amber:     #ffa502;
+            --purple:    #a855f7;
+            --blue:      #2f9bff;
+            --green:     #4ade80;
+            --text:      #e2e8f4;
+            --muted:     #6b7a99;
+            --code-bg:   #060a14;
+            --safe-t: env(safe-area-inset-top, 0px);
+            --safe-b: env(safe-area-inset-bottom, 0px);
+            --safe-l: env(safe-area-inset-left, 0px);
+            --safe-r: env(safe-area-inset-right, 0px);
+        }
+        html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+        body {
+            background: var(--bg); color: var(--text);
+            font-family: 'Inter', sans-serif; font-size: 16px; line-height: 1.7;
+            overflow-x: hidden; -webkit-font-smoothing: antialiased;
+        }
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.08) 2px, rgba(0,0,0,.08) 4px);
+            pointer-events: none; z-index: 9999;
+        }
+        img { max-width: 100%; height: auto; display: block; }
+        .progress-bar { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 700; background: var(--border); }
+        .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--cyan), var(--blue)); box-shadow: 0 0 8px var(--cyan-glow); transition: width .1s linear; }
+        .back-home {
+            position: fixed; top: calc(1.2rem + var(--safe-t)); left: calc(1.2rem + var(--safe-l)); z-index: 600;
+            display: inline-flex; align-items: center; gap: .5rem; padding: .6rem 1.05rem; min-height: 44px;
+            background: rgba(15,21,37,.9); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+            border: 1px solid var(--border); border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace; font-size: .78rem; font-weight: 500; color: var(--muted);
+            text-decoration: none; transition: all .2s;
+        }
+        .back-home:hover, .back-home:active { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 16px var(--cyan-glow); }
+        .back-home svg { width: 14px; height: 14px; flex-shrink: 0; }
+        .sidebar {
+            position: fixed; left: 0; top: 0; width: 64px; height: 100vh;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 100; padding: 2rem 0;
+        }
+        .sidebar-line { width: 1px; flex: 1; background: var(--border); }
+        .phase-dot {
+            width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--muted);
+            cursor: pointer; transition: all .3s; text-decoration: none; flex-shrink: 0;
+        }
+        .phase-dot:hover, .phase-dot.active { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 12px var(--cyan-glow); background: var(--cyan-dim); }
+        .mobile-nav {
+            display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 650;
+            background: rgba(15,21,37,.95); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+            border-top: 1px solid var(--border);
+            padding: .6rem calc(.6rem + var(--safe-l)) calc(.6rem + var(--safe-b)) calc(.6rem + var(--safe-r));
+        }
+        .mobile-nav-scroll { display: flex; gap: .5rem; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+        .mobile-nav-scroll::-webkit-scrollbar { display: none; }
+        .mobile-nav-item {
+            flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+            min-width: 44px; min-height: 44px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface);
+            font-family: 'JetBrains Mono', monospace; font-size: .66rem; color: var(--muted); text-decoration: none; transition: all .2s;
+        }
+        .mobile-nav-item.active { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+        main { margin-left: 64px; width: calc(100% - 64px); padding: 0 2rem 6rem; }
+        .inner { max-width: 920px; margin: 0 auto; }
+        .hero { padding: 5.5rem 0 4rem; position: relative; }
+        .hero-eyebrow {
+            font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+            color: var(--cyan); margin-bottom: 1.5rem; display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
+        }
+        .hero-eyebrow::before { content:''; display:inline-block; width:24px; height:1px; background: var(--cyan); }
+        .hero-title {
+            font-family: 'JetBrains Mono', monospace; font-size: clamp(1.9rem, 5.4vw, 3.3rem);
+            font-weight: 700; line-height: 1.15; letter-spacing: -.02em; margin-bottom: 1rem; word-break: break-word;
+        }
+        .hero-title .accent { color: var(--cyan); }
+        .hero-title .dim { color: var(--muted); font-weight: 300; }
+        .hero-sub { font-size: clamp(.95rem, 2.2vw, 1.05rem); color: var(--muted); margin-bottom: 2.5rem; max-width: 640px; }
+        .meta-pills { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 2rem; }
+        .pill { padding: .35rem .9rem; border-radius: 99px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .08em; font-weight: 500; white-space: nowrap; }
+        .pill-cyan   { border:1px solid var(--cyan);   color:var(--cyan);   background:var(--cyan-dim); }
+        .pill-red    { border:1px solid var(--red);    color:var(--red);    background:#ff475711; }
+        .pill-amber  { border:1px solid var(--amber);  color:var(--amber);  background:#ffa50211; }
+        .pill-purple { border:1px solid var(--purple); color:var(--purple); background:#a855f711; }
+        .pill-green  { border:1px solid var(--green);  color:var(--green);  background:#4ade8011; }
+        .hero-divider { width: 100%; height: 1px; background: linear-gradient(90deg, var(--cyan) 0%, var(--border) 60%, transparent 100%); margin-top: 3rem; }
+        .toc { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem 1.6rem; margin: 2rem 0; }
+        .toc-title { font-family: 'JetBrains Mono', monospace; font-size: .75rem; letter-spacing: .15em; text-transform: uppercase; color: var(--cyan); margin-bottom: 1rem; }
+        .toc-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: .6rem 1.5rem; }
+        .toc-list a { font-size: .85rem; color: #b8c3d9; text-decoration: none; display: flex; align-items: baseline; gap: .5rem; transition: color .2s; min-height: 24px; }
+        .toc-list a:hover, .toc-list a:active { color: var(--cyan); }
+        .toc-num { font-family: 'JetBrains Mono', monospace; font-size: .7rem; color: var(--muted); flex-shrink: 0; }
+        .section { padding: 3.5rem 0 2rem; border-bottom: 1px solid var(--border); }
+        .section:last-of-type { border-bottom: none; }
+        .section-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--cyan); margin-bottom: .6rem; display: flex; align-items: center; gap: .5rem; }
+        .section-label span { color: var(--muted); }
+        .section-title { font-family: 'JetBrains Mono', monospace; font-size: clamp(1.2rem, 3.2vw, 1.5rem); font-weight: 600; color: var(--text); margin-bottom: 1.5rem; line-height: 1.3; }
+        .subsection-title { font-family: 'JetBrains Mono', monospace; font-size: 1rem; font-weight: 600; color: var(--cyan); margin: 2.2rem 0 .9rem; padding-left: 1rem; border-left: 2px solid var(--cyan); }
+        p { margin-bottom: 1.1rem; color: #b8c3d9; word-wrap: break-word; }
+        p strong { color: var(--text); font-weight: 600; }
+        ul.plain, ol.plain { margin: 0 0 1.1rem 1.3rem; color: #b8c3d9; }
+        ul.plain li, ol.plain li { margin-bottom: .5rem; }
+        .def-box { background: linear-gradient(135deg, #2f9bff0a 0%, #2f9bff03 100%); border: 1px solid var(--blue); border-radius: 10px; padding: 1.3rem 1.4rem; margin: 1.2rem 0 1.6rem; }
+        .def-term { display: flex; align-items: center; gap: .6rem; font-family: 'JetBrains Mono', monospace; font-size: .92rem; font-weight: 700; color: var(--blue); margin-bottom: .5rem; flex-wrap: wrap; }
+        .def-term::before { content: '§'; font-size: 1.1rem; }
+        .def-body { color: #b8c3d9; font-size: .88rem; }
+        .def-body code { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: .1em .4em; color: #c0cce8; font-size: .85em; word-break: break-all; }
+        .glossary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+        .glossary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem; }
+        .glossary-term { font-family: 'JetBrains Mono', monospace; font-size: .85rem; font-weight: 700; color: var(--cyan); margin-bottom: .5rem; }
+        .glossary-def { font-size: .82rem; color: var(--muted); line-height: 1.55; }
+        .terminal-frame { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 1.5rem 0; box-shadow: 0 8px 40px rgba(0,0,0,.5), 0 0 0 1px rgba(0,212,170,.06); }
+        .terminal-bar { background: var(--surface2); padding: .6rem .9rem; display: flex; align-items: center; gap: .5rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+        .t-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .t-dot-red { background: #ff5f57; } .t-dot-amber { background: #ffbd2e; } .t-dot-green { background: #28c840; }
+        .terminal-bar-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); margin-left: .3rem; word-break: break-all; }
+        .terminal-frame .img-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .terminal-frame img { width: 100%; display: block; vertical-align: top; }
+        .terminal-caption { padding: .6rem .9rem; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); background: var(--surface2); border-top: 1px solid var(--border); display: flex; align-items: flex-start; gap: .5rem; }
+        .terminal-caption::before { content: '▸'; color: var(--cyan); flex-shrink: 0; }
+        .code-wrap { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 1rem 0 1.5rem; position: relative; }
+        .code-header { background: var(--surface2); padding: .45rem .9rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); gap: .5rem; }
+        .code-lang { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--cyan); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .copy-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: .35rem .7rem; border-radius: 4px; cursor: pointer; transition: all .2s; min-height: 32px; flex-shrink: 0; }
+        .copy-btn:hover, .copy-btn:active { border-color: var(--cyan); color: var(--cyan); }
+        .code-wrap pre { padding: 1.1rem 1.1rem; overflow-x: auto; -webkit-overflow-scrolling: touch; font-family: 'JetBrains Mono', monospace; font-size: .78rem; line-height: 1.7; color: #c0cce8; }
+        .code-wrap pre .kw { color: var(--cyan); }
+        .code-wrap pre .str { color: #ffdd87; }
+        .code-wrap pre .hl { color: var(--amber); font-weight: 700; }
+        .code-wrap pre .hl-cyan { color: var(--cyan); font-weight: 700; }
+        .code-wrap pre .hl-red { color: var(--red); font-weight: 700; }
+        .code-wrap pre .cmt { color: var(--muted); font-style: italic; }
+        .code-wrap pre .prop { color: var(--purple); }
+        .result-badge { display: inline-flex; align-items: flex-start; gap: .5rem; background: #00d4aa0f; border: 1px solid var(--cyan); border-radius: 6px; padding: .6rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--cyan); margin: .5rem 0 1rem; word-break: break-word; }
+        .result-badge::before { content: '✓'; font-weight: 700; flex-shrink: 0; }
+        .warn-badge { display: inline-flex; align-items: flex-start; gap: .5rem; background: #ffa5020f; border: 1px solid var(--amber); border-radius: 6px; padding: .6rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--amber); margin: .5rem 0 1rem; word-break: break-word; }
+        .warn-badge::before { content: '⚠'; font-weight: 700; flex-shrink: 0; }
+        .flag-box { background: linear-gradient(135deg, #00d4aa0a 0%, #00d4aa03 100%); border: 1px solid var(--cyan); border-radius: 10px; padding: 1.6rem 1.4rem; text-align: center; position: relative; overflow: hidden; margin: 1.5rem 0; }
+        .flag-box::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, var(--cyan-glow) 0%, transparent 70%); pointer-events: none; }
+        .flag-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); margin-bottom: .8rem; }
+        .flag-text { font-family: 'JetBrains Mono', monospace; font-size: clamp(.9rem, 3.2vw, 1.2rem); font-weight: 700; color: var(--cyan); letter-spacing: .02em; text-shadow: 0 0 20px var(--cyan-glow); word-break: break-all; }
+        .quiz-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: .8rem; overflow: hidden; }
+        .quiz-q { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.3rem; cursor: pointer; user-select: none; }
+        .quiz-q-num { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: .75rem; color: var(--bg); background: var(--purple); min-width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .quiz-q-text { font-size: .88rem; color: var(--text); font-weight: 500; flex: 1; }
+        .quiz-toggle { font-family: 'JetBrains Mono', monospace; color: var(--muted); transition: transform .25s; flex-shrink: 0; }
+        .quiz-item.open .quiz-toggle { transform: rotate(45deg); color: var(--cyan); }
+        .quiz-a { max-height: 0; overflow: hidden; transition: max-height .3s ease; }
+        .quiz-item.open .quiz-a { max-height: 200px; }
+        .quiz-a-inner { padding: 0 1.3rem 1.1rem 3.1rem; font-size: .84rem; color: var(--cyan); font-family: 'JetBrains Mono', monospace; }
+        .ref-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .8rem; margin-top: 1rem; }
+        .ref-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; text-decoration: none; display: flex; flex-direction: column; gap: .3rem; transition: border-color .2s, box-shadow .2s; min-height: 44px; }
+        .ref-card:hover, .ref-card:active { border-color: var(--cyan); box-shadow: 0 0 20px var(--cyan-glow); }
+        .ref-icon { font-size: 1.1rem; margin-bottom: .2rem; }
+        .ref-name { font-family: 'JetBrains Mono', monospace; font-size: .78rem; color: var(--cyan); font-weight: 600; }
+        .ref-url { font-size: .73rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .chain { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.1rem 1.2rem; margin: 1.2rem 0 1.6rem; }
+        .chain-title { width: 100%; font-family: 'JetBrains Mono', monospace; font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: .7rem; }
+        .chain-node { font-family: 'JetBrains Mono', monospace; font-size: .74rem; color: var(--text); background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; padding: .35rem .65rem; word-break: break-word; }
+        .chain-arrow { font-family: 'JetBrains Mono', monospace; font-size: .9rem; color: var(--cyan); flex-shrink: 0; }
+        .chain-node.highlight { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+        .chain-node.danger { border-color: var(--red); color: var(--red); background: #ff475711; }
+        footer { margin-top: 4rem; padding: 2rem 0; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+        .footer-author { font-family: 'JetBrains Mono', monospace; font-size: .78rem; color: var(--muted); line-height: 1.8; }
+        .footer-badge { font-family: 'JetBrains Mono', monospace; font-size: .72rem; color: var(--muted); display: flex; align-items: center; gap: .4rem; }
+        .footer-badge span { color: var(--cyan); }
+        .bottom-back { display: inline-flex; align-items: center; gap: .5rem; padding: .7rem 1.2rem; margin-top: .8rem; min-height: 44px; border: 1px solid var(--cyan); border-radius: 8px; color: var(--cyan); text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: .8rem; background: var(--cyan-dim); transition: all .2s; }
+        .bottom-back:hover, .bottom-back:active { box-shadow: 0 0 20px var(--cyan-glow); }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+        @media (max-width: 900px) {
+            main { margin-left: 0; width: 100%; padding: 0 1.6rem 6rem; }
+            .sidebar { display: none; }
+            .mobile-nav { display: block; }
+        }
+        @media (max-width: 768px) {
+            .hero { padding: 4.5rem 0 3rem; }
+            .toc-list { grid-template-columns: 1fr; }
+            .glossary-grid { grid-template-columns: 1fr; }
+            .ref-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+        }
+        @media (max-width: 480px) {
+            body { font-size: 15px; }
+            main { padding: 0 1.1rem 6rem; }
+            .hero { padding: 4rem 0 2.5rem; }
+            .back-home { font-size: .72rem; padding: .5rem .8rem; }
+            .back-home span.label { display: none; }
+            .section { padding: 2.6rem 0 1.5rem; }
+            .section-title { margin-bottom: 1.1rem; }
+            .subsection-title { margin: 1.8rem 0 .7rem; font-size: .92rem; }
+            .terminal-bar-label { font-size: 10px; }
+            .code-wrap pre { font-size: .7rem; padding: .9rem .8rem; }
+            .def-box, .toc, .terminal-caption { padding: 1rem 1.1rem; }
+            .flag-box { padding: 1.3rem 1rem; }
+            footer { flex-direction: column; align-items: flex-start; }
+        }
+        @media (max-height: 480px) and (orientation: landscape) {
+            .mobile-nav { padding-bottom: calc(.4rem + var(--safe-b)); }
+            .mobile-nav-item { min-height: 36px; }
+        }
+        @media (min-width: 1400px) { .inner { max-width: 1020px; } }
+    </style>
+</head>
+<body>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+<a class="back-home" href="../index.html">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9.5 3L4.5 8L9.5 13"/></svg>
+    <span class="label">Retour à l'accueil</span>
+</a>
+
+<nav class="sidebar">
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#s0">00</a>
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#s1">01</a>
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#s2">02</a>
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#s3">03</a>
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#s4">04</a>
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#s5">05</a>
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#s6">06</a>
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#quiz">Q</a>
+    <div class="sidebar-line"></div>
+</nav>
+
+<nav class="mobile-nav">
+    <div class="mobile-nav-scroll">
+        <a class="mobile-nav-item" href="#s0">00</a>
+        <a class="mobile-nav-item" href="#s1">01</a>
+        <a class="mobile-nav-item" href="#s2">02</a>
+        <a class="mobile-nav-item" href="#s3">03</a>
+        <a class="mobile-nav-item" href="#s4">04</a>
+        <a class="mobile-nav-item" href="#s5">05</a>
+        <a class="mobile-nav-item" href="#s6">06</a>
+        <a class="mobile-nav-item" href="#quiz">Q</a>
+    </div>
+</nav>
+
+<main>
+    <div class="inner">
+
+        <header class="hero">
+            <div class="hero-eyebrow">ROOTME · Défi : Réseau</div>
+            <h1 class="hero-title">
+                ROOTME — <span class="accent">Bluetooth - Fichier inconnu</span>
+            </h1>
+            <p class="hero-sub">
+                <strong>Catégorie :</strong> Réseau — <strong>Points :</strong> 15 — <strong>Difficulté :</strong> ⭐ (1/5) — <strong>Auteur :</strong> Neptune<br>
+                Rédigé par <span style="color:var(--cyan);">SPECTRA MZ</span> — analyse d'une capture BT Snoop.
+            </p>
+            <div class="meta-pills">
+                <span class="pill pill-cyan">ROOTME</span>
+                <span class="pill pill-red">Bluetooth</span>
+                <span class="pill pill-amber">HCI</span>
+                <span class="pill pill-purple">SHA-1</span>
+                <span class="pill pill-green">Wireshark</span>
+            </div>
+            <div class="hero-divider"></div>
+        </header>
+
+        <div class="toc">
+            <div class="toc-title">Sommaire</div>
+            <ul class="toc-list">
+                <li><span class="toc-num">00</span><a href="#s0">Présentation & énoncé</a></li>
+                <li><span class="toc-num">01</span><a href="#s1">Vocabulaire Bluetooth</a></li>
+                <li><span class="toc-num">02</span><a href="#s2">Identifier le format</a></li>
+                <li><span class="toc-num">03</span><a href="#s3">Analyse de la capture</a></li>
+                <li><span class="toc-num">04</span><a href="#s4">Extraction des données</a></li>
+                <li><span class="toc-num">05</span><a href="#s5">Calcul du SHA-1</a></li>
+                <li><span class="toc-num">06</span><a href="#s6">Enjeux de sécurité</a></li>
+                <li><span class="toc-num">Q</span><a href="#quiz">Quiz</a></li>
+            </ul>
+        </div>
+
+        <!-- SECTION 0 -->
+        <section class="section" id="s0">
+            <div class="section-label">Phase <span>00</span></div>
+            <h2 class="section-title">Présentation du challenge</h2>
+
+            <div style="background: var(--surface); border: 2px solid var(--cyan); border-radius: 10px; padding: 1.5rem; margin: 1.5rem 0; box-shadow: 0 0 20px var(--cyan-glow);">
+                <p style="font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: var(--cyan); margin: 0;">
+                    📜 <strong>ÉNONCÉ OFFICIEL</strong>
+                </p>
+                <p style="font-size: 1.05rem; color: var(--text); margin: 0.5rem 0 0 0; font-weight: 500;">
+                    Votre ami travaillant à l'ANSSI a récupéré un fichier illisible dans l'ordi d'un hacker. Tout ce qu'il sait est que cela provient d'un échange entre un ordinateur et un téléphone. À vous d'en apprendre le plus possible sur ce téléphone.<br><br>
+                    La réponse est le hash SHA‑1 de la concaténation de l'adresse MAC (en majuscules) et du nom du téléphone.<br>
+                    <code>Exemple : AB:CD:EF:12:34:56monTelephone → 836eca0d42f34291c5fefe91010873008b53c129</code>
+                </p>
+            </div>
+
+            <p>
+                <strong>Fichier fourni :</strong> un fichier binaire <code>ch18.bin</code> <strong>illisible</strong> tel quel.<br>
+                L'indice de l'énoncé — <em>« Google est ton ami »</em> — invite à identifier le format du fichier.
+            </p>
+
+            <div class="terminal-frame">
+                <div class="terminal-bar">
+                    <div class="t-dot t-dot-red"></div>
+                    <div class="t-dot t-dot-amber"></div>
+                    <div class="t-dot t-dot-green"></div>
+                    <span class="terminal-bar-label">ch18.bin — extrait hexadécimal</span>
+                </div>
+                <div class="img-scroll"><pre style="padding: 0.8rem 1rem; font-size: 0.7rem; line-height:1.6; background:var(--code-bg); color:#c0cce8; margin:0; overflow-x:auto;">62 74 73 6e 6f 6f 70 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+...</pre></div>
+                <div class="terminal-caption">Les premiers octets <code>62 74 73 6e 6f 6f 70</code> = <strong>btsnoop</strong>.</div>
+            </div>
+        </section>
+
+        <!-- SECTION 1 -->
+        <section class="section" id="s1">
+            <div class="section-label">Phase <span>01</span></div>
+            <h2 class="section-title">Vocabulaire clé</h2>
+            <div class="glossary-grid">
+                <div class="glossary-card"><div class="glossary-term">Bluetooth</div><div class="glossary-def">Norme de communication sans fil courte portée (2,4 GHz) entre appareils.</div></div>
+                <div class="glossary-card"><div class="glossary-term">HCI</div><div class="glossary-def">Host Controller Interface — couche de communication entre l'hôte et le contrôleur Bluetooth.</div></div>
+                <div class="glossary-card"><div class="glossary-term">BT Snoop (btsnoop)</div><div class="glossary-def">Format de capture du trafic HCI Bluetooth, lisible par Wireshark.</div></div>
+                <div class="glossary-card"><div class="glossary-term">BD_ADDR</div><div class="glossary-def">Bluetooth Device Address — adresse unique de 6 octets, format MAC (<code>AA:BB:CC:DD:EE:FF</code>).</div></div>
+                <div class="glossary-card"><div class="glossary-term">Remote Name Request</div><div class="glossary-def">Commande HCI pour demander le nom convivial d'un périphérique Bluetooth.</div></div>
+                <div class="glossary-card"><div class="glossary-term">Remote Name Request Complete</div><div class="glossary-def">Événement HCI contenant le <code>BD_ADDR</code> et le <code>Remote Name</code> de l'appareil interrogé.</div></div>
+                <div class="glossary-card"><div class="glossary-term">SHA‑1</div><div class="glossary-def">Fonction de hachage cryptographique produisant une empreinte de 160 bits (40 caractères hexadécimaux).</div></div>
+                <div class="glossary-card"><div class="glossary-term">ANSSI</div><div class="glossary-def">Agence nationale de la sécurité des systèmes d'information (France).</div></div>
+            </div>
+        </section>
+
+        <!-- SECTION 2 -->
+        <section class="section" id="s2">
+            <div class="section-label">Phase <span>02</span></div>
+            <h2 class="section-title">Identifier le format : « Google est ton ami »</h2>
+            <p>
+                Le fichier est binaire. En l'ouvrant avec un éditeur hexadécimal (<code>xxd</code>, HxD), on repère le <strong>magic number</strong> :
+            </p>
+            <div class="code-wrap"><pre>62 74 73 6e 6f 6f 70 → "btsnoop"</pre></div>
+            <p>
+                Une recherche Google (« btsnoop file format ») mène directement à la spécification du <strong>BT Snoop File Format</strong> (format de capture des trames HCI Bluetooth). Wireshark reconnaît ce format et le dissèque automatiquement.
+            </p>
+            <div class="def-box">
+                <div class="def-term">BT Snoop</div>
+                <div class="def-body">
+                    Format utilisé par des outils comme <code>hcidump</code>, <code>btmon</code> ou le <em>HCI snoop log</em> d'Android. C'est le format standard pour enregistrer le trafic Bluetooth au niveau HCI.
+                </div>
+            </div>
+            <p>
+                Ouvrons donc le fichier dans <strong>Wireshark</strong> (Fichier → Ouvrir → ch18.bin). Wireshark reconnaît le format et liste les paquets HCI.
+            </p>
+        </section>
+
+        <!-- SECTION 3 -->
+        <section class="section" id="s3">
+            <div class="section-label">Phase <span>03</span></div>
+            <h2 class="section-title">Analyse de la capture (Wireshark)</h2>
+            <p>
+                Une fois ouvert, on filtre sur les événements HCI. L'information recherchée se trouve dans l'événement <strong>Remote Name Request Complete</strong>.
+            </p>
+            <div class="code-wrap"><pre>Filtre Wireshark : bthci_evt.code == 0x07</pre></div>
+            <p>
+                En sélectionnant le paquet correspondant (généralement le paquet 9), on déplie la section <code>Bluetooth HCI Event</code>.
+            </p>
+            <div class="terminal-frame">
+                <div class="terminal-bar">
+                    <div class="t-dot t-dot-red"></div>
+                    <div class="t-dot t-dot-amber"></div>
+                    <div class="t-dot t-dot-green"></div>
+                    <span class="terminal-bar-label">Détails du paquet Remote Name Request Complete</span>
+                </div>
+                <div class="img-scroll"><pre style="padding: 0.8rem 1rem; font-size: 0.7rem; line-height:1.6; background:var(--code-bg); color:#c0cce8; margin:0; overflow-x:auto;">Bluetooth HCI Event
+    Event Code: Remote Name Request Complete (0x07)
+    Status: Success (0x00)
+    BD_ADDR: 0C:B3:19:B9:4F:C6
+    Remote Name: GT-S7390G</pre></div>
+                <div class="terminal-caption">L'événement livre l'adresse MAC et le nom du téléphone.</div>
+            </div>
+            <p>
+                <strong>Interprétation :</strong>
+            </p>
+            <ul class="plain">
+                <li><strong>BD_ADDR <code>0C:B3:19:B9:4F:C6</code></strong> → l'adresse MAC Bluetooth (OUI <code>0C:B3:19</code> = Samsung Electronics).</li>
+                <li><strong>Remote Name <code>GT-S7390G</code></strong> → le modèle du téléphone, un <strong>Samsung Galaxy Trend Lite</strong>.</li>
+            </ul>
+            <p>
+                On peut aussi utiliser la vue <strong>Wireless → Bluetooth Devices</strong> pour voir tous les appareils et leurs noms.
+            </p>
+        </section>
+
+        <!-- SECTION 4 -->
+        <section class="section" id="s4">
+            <div class="section-label">Phase <span>04</span></div>
+            <h2 class="section-title">Extraction des informations</h2>
+
+            <h3 class="subsection-title">Méthode 1 — Wireshark (graphique)</h3>
+            <p>
+                Suivre les étapes décrites ci‑dessus : filtrer <code>bthci_evt.code == 0x07</code> et lire les champs.
+            </p>
+
+            <h3 class="subsection-title">Méthode 2 — Ligne de commande (tshark)</h3>
+            <div class="code-wrap">
+                <div class="code-header"><span class="code-lang">Commande tshark</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+                <pre>tshark -r ch18.bin -Y "bthci_evt.code == 0x07" \
+  -T fields -e bthci_evt.bd_addr -e bthci_evt.device_name</pre>
+            </div>
+            <p>Résultat :</p>
+            <div class="code-wrap"><pre>0C:b3:19:b9:4f:c6    GT-S7390G</pre></div>
+
+            <h3 class="subsection-title">Table de synthèse</h3>
+            <div class="code-wrap"><pre>| Information          | Valeur                  |
+|----------------------|-------------------------|
+| Adresse MAC (BD_ADDR)| 0C:B3:19:B9:4F:C6       |
+| Nom du téléphone     | GT-S7390G               |</pre></div>
+        </section>
+
+        <!-- SECTION 5 -->
+        <section class="section" id="s5">
+            <div class="section-label">Phase <span>05</span></div>
+            <h2 class="section-title">Construction du hash SHA‑1</h2>
+            <p>
+                L'énoncé demande le SHA‑1 de la <strong>concaténation de l'adresse MAC (en majuscules) et du nom du téléphone</strong> — sans séparateur, sans espace.
+            </p>
+
+            <div class="warn-badge">
+                ⚠️ <strong>Piège n°1 :</strong> la concaténation est directe : <code>0C:B3:19:B9:4F:C6GT-S7390G</code><br>
+                Ne pas ajouter de deux‑points, d'espace ou de séparateur entre la MAC et le nom.
+            </div>
+
+            <p>Commande de calcul (Linux) :</p>
+            <div class="code-wrap">
+                <div class="code-header"><span class="code-lang">SHA‑1 avec echo -n</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+                <pre>echo -n "0C:B3:19:B9:4F:C6GT-S7390G" | sha1sum</pre>
+            </div>
+
+            <div class="warn-badge">
+                ⚠️ <strong>Piège n°2 (crucial) :</strong> l'option <strong><code>-n</code></strong> est obligatoire pour ne pas ajouter de retour à la ligne. Vérifiez avec l'exemple de l'énoncé :
+                <pre style="margin:0.5rem 0; background:var(--code-bg); padding:0.5rem; border-radius:4px; color:#c0cce8;">echo -n "AB:CD:EF:12:34:56monTelephone" | sha1sum
+# doit donner : 836eca0d42f34291c5fefe91010873008b53c129</pre>
+            </div>
+
+            <p>Le résultat :</p>
+            <div class="flag-box">
+                <div class="flag-label">Flag final</div>
+                <div class="flag-text">c1d0349c153ed96fe2fadf44e880aef9e69c122b</div>
+            </div>
+            <p>
+                (40 caractères hexadécimaux — la taille exacte d'une empreinte SHA‑1, un bon contrôle de cohérence.)
+            </p>
+        </section>
+
+        <!-- SECTION 6 -->
+        <section class="section" id="s6">
+            <div class="section-label">Phase <span>06</span></div>
+            <h2 class="section-title">Enjeux de sécurité (côté SOC / forensique)</h2>
+
+            <h3 class="subsection-title">La méthode en 4 étapes (à retenir)</h3>
+            <div class="chain">
+                <span class="chain-title">Processus de résolution</span>
+                <span class="chain-node highlight">1. Identifier le format (magic bytes)</span>
+                <span class="chain-arrow">→</span>
+                <span class="chain-node">2. Ouvrir dans Wireshark</span>
+                <span class="chain-arrow">→</span>
+                <span class="chain-node">3. Chercher Remote Name Request Complete</span>
+                <span class="chain-arrow">→</span>
+                <span class="chain-node danger">4. Concaténer MAC + nom → SHA‑1</span>
+            </div>
+
+            <h3 class="subsection-title">Le message de sécurité</h3>
+            <div class="glossary-grid">
+                <div class="glossary-card">
+                    <div class="glossary-term">Le nom Bluetooth est un identifiant faible</div>
+                    <div class="glossary-def"><code>GT-S7390G</code> révèle directement le modèle du téléphone. Beaucoup d'appareils utilisent <code>Prénom Modèle</code> comme nom — une mine d'or pour le profiling.</div>
+                </div>
+                <div class="glossary-card">
+                    <div class="glossary-term">Le BD_ADDR est traçable</div>
+                    <div class="glossary-def">Sauf mécanismes d'adresses aléatoires (BLE privacy), l'adresse MAC Bluetooth est unique et stable : elle permet de suivre un appareil dans l'espace et le temps.</div>
+                </div>
+                <div class="glossary-card">
+                    <div class="glossary-term">Les captures HCI sont une source forensique riche</div>
+                    <div class="glossary-def">On peut y retrouver appairages, noms, adresses, et parfois des données applicatives non chiffrées.</div>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">Recommandations</h3>
+            <ul class="rec-list">
+                <li><span class="rec-num">01</span><div><strong>Nom d'appareil neutre</strong> — ne pas mettre son nom/modèle dans le nom Bluetooth (préférer un alias sans données personnelles).</div></li>
+                <li><span class="rec-num">02</span><div><strong>Désactiver Bluetooth quand inutilisé</strong> — réduit la fenêtre de découverte et de capture passive.</div></li>
+                <li><span class="rec-num">03</span><div><strong>Ne pas appairer en public</strong> — éviter les appairages dans les lieux publics (attaques BlueSmack/BlueBorne historiquement possibles).</div></li>
+                <li><span class="rec-num">04</span><div><strong>Détection</strong> — règles sur les requêtes de nom répétées (fingerprinting automatique de téléphones dans une zone).</div></li>
+            </ul>
+        </section>
+
+        <!-- QUIZ -->
+        <section class="section" id="quiz">
+            <div class="section-label">// <span>auto-évaluation</span></div>
+            <h2 class="section-title">Quiz – Validation des acquis</h2>
+            <p style="font-size:.85rem;color:var(--muted);margin-bottom:1.5rem;">Clique sur une question pour révéler la réponse.</p>
+
+            <div class="quiz-list">
+                <div class="quiz-item">
+                    <div class="quiz-q"><span class="quiz-q-num">Q1</span><span class="quiz-q-text">Quel est le magic number du format BT Snoop ?</span><span class="quiz-toggle">+</span></div>
+                    <div class="quiz-a"><div class="quiz-a-inner">→ <code>62 74 73 6e 6f 6f 70</code> = "btsnoop"</div></div>
+                </div>
+                <div class="quiz-item">
+                    <div class="quiz-q"><span class="quiz-q-num">Q2</span><span class="quiz-q-text">Quel événement HCI contient le nom et l'adresse MAC du périphérique ?</span><span class="quiz-toggle">+</span></div>
+                    <div class="quiz-a"><div class="quiz-a-inner">→ Remote Name Request Complete (Event Code 0x07)</div></div>
+                </div>
+                <div class="quiz-item">
+                    <div class="quiz-q"><span class="quiz-q-num">Q3</span><span class="quiz-q-text">Quelle est la taille d'une empreinte SHA‑1 ?</span><span class="quiz-toggle">+</span></div>
+                    <div class="quiz-a"><div class="quiz-a-inner">→ 40 caractères hexadécimaux (160 bits).</div></div>
+                </div>
+                <div class="quiz-item">
+                    <div class="quiz-q"><span class="quiz-q-num">Q4</span><span class="quiz-q-text">Pourquoi utiliser l'option <code>-n</code> avec <code>echo</code> pour calculer le SHA‑1 ?</span><span class="quiz-toggle">+</span></div>
+                    <div class="quiz-a"><div class="quiz-a-inner">→ Pour ne pas ajouter de retour à la ligne, ce qui modifierait l'empreinte.</div></div>
+                </div>
+                <div class="quiz-item">
+                    <div class="quiz-q"><span class="quiz-q-num">Q5</span><span class="quiz-q-text">Quelle est la bonne concaténation pour le challenge ?</span><span class="quiz-toggle">+</span></div>
+                    <div class="quiz-a"><div class="quiz-a-inner">→ <code>0C:B3:19:B9:4F:C6GT-S7390G</code></div></div>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <div class="footer-author">
+                Rédigé par <strong style="color: var(--cyan);">SPECTRA MZ</strong>
+                &nbsp;·&nbsp; ROOTME — Bluetooth - Fichier inconnu
+                <br>
+                <a class="bottom-back" href="../index.html">← Retour à l'accueil</a>
+            </div>
+            <div class="footer-badge">
+                <span>📶</span> Write-up · BT Snoop &amp; SHA‑1
+            </div>
+        </footer>
+
+    </div>
+</main>
+
+<script>
+    function copyCode(btn) {
+        const pre = btn.closest('.code-wrap').querySelector('pre');
+        const text = pre.innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            btn.textContent = 'copié ✓';
+            btn.style.borderColor = 'var(--cyan)';
+            btn.style.color = 'var(--cyan)';
+            setTimeout(() => {
+                btn.textContent = 'copier';
+                btn.style.borderColor = '';
+                btn.style.color = '';
+            }, 1800);
+        });
+    }
+
+    const sections = document.querySelectorAll('.section[id]');
+    const dots = document.querySelectorAll('.phase-dot');
+    const mobileItems = document.querySelectorAll('.mobile-nav-item');
+    const progressFill = document.getElementById('progressFill');
+
+    function updateActive() {
+        let current = '';
+        sections.forEach(sec => { if (window.scrollY + 200 >= sec.offsetTop) current = sec.id; });
+        dots.forEach(dot => dot.classList.toggle('active', dot.getAttribute('href') === '#' + current));
+        mobileItems.forEach(item => item.classList.toggle('active', item.getAttribute('href') === '#' + current));
+
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const scrolled = docHeight > 0 ? (window.scrollY / docHeight) * 100 : 0;
+        progressFill.style.width = scrolled + '%';
+    }
+
+    window.addEventListener('scroll', updateActive, { passive: true });
+    window.addEventListener('resize', updateActive, { passive: true });
+    updateActive();
+
+    document.querySelectorAll('.quiz-q').forEach(q => {
+        q.addEventListener('click', () => q.parentElement.classList.toggle('open'));
+    });
+</script>
+</body>
+</html>

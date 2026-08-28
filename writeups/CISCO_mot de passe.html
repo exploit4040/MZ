@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>ROOTME — CISCO - mot de passe — Write-up</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* --- Style identique aux pages précédentes --- */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        :root {
+            --bg:        #080c18;
+            --surface:   #0f1525;
+            --surface2:  #151d30;
+            --border:    #1e2a42;
+            --cyan:      #00d4aa;
+            --cyan-dim:  #00d4aa22;
+            --cyan-glow: #00d4aa44;
+            --red:       #ff4757;
+            --amber:     #ffa502;
+            --purple:    #a855f7;
+            --blue:      #2f9bff;
+            --green:     #4ade80;
+            --text:      #e2e8f4;
+            --muted:     #6b7a99;
+            --code-bg:   #060a14;
+            --safe-t: env(safe-area-inset-top, 0px);
+            --safe-b: env(safe-area-inset-bottom, 0px);
+            --safe-l: env(safe-area-inset-left, 0px);
+            --safe-r: env(safe-area-inset-right, 0px);
+        }
+        html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+        body {
+            background: var(--bg); color: var(--text);
+            font-family: 'Inter', sans-serif; font-size: 16px; line-height: 1.7;
+            overflow-x: hidden; -webkit-font-smoothing: antialiased;
+        }
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.08) 2px, rgba(0,0,0,.08) 4px);
+            pointer-events: none; z-index: 9999;
+        }
+        img { max-width: 100%; height: auto; display: block; }
+        .progress-bar { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 700; background: var(--border); }
+        .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--cyan), var(--blue)); box-shadow: 0 0 8px var(--cyan-glow); transition: width .1s linear; }
+        .back-home {
+            position: fixed; top: calc(1.2rem + var(--safe-t)); left: calc(1.2rem + var(--safe-l)); z-index: 600;
+            display: inline-flex; align-items: center; gap: .5rem; padding: .6rem 1.05rem; min-height: 44px;
+            background: rgba(15,21,37,.9); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+            border: 1px solid var(--border); border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace; font-size: .78rem; font-weight: 500; color: var(--muted);
+            text-decoration: none; transition: all .2s;
+        }
+        .back-home:hover, .back-home:active { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 16px var(--cyan-glow); }
+        .back-home svg { width: 14px; height: 14px; flex-shrink: 0; }
+        .sidebar {
+            position: fixed; left: 0; top: 0; width: 64px; height: 100vh;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 100; padding: 2rem 0;
+        }
+        .sidebar-line { width: 1px; flex: 1; background: var(--border); }
+        .phase-dot {
+            width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--muted);
+            cursor: pointer; transition: all .3s; text-decoration: none; flex-shrink: 0;
+        }
+        .phase-dot:hover, .phase-dot.active { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 12px var(--cyan-glow); background: var(--cyan-dim); }
+        .mobile-nav {
+            display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 650;
+            background: rgba(15,21,37,.95); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+            border-top: 1px solid var(--border);
+            padding: .6rem calc(.6rem + var(--safe-l)) calc(.6rem + var(--safe-b)) calc(.6rem + var(--safe-r));
+        }
+        .mobile-nav-scroll { display: flex; gap: .5rem; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+        .mobile-nav-scroll::-webkit-scrollbar { display: none; }
+        .mobile-nav-item {
+            flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+            min-width: 44px; min-height: 44px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface);
+            font-family: 'JetBrains Mono', monospace; font-size: .66rem; color: var(--muted); text-decoration: none; transition: all .2s;
+        }
+        .mobile-nav-item.active { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+        main { margin-left: 64px; width: calc(100% - 64px); padding: 0 2rem 6rem; }
+        .inner { max-width: 920px; margin: 0 auto; }
+        .hero { padding: 5.5rem 0 4rem; position: relative; }
+        .hero-eyebrow {
+            font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+            color: var(--cyan); margin-bottom: 1.5rem; display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
+        }
+        .hero-eyebrow::before { content:''; display:inline-block; width:24px; height:1px; background: var(--cyan); }
+        .hero-title {
+            font-family: 'JetBrains Mono', monospace; font-size: clamp(1.9rem, 5.4vw, 3.3rem);
+            font-weight: 700; line-height: 1.15; letter-spacing: -.02em; margin-bottom: 1rem; word-break: break-word;
+        }
+        .hero-title .accent { color: var(--cyan); }
+        .hero-title .dim { color: var(--muted); font-weight: 300; }
+        .hero-sub { font-size: clamp(.95rem, 2.2vw, 1.05rem); color: var(--muted); margin-bottom: 2.5rem; max-width: 640px; }
+        .meta-pills { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 2rem; }
+        .pill { padding: .35rem .9rem; border-radius: 99px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .08em; font-weight: 500; white-space: nowrap; }
+        .pill-cyan   { border:1px solid var(--cyan);   color:var(--cyan);   background:var(--cyan-dim); }
+        .pill-red    { border:1px solid var(--red);    color:var(--red);    background:#ff475711; }
+        .pill-amber  { border:1px solid var(--amber);  color:var(--amber);  background:#ffa50211; }
+        .pill-purple { border:1px solid var(--purple); color:var(--purple); background:#a855f711; }
+        .pill-green  { border:1px solid var(--green);  color:var(--green);  background:#4ade8011; }
+        .hero-divider { width: 100%; height: 1px; background: linear-gradient(90deg, var(--cyan) 0%, var(--border) 60%, transparent 100%); margin-top: 3rem; }
+        .toc { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem 1.6rem; margin: 2rem 0; }
+        .toc-title { font-family: 'JetBrains Mono', monospace; font-size: .75rem; letter-spacing: .15em; text-transform: uppercase; color: var(--cyan); margin-bottom: 1rem; }
+        .toc-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: .6rem 1.5rem; }
+        .toc-list a { font-size: .85rem; color: #b8c3d9; text-decoration: none; display: flex; align-items: baseline; gap: .5rem; transition: color .2s; min-height: 24px; }
+        .toc-list a:hover, .toc-list a:active { color: var(--cyan); }
+        .toc-num { font-family: 'JetBrains Mono', monospace; font-size: .7rem; color: var(--muted); flex-shrink: 0; }
+        .section { padding: 3.5rem 0 2rem; border-bottom: 1px solid var(--border); }
+        .section:last-of-type { border-bottom: none; }
+        .section-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--cyan); margin-bottom: .6rem; display: flex; align-items: center; gap: .5rem; }
+        .section-label span { color: var(--muted); }
+        .section-title { font-family: 'JetBrains Mono', monospace; font-size: clamp(1.2rem, 3.2vw, 1.5rem); font-weight: 600; color: var(--text); margin-bottom: 1.5rem; line-height: 1.3; }
+        .subsection-title { font-family: 'JetBrains Mono', monospace; font-size: 1rem; font-weight: 600; color: var(--cyan); margin: 2.2rem 0 .9rem; padding-left: 1rem; border-left: 2px solid var(--cyan); }
+        p { margin-bottom: 1.1rem; color: #b8c3d9; word-wrap: break-word; }
+        p strong { color: var(--text); font-weight: 600; }
+        ul.plain, ol.plain { margin: 0 0 1.1rem 1.3rem; color: #b8c3d9; }
+        ul.plain li, ol.plain li { margin-bottom: .5rem; }
+        .def-box { background: linear-gradient(135deg, #2f9bff0a 0%, #2f9bff03 100%); border: 1px solid var(--blue); border-radius: 10px; padding: 1.3rem 1.4rem; margin: 1.2rem 0 1.6rem; }
+        .def-term { display: flex; align-items: center; gap: .6rem; font-family: 'JetBrains Mono', monospace; font-size: .92rem; font-weight: 700; color: var(--blue); margin-bottom: .5rem; flex-wrap: wrap; }
+        .def-term::before { content: '§'; font-size: 1.1rem; }
+        .def-body { color: #b8c3d9; font-size: .88rem; }
+        .def-body code { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: .1em .4em; color: #c0cce8; font-size: .85em; word-break: break-all; }
+        .glossary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+        .glossary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem; }
+        .glossary-term { font-family: 'JetBrains Mono', monospace; font-size: .85rem; font-weight: 700; color: var(--cyan); margin-bottom: .5rem; }
+        .glossary-def { font-size: .82rem; color: var(--muted); line-height: 1.55; }
+        .terminal-frame { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 1.5rem 0; box-shadow: 0 8px 40px rgba(0,0,0,.5), 0 0 0 1px rgba(0,212,170,.06); }
+        .terminal-bar { background: var(--surface2); padding: .6rem .9rem; display: flex; align-items: center; gap: .5rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+        .t-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .t-dot-red { background: #ff5f57; } .t-dot-amber { background: #ffbd2e; } .t-dot-green { background: #28c840; }
+        .terminal-bar-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); margin-left: .3rem; word-break: break-all; }
+        .terminal-frame .img-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .terminal-frame img { width: 100%; display: block; vertical-align: top; }
+        .terminal-caption { padding: .6rem .9rem; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); background: var(--surface2); border-top: 1px solid var(--border); display: flex; align-items: flex-start; gap: .5rem; }
+        .terminal-caption::before { content: '▸'; color: var(--cyan); flex-shrink: 0; }
+        .code-wrap { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 1rem 0 1.5rem; position: relative; }
+        .code-header { background: var(--surface2); padding: .45rem .9rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); gap: .5rem; }
+        .code-lang { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--cyan); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .copy-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: .35rem .7rem; border-radius: 4px; cursor: pointer; transition: all .2s; min-height: 32px; flex-shrink: 0; }
+        .copy-btn:hover, .copy-btn:active { border-color: var(--cyan); color: var(--cyan); }
+        .code-wrap pre { padding: 1.1rem 1.1rem; overflow-x: auto; -webkit-overflow-scrolling: touch; font-family: 'JetBrains Mono', monospace; font-size: .78rem; line-height: 1.7; color: #c0cce8; }
+        .code-wrap pre .kw { color: var(--cyan); }
+        .code-wrap pre .str { color: #ffdd87; }
+        .code-wrap pre .hl { color: var(--amber); font-weight: 700; }
+        .code-wrap pre .hl-cyan { color: var(--cyan); font-weight: 700; }
+        .code-wrap pre .hl-red { color: var(--red); font-weight: 700; }
+        .code-wrap pre .cmt { color: var(--muted); font-style: italic; }
+        .code-wrap pre .prop { color: var(--purple); }
+        .result-badge { display: inline-flex; align-items: flex-start; gap: .5rem; background: #00d4aa0f; border: 1px solid var(--cyan); border-radius: 6px; padding: .6rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--cyan); margin: .5rem 0 1rem; word-break: break-word; }
+        .result-badge::before { content: '✓'; font-weight: 700; flex-shrink: 0; }
+        .warn-badge { display: inline-flex; align-items: flex-start; gap: .5rem; background: #ffa5020f; border: 1px solid var(--amber); border-radius: 6px; padding: .6rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--amber); margin: .5rem 0 1rem; word-break: break-word; }
+        .warn-badge::before { content: '⚠'; font-weight: 700; flex-shrink: 0; }
+        .flag-box { background: linear-gradient(135deg, #00d4aa0a 0%, #00d4aa03 100%); border: 1px solid var(--cyan); border-radius: 10px; padding: 1.6rem 1.4rem; text-align: center; position: relative; overflow: hidden; margin: 1.5rem 0; }
+        .flag-box::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, var(--cyan-glow) 0%, transparent 70%); pointer-events: none; }
+        .flag-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); margin-bottom: .8rem; }
+        .flag-text { font-family: 'JetBrains Mono', monospace; font-size: clamp(.9rem, 3.2vw, 1.2rem); font-weight: 700; color: var(--cyan); letter-spacing: .02em; text-shadow: 0 0 20px var(--cyan-glow); word-break: break-all; }
+        .quiz-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: .8rem; overflow: hidden; }
+        .quiz-q { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.3rem; cursor: pointer; user-select: none; }
+        .quiz-q-num { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: .75rem; color: var(--bg); background: var(--purple); min-width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .quiz-q-text { font-size: .88rem; color: var(--text); font-weight: 500; flex: 1; }
+        .quiz-toggle { font-family: 'JetBrains Mono', monospace; color: var(--muted); transition: transform .25s; flex-shrink: 0; }
+        .quiz-item.open .quiz-toggle { transform: rotate(45deg); color: var(--cyan); }
+        .quiz-a { max-height: 0; overflow: hidden; transition: max-height .3s ease; }
+        .quiz-item.open .quiz-a { max-height: 200px; }
+        .quiz-a-inner { padding: 0 1.3rem 1.1rem 3.1rem; font-size: .84rem; color: var(--cyan); font-family: 'JetBrains Mono', monospace; }
+        .ref-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .8rem; margin-top: 1rem; }
+        .ref-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; text-decoration: none; display: flex; flex-direction: column; gap: .3rem; transition: border-color .2s, box-shadow .2s; min-height: 44px; }
+        .ref-card:hover, .ref-card:active { border-color: var(--cyan); box-shadow: 0 0 20px var(--cyan-glow); }
+        .ref-icon { font-size: 1.1rem; margin-bottom: .2rem; }
+        .ref-name { font-family: 'JetBrains Mono', monospace; font-size: .78rem; color: var(--cyan); font-weight: 600; }
+        .ref-url { font-size: .73rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .chain { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.1rem 1.2rem; margin: 1.2rem 0 1.6rem; }
+        .chain-title { width: 100%; font-family: 'JetBrains Mono', monospace; font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: .7rem; }
+        .chain-node { font-family: 'JetBrains Mono', monospace; font-size: .74rem; color: var(--text); background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; padding: .35rem .65rem; word-break: break-word; }
+        .chain-arrow { font-family: 'JetBrains Mono', monospace; font-size: .9rem; color: var(--cyan); flex-shrink: 0; }
+        .chain-node.highlight { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+        .chain-node.danger { border-color: var(--red); color: var(--red); background: #ff475711; }
+        .compare-box { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1.2rem 0; }
+        .compare-col { flex: 1; min-width: 200px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
+        .compare-col h4 { font-family: 'JetBrains Mono', monospace; font-size: .75rem; color: var(--cyan); margin-bottom: .5rem; }
+        footer { margin-top: 4rem; padding: 2rem 0; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+        .footer-author { font-family: 'JetBrains Mono', monospace; font-size: .78rem; color: var(--muted); line-height: 1.8; }
+        .footer-badge { font-family: 'JetBrains Mono', monospace; font-size: .72rem; color: var(--muted); display: flex; align-items: center; gap: .4rem; }
+        .footer-badge span { color: var(--cyan); }
+        .bottom-back { display: inline-flex; align-items: center; gap: .5rem; padding: .7rem 1.2rem; margin-top: .8rem; min-height: 44px; border: 1px solid var(--cyan); border-radius: 8px; color: var(--cyan); text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: .8rem; background: var(--cyan-dim); transition: all .2s; }
+        .bottom-back:hover, .bottom-back:active { box-shadow: 0 0 20px var(--cyan-glow); }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+        @media (max-width: 900px) {
+            main { margin-left: 0; width: 100%; padding: 0 1.6rem 6rem; }
+            .sidebar { display: none; }
+            .mobile-nav { display: block; }
+        }
+        @media (max-width: 768px) {
+            .hero { padding: 4.5rem 0 3rem; }
+            .toc-list { grid-template-columns: 1fr; }
+            .glossary-grid { grid-template-columns: 1fr; }
+            .ref-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+        }
+        @media (max-width: 480px) {
+            body { font-size: 15px; }
+            main { padding: 0 1.1rem 6rem; }
+            .hero { padding: 4rem 0 2.5rem; }
+            .back-home { font-size: .72rem; padding: .5rem .8rem; }
+            .back-home span.label { display: none; }
+            .section { padding: 2.6rem 0 1.5rem; }
+            .section-title { margin-bottom: 1.1rem; }
+            .subsection-title { margin: 1.8rem 0 .7rem; font-size: .92rem; }
+            .terminal-bar-label { font-size: 10px; }
+            .code-wrap pre { font-size: .7rem; padding: .9rem .8rem; }
+            .def-box, .toc, .terminal-caption { padding: 1rem 1.1rem; }
+            .flag-box { padding: 1.3rem 1rem; }
+            footer { flex-direction: column; align-items: flex-start; }
+        }
+        @media (max-height: 480px) and (orientation: landscape) {
+            .mobile-nav { padding-bottom: calc(.4rem + var(--safe-b)); }
+            .mobile-nav-item { min-height: 36px; }
+        }
+        @media (min-width: 1400px) { .inner { max-width: 1020px; } }
+    </style>
+</head>
+<body>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+<a class="back-home" href="../index.html">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9.5 3L4.5 8L9.5 13"/></svg>
+    <span class="label">Retour à l'accueil</span>
+</a>
+
+<nav class="sidebar">
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#s0">00</a>
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#s1">01</a>
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#s2">02</a>
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#s3">03</a>
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#s4">04</a>
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#s5">05</a>
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#s6">06</a>
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#quiz">Q</a>
+    <div class="sidebar-line"></div>
+</nav>
+
+<nav class="mobile-nav">
+    <div class="mobile-nav-scroll">
+        <a class="mobile-nav-item" href="#s0">00</a>
+        <a class="mobile-nav-item" href="#s1">01</a>
+        <a class="mobile-nav-item" href="#s2">02</a>
+        <a class="mobile-nav-item" href="#s3">03</a>
+        <a class="mobile-nav-item" href="#s4">04</a>
+        <a class="mobile-nav-item" href="#s5">05</a>
+        <a class="mobile-nav-item" href="#s6">06</a>
+        <a class="mobile-nav-item" href="#quiz">Q</a>
+    </div>
+</nav>
+
+<main>
+    <div class="inner">
+
+        <header class="hero">
+            <div class="hero-eyebrow">ROOTME · Défi : Réseau</div>
+            <h1 class="hero-title">
+                ROOTME — <span class="accent">CISCO - mot de passe</span>
+            </h1>
+            <p class="hero-sub">
+                <strong>Catégorie :</strong> Réseau — <strong>Points :</strong> 15 — <strong>Difficulté :</strong> ⭐ (1/5) — <strong>Auteur :</strong> Thanat0s<br>
+                Rédigé par <span style="color:var(--cyan);">SPECTRA MZ</span> — décodage de mots de passe Cisco type 7 et déduction du secret enable.
+            </p>
+            <div class="meta-pills">
+                <span class="pill pill-cyan">ROOTME</span>
+                <span class="pill pill-red">Cisco</span>
+                <span class="pill pill-amber">Type 7</span>
+                <span class="pill pill-purple">MD5-crypt</span>
+                <span class="pill pill-green">openssl</span>
+            </div>
+            <div class="hero-divider"></div>
+        </header>
+
+        <div class="toc">
+            <div class="toc-title">Sommaire</div>
+            <ul class="toc-list">
+                <li><span class="toc-num">00</span><a href="#s0">Présentation & énoncé</a></li>
+                <li><span class="toc-num">01</span><a href="#s1">Vocabulaire Cisco</a></li>
+                <li><span class="toc-num">02</span><a href="#s2">Type 5 vs Type 7</a></li>
+                <li><span class="toc-num">03</span><a href="#s3">Décodage des type 7</a></li>
+                <li><span class="toc-num">04</span><a href="#s4">Déduction du pattern</a></li>
+                <li><span class="toc-num">05</span><a href="#s5">Vérification par re-hachage</a></li>
+                <li><span class="toc-num">06</span><a href="#s6">Enjeux de sécurité</a></li>
+                <li><span class="toc-num">Q</span><a href="#quiz">Quiz</a></li>
+            </ul>
+        </div>
+
+        <!-- SECTION 0 -->
+        <section class="section" id="s0">
+            <div class="section-label">Phase <span>00</span></div>
+            <h2 class="section-title">Présentation du challenge</h2>
+
+            <div style="background: var(--surface); border: 2px solid var(--cyan); border-radius: 10px; padding: 1.5rem; margin: 1.5rem 0; box-shadow: 0 0 20px var(--cyan-glow);">
+                <p style="font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: var(--cyan); margin: 0;">
+                    📜 <strong>ÉNONCÉ OFFICIEL</strong>
+                </p>
+                <p style="font-size: 1.05rem; color: var(--text); margin: 0.5rem 0 0 0; font-weight: 500;">
+                    Trouvez le mot de passe <strong>« Enable »</strong>.<br>
+                    <span style="color: var(--muted); font-weight: 400;">Indice : <em>« Tous les hash n'en sont pas. »</em></span>
+                </p>
+            </div>
+
+            <p>
+                On nous donne une <strong>configuration Cisco</strong> (<code>show running-config</code>) d'un routeur nommé <code>rmt-paris</code>, avec plusieurs mots de passe de formes différentes.
+            </p>
+
+            <div class="terminal-frame">
+                <div class="terminal-bar">
+                    <div class="t-dot t-dot-red"></div>
+                    <div class="t-dot t-dot-amber"></div>
+                    <div class="t-dot t-dot-green"></div>
+                    <span class="terminal-bar-label">show running-config — extrait</span>
+                </div>
+                <div class="img-scroll"><pre style="padding: 0.8rem 1rem; font-size: 0.7rem; line-height:1.6; background:var(--code-bg); color:#c0cce8; margin:0; overflow-x:auto;">hostname rmt-paris
+!
+enable secret 5 $1$p8Y6$MCdRLBzuGlfOs9S.hXOp0.
+!
+username hub password 7 025017705B3907344E
+username admin privilege 15 password 7 10181A325528130F010D24
+username guest password 7 124F163C42340B112F3830
+!
+line con 0
+ password 7 144101205C3B29242A3B3C3927
+ login
+!
+line vty 0 4
+ password 7 060F0A2B5F400B091327
+ login
+!
+service password-encryption
+!</pre></div>
+                <div class="terminal-caption">La configuration mélange <code>secret 5</code> (hash MD5-crypt) et <code>password 7</code> (chiffrement faible).</div>
+            </div>
+
+            <p>
+                Le défi consiste à retrouver le mot de passe <code>enable</code>, protégé ici par un <strong>type 5</strong> (vrai hash irréversible). Mais l'indice nous met sur la piste : d'autres mots de passe sont en <strong>type 7</strong> — un chiffrement faible, réversible.
+            </p>
+        </section>
+
+        <!-- SECTION 1 -->
+        <section class="section" id="s1">
+            <div class="section-label">Phase <span>01</span></div>
+            <h2 class="section-title">Vocabulaire clé</h2>
+            <div class="glossary-grid">
+                <div class="glossary-card"><div class="glossary-term">Enable password / Enable secret</div><div class="glossary-def">Le mot de passe qui donne l'accès au mode <strong>privileged EXEC</strong> (<code>enable</code>) — l'équivalent de l'administrateur de l'équipement Cisco.</div></div>
+                <div class="glossary-card"><div class="glossary-term">Type 5 (<code>secret 5</code>)</div><div class="glossary-def">Vrai <strong>hash</strong> MD5-crypt (128 bits avec sel) : irréversible, on ne peut que le casser par dictionnaire.</div></div>
+                <div class="glossary-card"><div class="glossary-term">Type 7 (<code>password 7</code>)</div><div class="glossary-def"><strong>Chiffrement faible réversible</strong> : chaque octet est XORé avec une clé fixe connue publiquement. Ce n'est pas un hash — d'où le titre du challenge.</div></div>
+                <div class="glossary-card"><div class="glossary-term">service password-encryption</div><div class="glossary-def">Commande Cisco qui active le chiffrement type 7 des mots de passe (illusion de sécurité, car réversible).</div></div>
+                <div class="glossary-card"><div class="glossary-term">Salt</div><div class="glossary-def">Donnée aléatoire ajoutée au mot de passe avant hachage (ici <code>p8Y6</code>).</div></div>
+                <div class="glossary-card"><div class="glossary-term">MD5-crypt</div><div class="glossary-def">Schéma de hachage Unix <code>$1$sel$hash</code>, réutilisé par Cisco pour le type 5.</div></div>
+                <div class="glossary-card"><div class="glossary-term">XOR</div><div class="glossary-def">Ou exclusif bit à bit : <code>a ⊕ b = c</code>, et réversible (<code>c ⊕ b = a</code>) — la base de l'algorithme type 7.</div></div>
+            </div>
+        </section>
+
+        <!-- SECTION 2 -->
+        <section class="section" id="s2">
+            <div class="section-label">Phase <span>02</span></div>
+            <h2 class="section-title">Type 5 vs Type 7 — la théorie</h2>
+
+            <h3 class="subsection-title">Type 5 — un vrai hash (incassable par décodage)</h3>
+            <div class="code-wrap"><pre>enable secret 5 $1$p8Y6$MCdRLBzuGlfOs9S.hXOp0.</pre></div>
+            <ul class="plain">
+                <li>Le format <code>$1$&lt;sel&gt;$&lt;hash&gt;</code> est le <strong>MD5-crypt</strong> : <code>MD5(mot_de_passe + sel)</code> répété 1000 fois.</li>
+                <li>C'est <strong>à sens unique</strong> : impossible de « déchiffrer ». On ne peut qu'essayer des candidats (attaque par dictionnaire) et comparer.</li>
+                <li>La documentation Cisco elle‑même le dit : <em>il est impossible de récupérer un enable secret à partir de la configuration, sauf par attaque par dictionnaire</em>.</li>
+            </ul>
+            <p><strong>→ On ne va pas perdre de temps à attaquer ce hash par brute force.</strong> Le challenge est noté facile, il y a une astuce.</p>
+
+            <h3 class="subsection-title">Type 7 — un « faux hash » (réversible)</h3>
+            <div class="code-wrap"><pre>username hub password 7 025017705B3907344E</pre></div>
+            <ul class="plain">
+                <li>L'algorithme type 7 est un <strong>XOR</strong> avec une clé fixe, connue publiquement :<br>
+                    <code>tfd;kfoA,.iyewrkldJKD</code></li>
+                <li>Le <strong>premier chiffre(s)</strong> indique la position de départ dans la clé ; chaque <strong>paire hexadécimale</strong> suivante est XORée avec le caractère correspondant de la clé pour retrouver le caractère du mot de passe.</li>
+                <li>Le résultat est <strong>réversible</strong> — n'importe qui peut le décoder en quelques secondes avec un outil en ligne ou un script.</li>
+            </ul>
+
+            <div class="def-box">
+                <div class="def-term">« Tous les hash n'en sont pas »</div>
+                <div class="def-body">
+                    Le type 7 n'est pas un hash : c'est un <strong>chiffrement réversible</strong> avec une clé publique. L'indice du challenge nous invite à décoder ces mots de passe pour en tirer un <strong>pattern</strong>.
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3 -->
+        <section class="section" id="s3">
+            <div class="section-label">Phase <span>03</span></div>
+            <h2 class="section-title">Décodage des mots de passe type 7</h2>
+            <p>
+                Plusieurs outils permettent de décoder le type 7 :
+            </p>
+            <ul class="plain">
+                <li>Outils en ligne (ex. <code>ifm.net.nz</code>)</li>
+                <li>John the Ripper : <code>john --format=cisco hash.txt</code></li>
+                <li>Script Python avec la clé XOR publique</li>
+                <li>La commande <code>openssl</code> ne décode pas le type 7, mais on peut l'implémenter manuellement.</li>
+            </ul>
+
+            <p>
+                Prenons l'exemple du compte <code>hub</code> — <code>025017705B3907344E</code> :
+            </p>
+
+            <div class="code-wrap">
+                <div class="code-header"><span class="code-lang">Décodage pas à pas du type 7</span></div>
+                <pre>Position de départ : 2
+Paires hexadécimales  : 50 17 70 5B 39 07 34 4E
+
+Clé type 7 : tfd;kfoA,.iyewrkldJKD
+
+50 ⊕ clé[2] → 6    ("6")
+17 ⊕ clé[3] → s    ("s")
+70 ⊕ clé[4] → K    ("K")
+5B ⊕ clé[5] → 0    ("0")
+39 ⊕ clé[6] → _    ("_")
+07 ⊕ clé[7] → h    ("h")
+34 ⊕ clé[8] → u    ("u")
+4E ⊕ clé[9] → b    ("b")
+
+Résultat : <strong>6sK0_hub</strong></pre>
+            </div>
+
+            <p>
+                On applique le même décodage aux autres type 7 :
+            </p>
+
+            <div class="code-wrap">
+                <div class="code-header"><span class="code-lang">Table des mots de passe décodés</span></div>
+                <pre>| Ligne de config                    | Valeur type 7               | Décodé            |
+|------------------------------------|-----------------------------|-------------------|
+| username hub password 7            | 025017705B3907344E          | <strong>6sK0_hub</strong>      |
+| username admin privilege 15 ...    | 10181A325528130F010D24      | <strong>6sK0_admin</strong>    |
+| username guest password 7          | 124F163C42340B112F3830      | <strong>6sK0_guest</strong>    |
+| line con 0 password 7              | 144101205C3B29242A3B3C3927  | <strong>6sK0_console</strong> |
+| line vty 0 4 password 7            | 060F0A2B5F400B091327        | <strong>6sK0_vty</strong>      |</pre>
+            </div>
+        </section>
+
+        <!-- SECTION 4 -->
+        <section class="section" id="s4">
+            <div class="section-label">Phase <span>04</span></div>
+            <h2 class="section-title">Déduction du pattern</h2>
+
+            <div class="result-badge">
+                Tous les mots de passe décodés suivent exactement le même pattern : <strong><code>6sK0_</code> + nom de l'entité</strong>
+            </div>
+
+            <ul class="plain">
+                <li><code>6sK0_hub</code> pour le compte <code>hub</code></li>
+                <li><code>6sK0_admin</code> pour le compte <code>admin</code></li>
+                <li><code>6sK0_guest</code> pour le compte <code>guest</code></li>
+                <li><code>6sK0_console</code> pour la ligne console</li>
+                <li><code>6sK0_vty</code> pour les lignes VTY</li>
+            </ul>
+
+            <p>
+                Cette <strong>logique faible</strong> est exactement le piège de sécurité que l'énoncé veut illustrer : l'administrateur a utilisé la même convention pour tous les comptes.
+            </p>
+
+            <div class="warn-badge">
+                <strong>Déduction logique :</strong> Le mot de passe <strong>enable</strong> suit donc très probablement la même règle :
+                <pre style="margin:0.5rem 0; background:var(--code-bg); padding:0.5rem; border-radius:4px; color:#c0cce8; font-family: 'JetBrains Mono', monospace;">6sK0_enable</pre>
+            </div>
+        </section>
+
+        <!-- SECTION 5 -->
+        <section class="section" id="s5">
+            <div class="section-label">Phase <span>05</span></div>
+            <h2 class="section-title">Vérification par re-hachage</h2>
+            <p>
+                Le hash type 5 est un MD5-crypt standard. On peut le <strong>vérifier</strong> avec <code>openssl</code> en re-hachant le mot de passe candidat avec le même sel.
+            </p>
+
+            <div class="code-wrap">
+                <div class="code-header"><span class="code-lang">Commande openssl</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+                <pre>openssl passwd -1 -salt p8Y6 -table 6sK0_enable</pre>
+            </div>
+
+            <p>Résultat :</p>
+
+            <div class="code-wrap">
+                <div class="code-header"><span class="code-lang">Résultat — correspondance exacte</span></div>
+                <pre>6sK0_enable  $1$p8Y6$MCdRLBzuGlfOs9S.hXOp0.</pre>
+            </div>
+
+            <div class="compare-box">
+                <div class="compare-col">
+                    <h4>🔹 Configuration Cisco</h4>
+                    <pre style="font-family:'JetBrains Mono';font-size:.75rem;color:#c0cce8;background:var(--code-bg);padding:.5rem;border-radius:4px;">$1$p8Y6$MCdRLBzuGlfOs9S.hXOp0.</pre>
+                </div>
+                <div class="compare-col" style="border-color: var(--green);">
+                    <h4>🔸 openssl avec "6sK0_enable"</h4>
+                    <pre style="font-family:'JetBrains Mono';font-size:.75rem;color:#c0cce8;background:var(--code-bg);padding:.5rem;border-radius:4px;">$1$p8Y6$MCdRLBzuGlfOs9S.hXOp0.</pre>
+                </div>
+            </div>
+
+            <div class="result-badge" style="border-color: var(--green); color: var(--green);">
+                <strong>Vérification confirmée à 100 %</strong> — le mot de passe enable est bien <code>6sK0_enable</code>.
+            </div>
+
+            <div class="def-box">
+                <div class="def-term">Alternative — attaque par dictionnaire avec mask</div>
+                <div class="def-body">
+                    Si on n'avait pas deviné le pattern, on aurait pu attaquer le hash MD5-crypt avec un mask préfixé :
+                    <pre style="margin:0.5rem 0; background:var(--code-bg); padding:0.5rem; border-radius:4px; color:#c0cce8;">hashcat -m 500 hash.txt '6sK0_?l?l?l?l?l' -a 3</pre>
+                    Mais la déduction logique est bien plus rapide — et c'est l'esprit du challenge.
+                </div>
+            </div>
+
+            <div class="flag-box">
+                <div class="flag-label">Flag final</div>
+                <div class="flag-text">6sK0_enable</div>
+            </div>
+        </section>
+
+        <!-- SECTION 6 -->
+        <section class="section" id="s6">
+            <div class="section-label">Phase <span>06</span></div>
+            <h2 class="section-title">Enjeux de sécurité (côté SOC)</h2>
+
+            <h3 class="subsection-title">La méthode en 4 étapes (à retenir)</h3>
+            <div class="chain">
+                <span class="chain-title">Processus de résolution</span>
+                <span class="chain-node highlight">1. Identifier les types</span>
+                <span class="chain-arrow">→</span>
+                <span class="chain-node">2. Décoder les type 7</span>
+                <span class="chain-arrow">→</span>
+                <span class="chain-node">3. Déduire le pattern</span>
+                <span class="chain-arrow">→</span>
+                <span class="chain-node danger">4. Vérifier avec openssl</span>
+            </div>
+
+            <h3 class="subsection-title">Le message de sécurité</h3>
+            <div class="glossary-grid">
+                <div class="glossary-card">
+                    <div class="glossary-term">Le type 7 est une illusion de sécurité</div>
+                    <div class="glossary-def">Clé fixe et publique, décodable en ligne en 1 seconde. Ne jamais l'utiliser pour protéger un secret réel.</div>
+                </div>
+                <div class="glossary-card">
+                    <div class="glossary-term">Les patterns de mots de passe sont une faille</div>
+                    <div class="glossary-def">Un seul pattern (<code>6sK0_xxx</code>) pour tous les comptes : compromettre un compte révèle la logique de tous les autres.</div>
+                </div>
+                <div class="glossary-card">
+                    <div class="glossary-term">Le secret 5 n'est pas cassable « à la légère »</div>
+                    <div class="glossary-def">MD5-crypt avec sel est résistant, mais un mot de passe prévisible (<code>6sK0_enable</code>) le rend trivial à vérifier.</div>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">Recommandations</h3>
+            <ul class="rec-list">
+                <li><span class="rec-num">01</span><div><strong>Algorithme fort</strong> — remplacer type 5/7 par type 8/9 (PBKDF2-SHA256 / SCRYPT) : <code>enable algorithm-type scrypt secret ...</code></div></li>
+                <li><span class="rec-num">02</span><div><strong>Désactiver le type 7</strong> — <code>no service password-encryption</code> n'empêche pas les type 7 déjà présents ; régénérer les mots de passe.</div></li>
+                <li><span class="rec-num">03</span><div><strong>Mots de passe uniques</strong> — ne jamais réutiliser un pattern entre comptes ; mots de passe longs et aléatoires (et MFA/AAA Radius/TACACS+).</div></li>
+                <li><span class="rec-num">04</span><div><strong>Surveillance</strong> — journaliser les accès (AAA accounting), alerter sur les connexions admin hors horaires/sources normales.</div></li>
+            </ul>
+        </section>
+
+        <!-- QUIZ -->
+        <section class="section" id="quiz">
+            <div class="section-label">// <span>auto-évaluation</span></div>
+            <h2 class="section-title">Quiz – Validation des acquis</h2>
+            <p style="font-size:.85rem;color:var(--muted);margin-bottom:1.5rem;">Clique sur une question pour révéler la réponse.</p>
+
+            <div class="quiz-list">
+                <div class="quiz-item">
+                    <div class="quiz-q"><span class="quiz-q-num">Q1</span><span class="quiz-q-text">Quelle est la principale différence entre type 5 et type 7 ?</span><span class="quiz-toggle">+</span></div>
+                    <div class="quiz-a"><div class="quiz-a-inner">→ Le type 5 est un hash irréversible (MD5-crypt), le type 7 est un chiffrement réversible (XOR avec clé fixe).</div></div>
+                </div>
+                <div class="quiz-item">
+                    <div class="quiz-q"><span class="quiz-q-num">Q2</span><span class="quiz-q-text">Comment s'appelle la clé utilisée par l'algorithme type 7 ?</span><span class="quiz-toggle">+</span></div>
+                    <div class="quiz-a"><div class="quiz-a-inner">→ <code>tfd;kfoA,.iyewrkldJKD</code></div></div>
+                </div>
+                <div class="quiz-item">
+                    <div class="quiz-q"><span class="quiz-q-num">Q3</span><span class="quiz-q-text">Que signifie l'indice « Tous les hash n'en sont pas » ?</span><span class="quiz-toggle">+</span></div>
+                    <div class="quiz-a"><div class="quiz-a-inner">→ Les mots de passe type 7 ressemblent à des hash mais sont en réalité des chiffrements réversibles.</div></div>
+                </div>
+                <div class="quiz-item">
+                    <div class="quiz-q"><span class="quiz-q-num">Q4</span><span class="quiz-q-text">Quelle commande permet de vérifier un mot de passe MD5-crypt ?</span><span class="quiz-toggle">+</span></div>
+                    <div class="quiz-a"><div class="quiz-a-inner">→ <code>openssl passwd -1 -salt &lt;sel&gt; &lt;candidat&gt;</code></div></div>
+                </div>
+                <div class="quiz-item">
+                    <div class="quiz-q"><span class="quiz-q-num">Q5</span><span class="quiz-q-text">Quelle est la bonne réponse pour le mot de passe enable ?</span><span class="quiz-toggle">+</span></div>
+                    <div class="quiz-a"><div class="quiz-a-inner">→ <code>6sK0_enable</code></div></div>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <div class="footer-author">
+                Rédigé par <strong style="color: var(--cyan);">SPECTRA MZ</strong>
+                &nbsp;·&nbsp; ROOTME — CISCO - mot de passe
+                <br>
+                <a class="bottom-back" href="../index.html">← Retour à l'accueil</a>
+            </div>
+            <div class="footer-badge">
+                <span>🔐</span> Write-up · Cisco type 5/7 &amp; MD5-crypt
+            </div>
+        </footer>
+
+    </div>
+</main>
+
+<script>
+    function copyCode(btn) {
+        const pre = btn.closest('.code-wrap').querySelector('pre');
+        const text = pre.innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            btn.textContent = 'copié ✓';
+            btn.style.borderColor = 'var(--cyan)';
+            btn.style.color = 'var(--cyan)';
+            setTimeout(() => {
+                btn.textContent = 'copier';
+                btn.style.borderColor = '';
+                btn.style.color = '';
+            }, 1800);
+        });
+    }
+
+    const sections = document.querySelectorAll('.section[id]');
+    const dots = document.querySelectorAll('.phase-dot');
+    const mobileItems = document.querySelectorAll('.mobile-nav-item');
+    const progressFill = document.getElementById('progressFill');
+
+    function updateActive() {
+        let current = '';
+        sections.forEach(sec => { if (window.scrollY + 200 >= sec.offsetTop) current = sec.id; });
+        dots.forEach(dot => dot.classList.toggle('active', dot.getAttribute('href') === '#' + current));
+        mobileItems.forEach(item => item.classList.toggle('active', item.getAttribute('href') === '#' + current));
+
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const scrolled = docHeight > 0 ? (window.scrollY / docHeight) * 100 : 0;
+        progressFill.style.width = scrolled + '%';
+    }
+
+    window.addEventListener('scroll', updateActive, { passive: true });
+    window.addEventListener('resize', updateActive, { passive: true });
+    updateActive();
+
+    document.querySelectorAll('.quiz-q').forEach(q => {
+        q.addEventListener('click', () => q.parentElement.classList.toggle('open'));
+    });
+</script>
+</body>
+</html>

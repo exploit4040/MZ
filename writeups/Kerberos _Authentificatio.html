@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ROOTME — Kerberos - Authentification — Write-up complet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* Copier exactement le CSS des pages précédentes (identique) */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --bg:        #080c18;
+    --surface:   #0f1525;
+    --surface2:  #151d30;
+    --border:    #1e2a42;
+    --cyan:      #00d4aa;
+    --cyan-dim:  #00d4aa22;
+    --cyan-glow: #00d4aa44;
+    --red:       #ff4757;
+    --amber:     #ffa502;
+    --purple:    #a855f7;
+    --blue:      #2f9bff;
+    --green:     #4ade80;
+    --text:      #e2e8f4;
+    --muted:     #6b7a99;
+    --code-bg:   #060a14;
+    --safe-t: env(safe-area-inset-top, 0px);
+    --safe-b: env(safe-area-inset-bottom, 0px);
+    --safe-l: env(safe-area-inset-left, 0px);
+    --safe-r: env(safe-area-inset-right, 0px);
+  }
+
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'Inter', sans-serif; font-size: 16px; line-height: 1.7;
+    overflow-x: hidden; -webkit-font-smoothing: antialiased;
+  }
+
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.08) 2px, rgba(0,0,0,.08) 4px);
+    pointer-events: none; z-index: 9999;
+  }
+
+  img { max-width: 100%; height: auto; display: block; }
+
+  .progress-bar { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 700; background: var(--border); }
+  .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--cyan), var(--blue)); box-shadow: 0 0 8px var(--cyan-glow); transition: width .1s linear; }
+
+  .back-home {
+    position: fixed; top: calc(1.2rem + var(--safe-t)); left: calc(1.2rem + var(--safe-l)); z-index: 600;
+    display: inline-flex; align-items: center; gap: .5rem; padding: .6rem 1.05rem; min-height: 44px;
+    background: rgba(15,21,37,.9); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border: 1px solid var(--border); border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace; font-size: .78rem; font-weight: 500; color: var(--muted);
+    text-decoration: none; transition: all .2s;
+  }
+  .back-home:hover, .back-home:active { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 16px var(--cyan-glow); }
+  .back-home svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+  .sidebar {
+    position: fixed; left: 0; top: 0; width: 64px; height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 100; padding: 2rem 0;
+  }
+  .sidebar-line { width: 1px; flex: 1; background: var(--border); }
+  .phase-dot {
+    width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--muted);
+    cursor: pointer; transition: all .3s; text-decoration: none; flex-shrink: 0;
+  }
+  .phase-dot:hover, .phase-dot.active { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 12px var(--cyan-glow); background: var(--cyan-dim); }
+
+  .mobile-nav {
+    display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 650;
+    background: rgba(15,21,37,.95); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    border-top: 1px solid var(--border);
+    padding: .6rem calc(.6rem + var(--safe-l)) calc(.6rem + var(--safe-b)) calc(.6rem + var(--safe-r));
+  }
+  .mobile-nav-scroll { display: flex; gap: .5rem; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+  .mobile-nav-scroll::-webkit-scrollbar { display: none; }
+  .mobile-nav-item {
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    min-width: 44px; min-height: 44px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface);
+    font-family: 'JetBrains Mono', monospace; font-size: .66rem; color: var(--muted); text-decoration: none; transition: all .2s;
+  }
+  .mobile-nav-item.active { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+
+  main { margin-left: 64px; width: calc(100% - 64px); padding: 0 2rem 6rem; }
+  .inner { max-width: 920px; margin: 0 auto; }
+
+  .hero { padding: 5.5rem 0 4rem; position: relative; }
+  .hero-eyebrow {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--cyan); margin-bottom: 1.5rem; display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
+  }
+  .hero-eyebrow::before { content:''; display:inline-block; width:24px; height:1px; background: var(--cyan); }
+
+  .hero-title {
+    font-family: 'JetBrains Mono', monospace; font-size: clamp(1.9rem, 5.4vw, 3.3rem);
+    font-weight: 700; line-height: 1.15; letter-spacing: -.02em; margin-bottom: 1rem; word-break: break-word;
+  }
+  .hero-title .accent { color: var(--cyan); }
+  .hero-title .dim { color: var(--muted); font-weight: 300; }
+
+  .hero-sub { font-size: clamp(.95rem, 2.2vw, 1.05rem); color: var(--muted); margin-bottom: 2.5rem; max-width: 640px; }
+
+  .meta-pills { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 2rem; }
+  .pill { padding: .35rem .9rem; border-radius: 99px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .08em; font-weight: 500; white-space: nowrap; }
+  .pill-cyan   { border:1px solid var(--cyan);   color:var(--cyan);   background:var(--cyan-dim); }
+  .pill-red    { border:1px solid var(--red);    color:var(--red);    background:#ff475711; }
+  .pill-amber  { border:1px solid var(--amber);  color:var(--amber);  background:#ffa50211; }
+  .pill-purple { border:1px solid var(--purple); color:var(--purple); background:#a855f711; }
+  .pill-green  { border:1px solid var(--green);  color:var(--green);  background:#4ade8011; }
+
+  .hero-divider { width: 100%; height: 1px; background: linear-gradient(90deg, var(--cyan) 0%, var(--border) 60%, transparent 100%); margin-top: 3rem; }
+
+  .toc { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem 1.6rem; margin: 2rem 0; }
+  .toc-title { font-family: 'JetBrains Mono', monospace; font-size: .75rem; letter-spacing: .15em; text-transform: uppercase; color: var(--cyan); margin-bottom: 1rem; }
+  .toc-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: .6rem 1.5rem; }
+  .toc-list a { font-size: .85rem; color: #b8c3d9; text-decoration: none; display: flex; align-items: baseline; gap: .5rem; transition: color .2s; min-height: 24px; }
+  .toc-list a:hover, .toc-list a:active { color: var(--cyan); }
+  .toc-num { font-family: 'JetBrains Mono', monospace; font-size: .7rem; color: var(--muted); flex-shrink: 0; }
+
+  .section { padding: 3.5rem 0 2rem; border-bottom: 1px solid var(--border); }
+  .section:last-of-type { border-bottom: none; }
+
+  .section-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--cyan); margin-bottom: .6rem; display: flex; align-items: center; gap: .5rem; }
+  .section-label span { color: var(--muted); }
+  .section-title { font-family: 'JetBrains Mono', monospace; font-size: clamp(1.2rem, 3.2vw, 1.5rem); font-weight: 600; color: var(--text); margin-bottom: 1.5rem; line-height: 1.3; }
+  .subsection-title { font-family: 'JetBrains Mono', monospace; font-size: 1rem; font-weight: 600; color: var(--cyan); margin: 2.2rem 0 .9rem; padding-left: 1rem; border-left: 2px solid var(--cyan); }
+
+  p { margin-bottom: 1.1rem; color: #b8c3d9; word-wrap: break-word; }
+  p strong { color: var(--text); font-weight: 600; }
+  ul.plain, ol.plain { margin: 0 0 1.1rem 1.3rem; color: #b8c3d9; }
+  ul.plain li, ol.plain li { margin-bottom: .5rem; }
+
+  .def-box { background: linear-gradient(135deg, #2f9bff0a 0%, #2f9bff03 100%); border: 1px solid var(--blue); border-radius: 10px; padding: 1.3rem 1.4rem; margin: 1.2rem 0 1.6rem; }
+  .def-term { display: flex; align-items: center; gap: .6rem; font-family: 'JetBrains Mono', monospace; font-size: .92rem; font-weight: 700; color: var(--blue); margin-bottom: .5rem; flex-wrap: wrap; }
+  .def-term::before { content: '§'; font-size: 1.1rem; }
+  .def-body { color: #b8c3d9; font-size: .88rem; }
+  .def-body code { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: .1em .4em; color: #c0cce8; font-size: .85em; word-break: break-all; }
+
+  .glossary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+  .glossary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem; }
+  .glossary-term { font-family: 'JetBrains Mono', monospace; font-size: .85rem; font-weight: 700; color: var(--cyan); margin-bottom: .5rem; }
+  .glossary-def { font-size: .82rem; color: var(--muted); line-height: 1.55; }
+
+  .terminal-frame { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 1.5rem 0; box-shadow: 0 8px 40px rgba(0,0,0,.5), 0 0 0 1px rgba(0,212,170,.06); }
+  .terminal-bar { background: var(--surface2); padding: .6rem .9rem; display: flex; align-items: center; gap: .5rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .t-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .t-dot-red { background: #ff5f57; } .t-dot-amber { background: #ffbd2e; } .t-dot-green { background: #28c840; }
+  .terminal-bar-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); margin-left: .3rem; word-break: break-all; }
+  .terminal-frame .img-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .terminal-frame img { width: 100%; display: block; vertical-align: top; }
+  .terminal-caption { padding: .6rem .9rem; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); background: var(--surface2); border-top: 1px solid var(--border); display: flex; align-items: flex-start; gap: .5rem; }
+  .terminal-caption::before { content: '▸'; color: var(--cyan); flex-shrink: 0; }
+
+  .code-wrap { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 1rem 0 1.5rem; position: relative; }
+  .code-header { background: var(--surface2); padding: .45rem .9rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); gap: .5rem; }
+  .code-lang { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--cyan); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .copy-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: .35rem .7rem; border-radius: 4px; cursor: pointer; transition: all .2s; min-height: 32px; flex-shrink: 0; }
+  .copy-btn:hover, .copy-btn:active { border-color: var(--cyan); color: var(--cyan); }
+  .code-wrap pre { padding: 1.1rem 1.1rem; overflow-x: auto; -webkit-overflow-scrolling: touch; font-family: 'JetBrains Mono', monospace; font-size: .78rem; line-height: 1.7; color: #c0cce8; }
+  .code-wrap pre .kw { color: var(--cyan); }
+  .code-wrap pre .str { color: #ffdd87; }
+  .code-wrap pre .hl { color: var(--amber); font-weight: 700; }
+  .code-wrap pre .hl-cyan { color: var(--cyan); font-weight: 700; }
+  .code-wrap pre .hl-red { color: var(--red); font-weight: 700; }
+  .code-wrap pre .cmt { color: var(--muted); font-style: italic; }
+  .code-wrap pre .prop { color: var(--purple); }
+
+  .result-badge { display: inline-flex; align-items: flex-start; gap: .5rem; background: #00d4aa0f; border: 1px solid var(--cyan); border-radius: 6px; padding: .6rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--cyan); margin: .5rem 0 1rem; word-break: break-word; }
+  .result-badge::before { content: '✓'; font-weight: 700; flex-shrink: 0; }
+  .warn-badge { display: inline-flex; align-items: flex-start; gap: .5rem; background: #ffa5020f; border: 1px solid var(--amber); border-radius: 6px; padding: .6rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--amber); margin: .5rem 0 1rem; }
+  .warn-badge::before { content: '⚠'; font-weight: 700; flex-shrink: 0; }
+
+  .flag-box { background: linear-gradient(135deg, #00d4aa0a 0%, #00d4aa03 100%); border: 1px solid var(--cyan); border-radius: 10px; padding: 1.6rem 1.4rem; text-align: center; position: relative; overflow: hidden; margin: 1.5rem 0; }
+  .flag-box::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, var(--cyan-glow) 0%, transparent 70%); pointer-events: none; }
+  .flag-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); margin-bottom: .8rem; }
+  .flag-text { font-family: 'JetBrains Mono', monospace; font-size: clamp(.9rem, 3.2vw, 1.2rem); font-weight: 700; color: var(--cyan); letter-spacing: .02em; text-shadow: 0 0 20px var(--cyan-glow); word-break: break-all; }
+
+  .quiz-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: .8rem; overflow: hidden; }
+  .quiz-q { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.3rem; cursor: pointer; user-select: none; }
+  .quiz-q-num { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: .75rem; color: var(--bg); background: var(--purple); min-width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .quiz-q-text { font-size: .88rem; color: var(--text); font-weight: 500; flex: 1; }
+  .quiz-toggle { font-family: 'JetBrains Mono', monospace; color: var(--muted); transition: transform .25s; flex-shrink: 0; }
+  .quiz-item.open .quiz-toggle { transform: rotate(45deg); color: var(--cyan); }
+  .quiz-a { max-height: 0; overflow: hidden; transition: max-height .3s ease; }
+  .quiz-item.open .quiz-a { max-height: 200px; }
+  .quiz-a-inner { padding: 0 1.3rem 1.1rem 3.1rem; font-size: .84rem; color: var(--cyan); font-family: 'JetBrains Mono', monospace; }
+
+  .ref-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .8rem; margin-top: 1rem; }
+  .ref-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; text-decoration: none; display: flex; flex-direction: column; gap: .3rem; transition: border-color .2s, box-shadow .2s; min-height: 44px; }
+  .ref-card:hover, .ref-card:active { border-color: var(--cyan); box-shadow: 0 0 20px var(--cyan-glow); }
+  .ref-icon { font-size: 1.1rem; margin-bottom: .2rem; }
+  .ref-name { font-family: 'JetBrains Mono', monospace; font-size: .78rem; color: var(--cyan); font-weight: 600; }
+  .ref-url { font-size: .73rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .chain { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.1rem 1.2rem; margin: 1.2rem 0 1.6rem; }
+  .chain-title { width: 100%; font-family: 'JetBrains Mono', monospace; font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: .7rem; }
+  .chain-node { font-family: 'JetBrains Mono', monospace; font-size: .74rem; color: var(--text); background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; padding: .35rem .65rem; word-break: break-word; }
+  .chain-arrow { font-family: 'JetBrains Mono', monospace; font-size: .9rem; color: var(--cyan); flex-shrink: 0; }
+  .chain-node.highlight { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+  .chain-node.danger { border-color: var(--red); color: var(--red); background: #ff475711; }
+
+  footer { margin-top: 4rem; padding: 2rem 0; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+  .footer-author { font-family: 'JetBrains Mono', monospace; font-size: .78rem; color: var(--muted); line-height: 1.8; }
+  .footer-badge { font-family: 'JetBrains Mono', monospace; font-size: .72rem; color: var(--muted); display: flex; align-items: center; gap: .4rem; }
+  .footer-badge span { color: var(--cyan); }
+
+  .bottom-back { display: inline-flex; align-items: center; gap: .5rem; padding: .7rem 1.2rem; margin-top: .8rem; min-height: 44px; border: 1px solid var(--cyan); border-radius: 8px; color: var(--cyan); text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: .8rem; background: var(--cyan-dim); transition: all .2s; }
+  .bottom-back:hover, .bottom-back:active { box-shadow: 0 0 20px var(--cyan-glow); }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  @media (max-width: 900px) {
+    main { margin-left: 0; width: 100%; padding: 0 1.6rem 6rem; }
+    .sidebar { display: none; }
+    .mobile-nav { display: block; }
+  }
+  @media (max-width: 768px) {
+    .hero { padding: 4.5rem 0 3rem; }
+    .toc-list { grid-template-columns: 1fr; }
+    .glossary-grid { grid-template-columns: 1fr; }
+    .ref-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+  }
+  @media (max-width: 480px) {
+    body { font-size: 15px; }
+    main { padding: 0 1.1rem 6rem; }
+    .hero { padding: 4rem 0 2.5rem; }
+    .back-home { font-size: .72rem; padding: .5rem .8rem; }
+    .back-home span.label { display: none; }
+    .section { padding: 2.6rem 0 1.5rem; }
+    .section-title { margin-bottom: 1.1rem; }
+    .subsection-title { margin: 1.8rem 0 .7rem; font-size: .92rem; }
+    .terminal-bar-label { font-size: 10px; }
+    .code-wrap pre { font-size: .7rem; padding: .9rem .8rem; }
+    .def-box, .toc, .terminal-caption { padding: 1rem 1.1rem; }
+    .flag-box { padding: 1.3rem 1rem; }
+    footer { flex-direction: column; align-items: flex-start; }
+  }
+  @media (max-height: 480px) and (orientation: landscape) {
+    .mobile-nav { padding-bottom: calc(.4rem + var(--safe-b)); }
+    .mobile-nav-item { min-height: 36px; }
+  }
+  @media (min-width: 1400px) { .inner { max-width: 1020px; } }
+</style>
+</head>
+<body>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+<a class="back-home" href="../index.html">
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9.5 3L4.5 8L9.5 13"/></svg>
+  <span class="label">Retour à l'accueil</span>
+</a>
+
+<nav class="sidebar">
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s0">00</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s1">01</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s2">02</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s3">03</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s4">04</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s5">05</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s6">06</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#quiz">Q</a>
+  <div class="sidebar-line"></div>
+</nav>
+
+<nav class="mobile-nav">
+  <div class="mobile-nav-scroll">
+    <a class="mobile-nav-item" href="#s0">00</a>
+    <a class="mobile-nav-item" href="#s1">01</a>
+    <a class="mobile-nav-item" href="#s2">02</a>
+    <a class="mobile-nav-item" href="#s3">03</a>
+    <a class="mobile-nav-item" href="#s4">04</a>
+    <a class="mobile-nav-item" href="#s5">05</a>
+    <a class="mobile-nav-item" href="#s6">06</a>
+    <a class="mobile-nav-item" href="#quiz">Q</a>
+  </div>
+</nav>
+
+<main>
+<div class="inner">
+
+  <header class="hero">
+    <div class="hero-eyebrow">ROOTME · Défi : Réseau</div>
+    <h1 class="hero-title">
+      ROOTME — <span class="accent">Kerberos - Authentification</span>
+      <span class="dim" style="font-size:58%;"></span>
+    </h1>
+    <p class="hero-sub">
+      <strong>Catégorie :</strong> Réseau — <strong>Points :</strong> 10 — <strong>Difficulté :</strong> ⭐ (1/5) — <strong>Auteur :</strong> nuts.<br>
+      Rédigé par <span style="color:var(--cyan);">SPECTRA MZ</span> — version optimisée avec analyses approfondies et recommandations.
+    </p>
+    <div class="meta-pills">
+      <span class="pill pill-cyan">ROOTME</span>
+      <span class="pill pill-red">Kerberos</span>
+      <span class="pill pill-amber">AS-REQ</span>
+      <span class="pill pill-purple">hashcat</span>
+      <span class="pill pill-green">Wireshark</span>
+    </div>
+    <div class="hero-divider"></div>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">Sommaire complet</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">00</span><a href="#s0">Présentation & énoncé</a></li>
+      <li><span class="toc-num">01</span><a href="#s1">Vocabulaire Kerberos</a></li>
+      <li><span class="toc-num">02</span><a href="#s2">Théorie de l'attaque (détaillée)</a></li>
+      <li><span class="toc-num">03</span><a href="#s3">Analyse de la trame avec Wireshark</a></li>
+      <li><span class="toc-num">04</span><a href="#s4">Construction du hash</a></li>
+      <li><span class="toc-num">05</span><a href="#s5">Optimisation du cracking</a></li>
+      <li><span class="toc-num">06</span><a href="#s6">Résultat et recommandations</a></li>
+      <li><span class="toc-num">Q</span><a href="#quiz">Quiz</a></li>
+    </ul>
+  </div>
+
+  <!-- SECTION 0 -->
+  <section class="section" id="s0">
+    <div class="section-label">Phase <span>00</span></div>
+    <h2 class="section-title">Présentation du challenge</h2>
+
+    <div style="background: var(--surface); border: 2px solid var(--cyan); border-radius: 10px; padding: 1.5rem; margin: 1.5rem 0; box-shadow: 0 0 20px var(--cyan-glow);">
+      <p style="font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: var(--cyan); margin: 0;">
+        📜 <strong>ÉNONCÉ OFFICIEL</strong>
+      </p>
+      <p style="font-size: 1.05rem; color: var(--text); margin: 0.5rem 0 0 0; font-weight: 500;">
+        Vous êtes mandaté par l'équipe SOC de l'entreprise <strong>Cat Corporation</strong> pour retrouver le mot de passe d'un utilisateur lié à une connexion Kerberos suspecte.<br>
+        Format du flag : <code>RM{userPrincipalName:password}</code> — l'userPrincipalName doit être écrit en minuscules.
+      </p>
+    </div>
+
+    <p>
+      <strong>Fichier fourni :</strong> une capture réseau (pcap) ne contenant qu'une seule trame Kerberos AS-REQ.<br>
+      <strong>Empreinte SHA256 :</strong> <code style="font-size:0.8rem;">0770efe5374637534fe55fdf51a3b7a1d5c58a1d6027d7143ce0a491ffd66405</code><br>
+      (Cette empreinte ne sert qu'à vérifier l'intégrité du fichier, pas à résoudre le challenge.)
+    </p>
+
+    <div class="terminal-frame">
+      <div class="terminal-bar">
+        <div class="t-dot t-dot-red"></div>
+        <div class="t-dot t-dot-amber"></div>
+        <div class="t-dot t-dot-green"></div>
+        <span class="terminal-bar-label">Capture pcap (frame 60) — extrait Wireshark</span>
+      </div>
+      <div class="img-scroll"><pre style="padding: 0.8rem 1rem; font-size: 0.7rem; line-height:1.6; background:var(--code-bg); color:#c0cce8; margin:0; overflow-x:auto;">Frame 60: 304 bytes on wire (2432 bits)
+Ethernet II, Src: 54:54:01:97:49:54, Dst: 52:54:00:65:4c:4d
+Internet Protocol Version 4, Src: 192.168.122.1, Dst: 192.168.122.100
+Transmission Control Protocol, Src Port: 55282, Dst Port: 88, Len: 273
+Kerberos
+    Record Mark: 269 bytes
+    as-req
+        pvno: 5
+        msg-type: krb-as-req (10)
+        padata: 2 items
+            PA-DATA pA-ENC-TIMESTAMP
+                padata-type: pA-ENC-TIMESTAMP (2)
+                    padata-value: fc8bbe22b2c967b222ed73dd7616ea71b2ae0c1b0c3688bfff7fecffdebd4054471350cb6e36d3b55ba3420be6c0210b2d978d3f51d1eb4f
+        cname
+            name-type: kRB5-NT-PRINCIPAL (1)
+            cname-string: 1 item
+                CNameString: william.dupond
+        realm: CATCORP.LOCAL
+        sname
+            name-type: kRB5-NT-PRINCIPAL (1)
+            sname-string: 2 items
+                SNameString: krbtgt
+                SNameString: CATCORP.LOCAL
+        etype: 1 item
+            ENCTYPE: eTYPE-AES256-CTS-HMAC-SHA1-96 (18)</pre></div>
+      <div class="terminal-caption">La trame AS-REQ contient la pré-authentification (PA-ENC-TIMESTAMP) avec un timestamp chiffré en AES-256.</div>
+    </div>
+  </section>
+
+  <!-- SECTION 1 -->
+  <section class="section" id="s1">
+    <div class="section-label">Phase <span>01</span></div>
+    <h2 class="section-title">Vocabulaire clé (connaissances préalables)</h2>
+    <div class="glossary-grid">
+      <div class="glossary-card"><div class="glossary-term">SOC</div><div class="glossary-def">Security Operations Center — équipe de surveillance et réponse aux incidents.</div></div>
+      <div class="glossary-card"><div class="glossary-term">Kerberos</div><div class="glossary-def">Protocole d'authentification réseau (RFC 4120), standard dans les environnements Active Directory pour le SSO.</div></div>
+      <div class="glossary-card"><div class="glossary-term">KDC</div><div class="glossary-def">Key Distribution Center — le centre de distribution de clés, hébergeant l'AS et le TGS.</div></div>
+      <div class="glossary-card"><div class="glossary-term">AS-REQ</div><div class="glossary-def">Authentication Service Request — première requête : le client demande un TGT.</div></div>
+      <div class="glossary-card"><div class="glossary-term">Pré-authentification</div><div class="glossary-def">Mécanisme prouvant au KDC que le client connaît son mot de passe avant d'émettre un ticket, évitant les attaques par dictionnaire en ligne.</div></div>
+      <div class="glossary-card"><div class="glossary-term">PA-ENC-TIMESTAMP</div><div class="glossary-def">Le client chiffre l'horodatage avec une clé dérivée du mot de passe (le salt = realm + principal). Le KDC déchiffre pour valider.</div></div>
+      <div class="glossary-card"><div class="glossary-term">etype 18</div><div class="glossary-def">Algorithme AES256-CTS-HMAC-SHA1-96 — chiffrement fort utilisé par défaut dans AD.</div></div>
+      <div class="glossary-card"><div class="glossary-term">Realm</div><div class="glossary-def">Le domaine Kerberos, écrit en majuscules (ex. CATCORP.LOCAL). Il sert dans le calcul du salt.</div></div>
+    </div>
+  </section>
+
+  <!-- SECTION 2 -->
+  <section class="section" id="s2">
+    <div class="section-label">Phase <span>02</span></div>
+    <h2 class="section-title">Théorie de l'attaque (détaillée)</h2>
+
+    <h3 class="subsection-title">Déroulement d'une authentification Kerberos</h3>
+    <div class="chain">
+      <span class="chain-title">Ordinogramme de la séquence Kerberos</span>
+      <span class="chain-node">1. AS-REQ</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">2. AS-REP (TGT)</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">3. TGS-REQ</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">4. TGS-REP</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">5. AP-REQ</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-node">6. AP-REP</span>
+    </div>
+    <p>
+      Dans l'étape 1 (AS-REQ), le client doit prouver sa connaissance du mot de passe. Pour ce faire, il chiffre l'heure courante (timestamp) avec une clé dérivée de son mot de passe, selon l'algorithme défini par la RFC 3961. Ce chiffré (<code>padata-value</code>) est transmis en clair dans la requête. Si un attaquant capture cette trame, il peut alors tenter de retrouver le mot de passe par <strong>force brute hors ligne</strong> : pour chaque candidat, il dérive la clé, déchiffre le timestamp, et vérifie si le résultat est un timestamp valide (proche de l'heure actuelle). C'est ce qu'on appelle l'<strong>AS-REQ roasting</strong> (ou <em>pre-auth roasting</em>).
+    </p>
+
+    <div class="def-box">
+      <div class="def-term">AS-REQ Roasting</div>
+      <div class="def-body">
+        Technique d'attaque qui exploite la pré-authentification Kerberos pour casser hors ligne le mot de passe d'un compte, à partir d'une capture d'une AS-REQ. Le timestamp chiffré sert d'<strong>oracle</strong> : on peut tester un grand nombre de mots de passe sans interagir avec le KDC, ce qui la rend très efficace.
+      </div>
+    </div>
+
+    <h3 class="subsection-title">Le rôle du salt dans la dérivation de clé</h3>
+    <p>
+      Pour AES, la clé de chiffrement est dérivée du mot de passe via la fonction <code>PBKDF2</code> avec un <strong>salt</strong> composé du <em>realm</em> et du <em>principal</em> (concaténés). Dans notre cas, le salt est <code>CATCORP.LOCALwilliam.dupond</code>. C'est pourquoi le hash formaté pour hashcat n'inclut pas de salt séparé : il est reconstruit automatiquement à partir du realm et du principal.
+    </p>
+  </section>
+
+  <!-- SECTION 3 -->
+  <section class="section" id="s3">
+    <div class="section-label">Phase <span>03</span></div>
+    <h2 class="section-title">Analyse de la capture avec Wireshark</h2>
+    <p>
+      Ouvrez le fichier pcap dans Wireshark. Filtrez avec <code>kerberos</code> ou <code>udp.port == 88</code> (selon le transport). Repérez la trame dont le <code>msg-type</code> est <code>krb-as-req (10)</code>. La frame 60 est celle qui nous intéresse.
+    </p>
+    <p><strong>Détail des champs importants :</strong></p>
+    <ul class="plain">
+      <li><strong>pvno : 5</strong> → version 5 du protocole Kerberos (la plus courante).</li>
+      <li><strong>msg-type : 10</strong> → AS-REQ (Authentification Service Request).</li>
+      <li><strong>padata-type : 2</strong> → PA-ENC-TIMESTAMP, la pré-authentification par timestamp chiffré.</li>
+      <li><strong>padata-value</strong> → la valeur chiffrée, qui sera utilisée pour le cracking.</li>
+      <li><strong>cname</strong> → <code>william.dupond</code> : le compte utilisateur cible.</li>
+      <li><strong>realm</strong> → <code>CATCORP.LOCAL</code> : le domaine Kerberos.</li>
+      <li><strong>etype</strong> → <code>18</code> : AES-256-CTS-HMAC-SHA1-96. C'est le mode de hashcat 19900.</li>
+    </ul>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">Extraction des données essentielles</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre>Utilisateur : william.dupond
+Realm       : CATCORP.LOCAL
+Etype       : 18 (AES-256)
+Chiffré     : fc8bbe22b2c967b222ed73dd7616ea71b2ae0c1b0c3688bfff7fecffdebd4054471350cb6e36d3b55ba3420be6c0210b2d978d3f51d1eb4f</pre>
+    </div>
+  </section>
+
+  <!-- SECTION 4 -->
+  <section class="section" id="s4">
+    <div class="section-label">Phase <span>04</span></div>
+    <h2 class="section-title">Construction du hash pour hashcat</h2>
+    <p>
+      Le format attendu par hashcat (mode 19900) est :
+    </p>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">Syntaxe du hash</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre>$krb5pa$18$utilisateur$REALM$ciphertext</pre>
+    </div>
+    <p>
+      Appliquons nos valeurs :
+    </p>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">hash.txt (contenu du fichier)</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre>$krb5pa$18$william.dupond$CATCORP.LOCAL$fc8bbe22b2c967b222ed73dd7616ea71b2ae0c1b0c3688bfff7fecffdebd4054471350cb6e36d3b55ba3420be6c0210b2d978d3f51d1eb4f</pre>
+    </div>
+    <div class="warn-badge">
+      ⚠️ Piège fréquent : le hash doit impérativement être placé dans un fichier, et non passé directement en ligne de commande, sous peine d'erreur <code>Separator unmatched</code>.
+    </div>
+    <p>
+      Vérification que hashcat reconnaît le format :
+    </p>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">Commande de test</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre>hashcat -m 19900 hash.txt --show</pre>
+    </div>
+  </section>
+
+  <!-- SECTION 5 -->
+  <section class="section" id="s5">
+    <div class="section-label">Phase <span>05</span></div>
+    <h2 class="section-title">Optimisation du cracking avec hashcat</h2>
+    <p>
+      Pour accélérer l'attaque, on peut utiliser plusieurs options :
+    </p>
+    <ul class="plain">
+      <li><strong><code>-O</code></strong> : active les optimisations pour les anciennes cartes, mais peut réduire la stabilité.</li>
+      <li><strong><code>-w 4</code></strong> : met le profil de performance au maximum (plus rapide mais plus consommateur).</li>
+      <li><strong><code>--force</code></strong> : si vous n'avez pas de carte NVIDIA ou AMD reconnue, pour forcer l'utilisation du CPU.</li>
+      <li><strong><code>-a 0</code></strong> : attaque par dictionnaire (par défaut). Pour une attaque par règle, on pourrait utiliser <code>-a 6</code> ou <code>-a 7</code>.</li>
+    </ul>
+    <p>
+      La commande optimisée :
+    </p>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">Commande hashcat optimisée</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre>hashcat -m 19900 -a 0 -w 4 -O hash.txt /usr/share/wordlists/rockyou.txt</pre>
+    </div>
+    <p>
+      Après quelques minutes (selon la puissance de votre machine), le mot de passe est trouvé. Résultat :
+    </p>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">Résultat hashcat (avec masque)</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre>$krb5pa$18$william.dupond$CATCORP.LOCAL$fc8bbe... : ********** (masqué)</pre>
+    </div>
+    <p>
+      <span style="color: var(--amber);">Le mot de passe réel est volontairement masqué dans ce write-up pour préserver l'intérêt du challenge.</span>
+    </p>
+    <p>
+      Pour afficher le résultat complet, on utilise :
+    </p>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">Affichage du résultat</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre>hashcat -m 19900 hash.txt --show</pre>
+    </div>
+  </section>
+
+  <!-- SECTION 6 -->
+  <section class="section" id="s6">
+    <div class="section-label">Phase <span>06</span></div>
+    <h2 class="section-title">Flag et recommandations de sécurité</h2>
+    <p>
+      Le flag est au format <code>RM{userPrincipalName:password}</code> avec l'userPrincipalName en minuscules.
+    </p>
+    <ul class="plain">
+      <li><strong>userPrincipalName</strong> : <code>william.dupond@catcorp.local</code></li>
+      <li><strong>password</strong> : <span style="color: var(--amber);">masqué pour préserver l'intégrité du challenge</span></li>
+    </ul>
+    <div class="flag-box">
+      <div class="flag-label">Flag final (masqué partiellement)</div>
+      <div class="flag-text">RM{william.dupond@catcorp.local:*****}</div>
+    </div>
+    <p>
+      <span style="color: var(--muted);">(Le mot de passe exact a été remplacé par des astérisques pour ne pas gâcher l'expérience de résolution.)</span>
+    </p>
+
+    <h3 class="subsection-title">Recommandations de sécurité pour Cat Corporation</h3>
+    <ul class="rec-list">
+      <li><span class="rec-num">01</span><div><strong>Politique de mots de passe renforcée</strong> : exiger des mots de passe de 15 caractères minimum, non présents dans les wordlists publiques, avec vérification par filtres de bloat.</div></li>
+      <li><span class="rec-num">02</span><div><strong>Authentification multifacteur (MFA)</strong> : déployer Windows Hello for Business ou Azure AD MFA pour neutraliser l'impact d'un mot de passe compromis.</div></li>
+      <li><span class="rec-num">03</span><div><strong>Surveillance des AS-REQ</strong> : mettre en place des alertes sur les échecs de pré-authentification répétés (Event ID 4771) et les requêtes depuis des sources anormales.</div></li>
+      <li><span class="rec-num">04</span><div><strong>Segmentation réseau</strong> : isoler le trafic Kerberos (port 88) des segments exposés à des tiers ou à l'Internet.</div></li>
+      <li><span class="rec-num">05</span><div><strong>Détection avancée</strong> : utiliser des règles Sigma/SIEM pour détecter les tentatives de <em>roasting</em> (ex: nombreux AS-REQ avec des utilisateurs différents).</div></li>
+    </ul>
+  </section>
+
+  <!-- QUIZ -->
+  <section class="section" id="quiz">
+    <div class="section-label">// <span>auto-évaluation</span></div>
+    <h2 class="section-title">Quiz – Validation des acquis</h2>
+    <p style="font-size:.85rem;color:var(--muted);margin-bottom:1.5rem;">Clique sur une question pour révéler la réponse.</p>
+
+    <div class="quiz-list">
+      <div class="quiz-item">
+        <div class="quiz-q"><span class="quiz-q-num">Q1</span><span class="quiz-q-text">Quel est le msg-type d'une AS-REQ ?</span><span class="quiz-toggle">+</span></div>
+        <div class="quiz-a"><div class="quiz-a-inner">→ 10</div></div>
+      </div>
+      <div class="quiz-item">
+        <div class="quiz-q"><span class="quiz-q-num">Q2</span><span class="quiz-q-text">Que signifie « etype 18 » ?</span><span class="quiz-toggle">+</span></div>
+        <div class="quiz-a"><div class="quiz-a-inner">→ AES256-CTS-HMAC-SHA1-96 (chiffrement AES-256)</div></div>
+      </div>
+      <div class="quiz-item">
+        <div class="quiz-q"><span class="quiz-q-num">Q3</span><span class="quiz-q-text">Quelle est l'utilité de la pré-authentification Kerberos ?</span><span class="quiz-toggle">+</span></div>
+        <div class="quiz-a"><div class="quiz-a-inner">→ Prouver au KDC que le client connaît le mot de passe avant l'émission d'un ticket.</div></div>
+      </div>
+      <div class="quiz-item">
+        <div class="quiz-q"><span class="quiz-q-num">Q4</span><span class="quiz-q-text">Quel mode hashcat utilise-t-on pour etype 18 Pre-Auth ?</span><span class="quiz-toggle">+</span></div>
+        <div class="quiz-a"><div class="quiz-a-inner">→ 19900</div></div>
+      </div>
+      <div class="quiz-item">
+        <div class="quiz-q"><span class="quiz-q-num">Q5</span><span class="quiz-q-text">Comment s'appelle l'attaque consistant à casser un AS-REQ capturé ?</span><span class="quiz-toggle">+</span></div>
+        <div class="quiz-a"><div class="quiz-a-inner">→ AS-REQ roasting (ou pré-auth roasting)</div></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-author">
+      Rédigé par <strong style="color: var(--cyan);">SPECTRA MZ</strong>
+      &nbsp;·&nbsp; ROOTME — Kerberos - Authentification
+      <br>
+      <a class="bottom-back" href="../index.html">← Retour à l'accueil</a>
+    </div>
+    <div class="footer-badge">
+      <span>🔐</span> Write-up professionnel · AS-REQ roasting
+    </div>
+  </footer>
+
+</div>
+</main>
+
+<script>
+  function copyCode(btn) {
+    const pre = btn.closest('.code-wrap').querySelector('pre');
+    const text = pre.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'copié ✓';
+      btn.style.borderColor = 'var(--cyan)';
+      btn.style.color = 'var(--cyan)';
+      setTimeout(() => {
+        btn.textContent = 'copier';
+        btn.style.borderColor = '';
+        btn.style.color = '';
+      }, 1800);
+    });
+  }
+
+  const sections = document.querySelectorAll('.section[id]');
+  const dots = document.querySelectorAll('.phase-dot');
+  const mobileItems = document.querySelectorAll('.mobile-nav-item');
+  const progressFill = document.getElementById('progressFill');
+
+  function updateActive() {
+    let current = '';
+    sections.forEach(sec => { if (window.scrollY + 200 >= sec.offsetTop) current = sec.id; });
+    dots.forEach(dot => dot.classList.toggle('active', dot.getAttribute('href') === '#' + current));
+    mobileItems.forEach(item => item.classList.toggle('active', item.getAttribute('href') === '#' + current));
+
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const scrolled = docHeight > 0 ? (window.scrollY / docHeight) * 100 : 0;
+    progressFill.style.width = scrolled + '%';
+  }
+
+  window.addEventListener('scroll', updateActive, { passive: true });
+  window.addEventListener('resize', updateActive, { passive: true });
+  updateActive();
+
+  document.querySelectorAll('.quiz-q').forEach(q => {
+    q.addEventListener('click', () => q.parentElement.classList.toggle('open'));
+  });
+</script>
+</body>
+</html>

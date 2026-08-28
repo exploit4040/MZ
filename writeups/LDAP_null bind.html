@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Root-Me — LDAP null bind — Write‑up</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* ===== STYLE IDENTIQUE AUX PAGES PRÉCÉDENTES ===== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        :root {
+            --bg:        #080c18;
+            --surface:   #0f1525;
+            --surface2:  #151d30;
+            --border:    #1e2a42;
+            --cyan:      #00d4aa;
+            --cyan-dim:  #00d4aa22;
+            --cyan-glow: #00d4aa44;
+            --red:       #ff4757;
+            --amber:     #ffa502;
+            --purple:    #a855f7;
+            --blue:      #2f9bff;
+            --green:     #4ade80;
+            --text:      #e2e8f4;
+            --muted:     #6b7a99;
+            --code-bg:   #060a14;
+            --safe-t: env(safe-area-inset-top, 0px);
+            --safe-b: env(safe-area-inset-bottom, 0px);
+            --safe-l: env(safe-area-inset-left, 0px);
+            --safe-r: env(safe-area-inset-right, 0px);
+        }
+        html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+        body {
+            background: var(--bg); color: var(--text);
+            font-family: 'Inter', sans-serif; font-size: 16px; line-height: 1.7;
+            overflow-x: hidden; -webkit-font-smoothing: antialiased;
+        }
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.08) 2px, rgba(0,0,0,.08) 4px);
+            pointer-events: none; z-index: 9999;
+        }
+        img { max-width: 100%; height: auto; display: block; }
+        .progress-bar { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 700; background: var(--border); }
+        .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--cyan), var(--blue)); box-shadow: 0 0 8px var(--cyan-glow); transition: width .1s linear; }
+        .back-home {
+            position: fixed; top: calc(1.2rem + var(--safe-t)); left: calc(1.2rem + var(--safe-l)); z-index: 600;
+            display: inline-flex; align-items: center; gap: .5rem; padding: .6rem 1.05rem; min-height: 44px;
+            background: rgba(15,21,37,.9); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+            border: 1px solid var(--border); border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace; font-size: .78rem; font-weight: 500; color: var(--muted);
+            text-decoration: none; transition: all .2s;
+        }
+        .back-home:hover, .back-home:active { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 16px var(--cyan-glow); }
+        .back-home svg { width: 14px; height: 14px; flex-shrink: 0; }
+        .sidebar {
+            position: fixed; left: 0; top: 0; width: 64px; height: 100vh;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 100; padding: 2rem 0;
+        }
+        .sidebar-line { width: 1px; flex: 1; background: var(--border); }
+        .phase-dot {
+            width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--muted);
+            cursor: pointer; transition: all .3s; text-decoration: none; flex-shrink: 0;
+        }
+        .phase-dot:hover, .phase-dot.active { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 12px var(--cyan-glow); background: var(--cyan-dim); }
+        .mobile-nav {
+            display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 650;
+            background: rgba(15,21,37,.95); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+            border-top: 1px solid var(--border);
+            padding: .6rem calc(.6rem + var(--safe-l)) calc(.6rem + var(--safe-b)) calc(.6rem + var(--safe-r));
+        }
+        .mobile-nav-scroll { display: flex; gap: .5rem; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+        .mobile-nav-scroll::-webkit-scrollbar { display: none; }
+        .mobile-nav-item {
+            flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+            min-width: 44px; min-height: 44px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface);
+            font-family: 'JetBrains Mono', monospace; font-size: .66rem; color: var(--muted); text-decoration: none; transition: all .2s;
+        }
+        .mobile-nav-item.active { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+        main { margin-left: 64px; width: calc(100% - 64px); padding: 0 2rem 6rem; }
+        .inner { max-width: 920px; margin: 0 auto; }
+        .hero { padding: 5.5rem 0 4rem; position: relative; }
+        .hero-eyebrow {
+            font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+            color: var(--cyan); margin-bottom: 1.5rem; display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
+        }
+        .hero-eyebrow::before { content:''; display:inline-block; width:24px; height:1px; background: var(--cyan); }
+        .hero-title {
+            font-family: 'JetBrains Mono', monospace; font-size: clamp(1.9rem, 5.4vw, 3.3rem);
+            font-weight: 700; line-height: 1.15; letter-spacing: -.02em; margin-bottom: 1rem; word-break: break-word;
+        }
+        .hero-title .accent { color: var(--cyan); }
+        .hero-title .dim { color: var(--muted); font-weight: 300; }
+        .hero-sub { font-size: clamp(.95rem, 2.2vw, 1.05rem); color: var(--muted); margin-bottom: 2.5rem; max-width: 640px; }
+        .meta-pills { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 2rem; }
+        .pill { padding: .35rem .9rem; border-radius: 99px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .08em; font-weight: 500; white-space: nowrap; }
+        .pill-cyan   { border:1px solid var(--cyan);   color:var(--cyan);   background:var(--cyan-dim); }
+        .pill-red    { border:1px solid var(--red);    color:var(--red);    background:#ff475711; }
+        .pill-amber  { border:1px solid var(--amber);  color:var(--amber);  background:#ffa50211; }
+        .pill-purple { border:1px solid var(--purple); color:var(--purple); background:#a855f711; }
+        .pill-green  { border:1px solid var(--green);  color:var(--green);  background:#4ade8011; }
+        .hero-divider { width: 100%; height: 1px; background: linear-gradient(90deg, var(--cyan) 0%, var(--border) 60%, transparent 100%); margin-top: 3rem; }
+        .toc { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem 1.6rem; margin: 2rem 0; }
+        .toc-title { font-family: 'JetBrains Mono', monospace; font-size: .75rem; letter-spacing: .15em; text-transform: uppercase; color: var(--cyan); margin-bottom: 1rem; }
+        .toc-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: .6rem 1.5rem; }
+        .toc-list a { font-size: .85rem; color: #b8c3d9; text-decoration: none; display: flex; align-items: baseline; gap: .5rem; transition: color .2s; min-height: 24px; }
+        .toc-list a:hover, .toc-list a:active { color: var(--cyan); }
+        .toc-num { font-family: 'JetBrains Mono', monospace; font-size: .7rem; color: var(--muted); flex-shrink: 0; }
+        .section { padding: 3.5rem 0 2rem; border-bottom: 1px solid var(--border); }
+        .section:last-of-type { border-bottom: none; }
+        .section-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--cyan); margin-bottom: .6rem; display: flex; align-items: center; gap: .5rem; }
+        .section-label span { color: var(--muted); }
+        .section-title { font-family: 'JetBrains Mono', monospace; font-size: clamp(1.2rem, 3.2vw, 1.5rem); font-weight: 600; color: var(--text); margin-bottom: 1.5rem; line-height: 1.3; }
+        .subsection-title { font-family: 'JetBrains Mono', monospace; font-size: 1rem; font-weight: 600; color: var(--cyan); margin: 2.2rem 0 .9rem; padding-left: 1rem; border-left: 2px solid var(--cyan); }
+        p { margin-bottom: 1.1rem; color: #b8c3d9; word-wrap: break-word; }
+        p strong { color: var(--text); font-weight: 600; }
+        ul.plain, ol.plain { margin: 0 0 1.1rem 1.3rem; color: #b8c3d9; }
+        ul.plain li, ol.plain li { margin-bottom: .5rem; }
+        .def-box { background: linear-gradient(135deg, #2f9bff0a 0%, #2f9bff03 100%); border: 1px solid var(--blue); border-radius: 10px; padding: 1.3rem 1.4rem; margin: 1.2rem 0 1.6rem; }
+        .def-term { display: flex; align-items: center; gap: .6rem; font-family: 'JetBrains Mono', monospace; font-size: .92rem; font-weight: 700; color: var(--blue); margin-bottom: .5rem; flex-wrap: wrap; }
+        .def-term::before { content: '§'; font-size: 1.1rem; }
+        .def-body { color: #b8c3d9; font-size: .88rem; }
+        .def-body code { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: .1em .4em; color: #c0cce8; font-size: .85em; word-break: break-all; }
+        .glossary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+        .glossary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem; }
+        .glossary-term { font-family: 'JetBrains Mono', monospace; font-size: .85rem; font-weight: 700; color: var(--cyan); margin-bottom: .5rem; }
+        .glossary-def { font-size: .82rem; color: var(--muted); line-height: 1.55; }
+        .terminal-frame { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 1.5rem 0; box-shadow: 0 8px 40px rgba(0,0,0,.5), 0 0 0 1px rgba(0,212,170,.06); }
+        .terminal-bar { background: var(--surface2); padding: .6rem .9rem; display: flex; align-items: center; gap: .5rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+        .t-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .t-dot-red { background: #ff5f57; } .t-dot-amber { background: #ffbd2e; } .t-dot-green { background: #28c840; }
+        .terminal-bar-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); margin-left: .3rem; word-break: break-all; }
+        .terminal-frame .img-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .terminal-frame img { width: 100%; display: block; vertical-align: top; border-radius: 0; }
+        .terminal-caption { padding: .6rem .9rem; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); background: var(--surface2); border-top: 1px solid var(--border); display: flex; align-items: flex-start; gap: .5rem; }
+        .terminal-caption::before { content: '▸'; color: var(--cyan); flex-shrink: 0; }
+        .code-wrap { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 1rem 0 1.5rem; position: relative; }
+        .code-header { background: var(--surface2); padding: .45rem .9rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); gap: .5rem; }
+        .code-lang { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--cyan); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .copy-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: .35rem .7rem; border-radius: 4px; cursor: pointer; transition: all .2s; min-height: 32px; flex-shrink: 0; }
+        .copy-btn:hover, .copy-btn:active { border-color: var(--cyan); color: var(--cyan); }
+        .code-wrap pre { padding: 1.1rem 1.1rem; overflow-x: auto; -webkit-overflow-scrolling: touch; font-family: 'JetBrains Mono', monospace; font-size: .78rem; line-height: 1.7; color: #c0cce8; }
+        .code-wrap pre .kw { color: var(--cyan); }
+        .code-wrap pre .str { color: #ffdd87; }
+        .code-wrap pre .hl { color: var(--amber); font-weight: 700; }
+        .code-wrap pre .hl-cyan { color: var(--cyan); font-weight: 700; }
+        .code-wrap pre .hl-red { color: var(--red); font-weight: 700; }
+        .code-wrap pre .cmt { color: var(--muted); font-style: italic; }
+        .code-wrap pre .prop { color: var(--purple); }
+        .result-badge { display: inline-flex; align-items: flex-start; gap: .5rem; background: #00d4aa0f; border: 1px solid var(--cyan); border-radius: 6px; padding: .6rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--cyan); margin: .5rem 0 1rem; word-break: break-word; }
+        .result-badge::before { content: '✓'; font-weight: 700; flex-shrink: 0; }
+        .warn-badge { display: inline-flex; align-items: flex-start; gap: .5rem; background: #ffa5020f; border: 1px solid var(--amber); border-radius: 6px; padding: .6rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--amber); margin: .5rem 0 1rem; word-break: break-word; }
+        .warn-badge::before { content: '⚠'; font-weight: 700; flex-shrink: 0; }
+        .flag-box { background: linear-gradient(135deg, #00d4aa0a 0%, #00d4aa03 100%); border: 1px solid var(--cyan); border-radius: 10px; padding: 1.6rem 1.4rem; text-align: center; position: relative; overflow: hidden; margin: 1.5rem 0; }
+        .flag-box::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, var(--cyan-glow) 0%, transparent 70%); pointer-events: none; }
+        .flag-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); margin-bottom: .8rem; }
+        .flag-text { font-family: 'JetBrains Mono', monospace; font-size: clamp(.9rem, 3.2vw, 1.2rem); font-weight: 700; color: var(--cyan); letter-spacing: .02em; text-shadow: 0 0 20px var(--cyan-glow); word-break: break-all; }
+        .quiz-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: .8rem; overflow: hidden; }
+        .quiz-q { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.3rem; cursor: pointer; user-select: none; }
+        .quiz-q-num { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: .75rem; color: var(--bg); background: var(--purple); min-width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .quiz-q-text { font-size: .88rem; color: var(--text); font-weight: 500; flex: 1; }
+        .quiz-toggle { font-family: 'JetBrains Mono', monospace; color: var(--muted); transition: transform .25s; flex-shrink: 0; }
+        .quiz-item.open .quiz-toggle { transform: rotate(45deg); color: var(--cyan); }
+        .quiz-a { max-height: 0; overflow: hidden; transition: max-height .3s ease; }
+        .quiz-item.open .quiz-a { max-height: 200px; }
+        .quiz-a-inner { padding: 0 1.3rem 1.1rem 3.1rem; font-size: .84rem; color: var(--cyan); font-family: 'JetBrains Mono', monospace; }
+        .ref-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .8rem; margin-top: 1rem; }
+        .ref-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; text-decoration: none; display: flex; flex-direction: column; gap: .3rem; transition: border-color .2s, box-shadow .2s; min-height: 44px; }
+        .ref-card:hover, .ref-card:active { border-color: var(--cyan); box-shadow: 0 0 20px var(--cyan-glow); }
+        .ref-icon { font-size: 1.1rem; margin-bottom: .2rem; }
+        .ref-name { font-family: 'JetBrains Mono', monospace; font-size: .78rem; color: var(--cyan); font-weight: 600; }
+        .ref-url { font-size: .73rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .chain { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.1rem 1.2rem; margin: 1.2rem 0 1.6rem; }
+        .chain-title { width: 100%; font-family: 'JetBrains Mono', monospace; font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: .7rem; }
+        .chain-node { font-family: 'JetBrains Mono', monospace; font-size: .74rem; color: var(--text); background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; padding: .35rem .65rem; word-break: break-word; }
+        .chain-arrow { font-family: 'JetBrains Mono', monospace; font-size: .9rem; color: var(--cyan); flex-shrink: 0; }
+        .chain-node.highlight { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+        .chain-node.danger { border-color: var(--red); color: var(--red); background: #ff475711; }
+        footer { margin-top: 4rem; padding: 2rem 0; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+        .footer-author { font-family: 'JetBrains Mono', monospace; font-size: .78rem; color: var(--muted); line-height: 1.8; }
+        .footer-badge { font-family: 'JetBrains Mono', monospace; font-size: .72rem; color: var(--muted); display: flex; align-items: center; gap: .4rem; }
+        .footer-badge span { color: var(--cyan); }
+        .bottom-back { display: inline-flex; align-items: center; gap: .5rem; padding: .7rem 1.2rem; margin-top: .8rem; min-height: 44px; border: 1px solid var(--cyan); border-radius: 8px; color: var(--cyan); text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: .8rem; background: var(--cyan-dim); transition: all .2s; }
+        .bottom-back:hover, .bottom-back:active { box-shadow: 0 0 20px var(--cyan-glow); }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+        /* ===== TABLEAUX STYLISÉS ===== */
+        .table-wrap { overflow-x: auto; margin: 1.5rem 0; border-radius: 10px; border: 1px solid var(--border); }
+        .table-wrap table { width: 100%; border-collapse: collapse; font-size: .85rem; background: var(--surface); }
+        .table-wrap th { background: var(--surface2); color: var(--cyan); font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; padding: .7rem .9rem; text-align: left; border-bottom: 1px solid var(--border); }
+        .table-wrap td { padding: .6rem .9rem; border-bottom: 1px solid var(--border); color: #b8c3d9; }
+        .table-wrap tr:last-child td { border-bottom: none; }
+        .table-wrap td code { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: .1em .4em; color: #c0cce8; font-size: .85em; }
+
+        @media (max-width: 900px) {
+            main { margin-left: 0; width: 100%; padding: 0 1.6rem 6rem; }
+            .sidebar { display: none; }
+            .mobile-nav { display: block; }
+        }
+        @media (max-width: 768px) {
+            .hero { padding: 4.5rem 0 3rem; }
+            .toc-list { grid-template-columns: 1fr; }
+            .glossary-grid { grid-template-columns: 1fr; }
+            .ref-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+        }
+        @media (max-width: 480px) {
+            body { font-size: 15px; }
+            main { padding: 0 1.1rem 6rem; }
+            .hero { padding: 4rem 0 2.5rem; }
+            .back-home { font-size: .72rem; padding: .5rem .8rem; }
+            .back-home span.label { display: none; }
+            .section { padding: 2.6rem 0 1.5rem; }
+            .section-title { margin-bottom: 1.1rem; }
+            .subsection-title { margin: 1.8rem 0 .7rem; font-size: .92rem; }
+            .terminal-bar-label { font-size: 10px; }
+            .code-wrap pre { font-size: .7rem; padding: .9rem .8rem; }
+            .def-box, .toc, .terminal-caption { padding: 1rem 1.1rem; }
+            .flag-box { padding: 1.3rem 1rem; }
+            footer { flex-direction: column; align-items: flex-start; }
+        }
+        @media (max-height: 480px) and (orientation: landscape) {
+            .mobile-nav { padding-bottom: calc(.4rem + var(--safe-b)); }
+            .mobile-nav-item { min-height: 36px; }
+        }
+        @media (min-width: 1400px) { .inner { max-width: 1020px; } }
+    </style>
+</head>
+<body>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+<a class="back-home" href="../index.html">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9.5 3L4.5 8L9.5 13"/></svg>
+    <span class="label">Retour à l'accueil</span>
+</a>
+
+<nav class="sidebar">
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#s0">00</a>
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#s1">01</a>
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#s2">02</a>
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#s3">03</a>
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#s4">04</a>
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#s5">05</a>
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#s6">06</a>
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#quiz">Q</a>
+    <div class="sidebar-line"></div>
+</nav>
+
+<nav class="mobile-nav">
+    <div class="mobile-nav-scroll">
+        <a class="mobile-nav-item" href="#s0">00</a>
+        <a class="mobile-nav-item" href="#s1">01</a>
+        <a class="mobile-nav-item" href="#s2">02</a>
+        <a class="mobile-nav-item" href="#s3">03</a>
+        <a class="mobile-nav-item" href="#s4">04</a>
+        <a class="mobile-nav-item" href="#s5">05</a>
+        <a class="mobile-nav-item" href="#s6">06</a>
+        <a class="mobile-nav-item" href="#quiz">Q</a>
+    </div>
+</nav>
+
+<main>
+<div class="inner">
+
+    <header class="hero">
+        <div class="hero-eyebrow">ROOT‑ME · Défi : Service réseau</div>
+        <h1 class="hero-title">
+            LDAP — <span class="accent">null bind</span>
+        </h1>
+        <p class="hero-sub">
+            <strong>Catégorie :</strong> Service réseau — <strong>Points :</strong> 15 — <strong>Difficulté :</strong> ⭐ (1/5) — <strong>Auteur :</strong> g0uZ (26 mai 2013)<br>
+            Rédigé par <span style="color:var(--cyan);">SPECTRA MZ</span> — exploitation d’un bind anonyme LDAP mal configuré.
+        </p>
+        <div class="meta-pills">
+            <span class="pill pill-cyan">ROOT‑ME</span>
+            <span class="pill pill-red">LDAP</span>
+            <span class="pill pill-amber">null bind</span>
+            <span class="pill pill-purple">ldapsearch</span>
+            <span class="pill pill-green">Annuaire</span>
+        </div>
+        <div class="hero-divider"></div>
+    </header>
+
+    <div class="toc">
+        <div class="toc-title">Sommaire</div>
+        <ul class="toc-list">
+            <li><span class="toc-num">00</span><a href="#s0">Présentation & énoncé</a></li>
+            <li><span class="toc-num">01</span><a href="#s1">Vocabulaire LDAP</a></li>
+            <li><span class="toc-num">02</span><a href="#s2">Théorie du bind</a></li>
+            <li><span class="toc-num">03</span><a href="#s3">Méthodologie</a></li>
+            <li><span class="toc-num">04</span><a href="#s4">Analyse des réponses</a></li>
+            <li><span class="toc-num">05</span><a href="#s5">Flag</a></li>
+            <li><span class="toc-num">06</span><a href="#s6">Remédiation</a></li>
+            <li><span class="toc-num">Q</span><a href="#quiz">Quiz</a></li>
+        </ul>
+    </div>
+
+    <!-- SECTION 0 -->
+    <section class="section" id="s0">
+        <div class="section-label">Phase <span>00</span></div>
+        <h2 class="section-title">Présentation du challenge</h2>
+
+        <div style="background: var(--surface); border: 2px solid var(--cyan); border-radius: 10px; padding: 1.5rem; margin: 1.5rem 0; box-shadow: 0 0 20px var(--cyan-glow);">
+            <p style="font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: var(--cyan); margin: 0;">
+                📜 <strong>ÉNONCÉ OFFICIEL</strong>
+            </p>
+            <p style="font-size: 1.05rem; color: var(--text); margin: 0.5rem 0 0 0; font-weight: 500;">
+                L'administrateur a besoin de vous, il semblerait qu'un des anonymous se soit installé dans une nouvelle branche de l'annuaire LDAP ; quelque part dans :<br>
+                <code>dc=challenge01,dc=root-me,dc=org</code><br>
+                Retrouvez un accès à ses données et ramenez son adresse email.
+            </p>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Élément</th><th>Valeur</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>Hôte</strong></td><td><code>challenge01.root-me.org</code></td></tr>
+                    <tr><td><strong>Protocole</strong></td><td>LDAP</td></tr>
+                    <tr><td><strong>Port</strong></td><td>54013</td></tr>
+                    <tr><td><strong>Base DN</strong></td><td><code>dc=challenge01,dc=root-me,dc=org</code></td></tr>
+                    <tr><td><strong>Validations</strong></td><td>17 508 (5%)</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="terminal-frame">
+            <div class="terminal-bar">
+                <div class="t-dot t-dot-red"></div>
+                <div class="t-dot t-dot-amber"></div>
+                <div class="t-dot t-dot-green"></div>
+                <span class="terminal-bar-label">Énoncé Root‑Me</span>
+            </div>
+            <div class="img-scroll">
+                <img src="ldap/rootme.png" alt="Capture d'écran de l'énoncé Root-Me">
+            </div>
+            <div class="terminal-caption">Le défi « LDAP — null bind » sur Root‑Me (15 pts, niveau facile).</div>
+        </div>
+    </section>
+
+    <!-- SECTION 1 -->
+    <section class="section" id="s1">
+        <div class="section-label">Phase <span>01</span></div>
+        <h2 class="section-title">Vocabulaire clé</h2>
+        <div class="glossary-grid">
+            <div class="glossary-card">
+                <div class="glossary-term">LDAP</div>
+                <div class="glossary-def">Lightweight Directory Access Protocol — protocole d’interrogation d’annuaires hiérarchiques (utilisateurs, groupes, machines).</div>
+            </div>
+            <div class="glossary-card">
+                <div class="glossary-term">DN (Distinguished Name)</div>
+                <div class="glossary-def">Nom unique d’un objet dans l’annuaire, lu de droite à gauche (ex: <code>uid=sabu,ou=anonymous,dc=...</code>).</div>
+            </div>
+            <div class="glossary-card">
+                <div class="glossary-term">Bind</div>
+                <div class="glossary-def">Étape d’authentification avant toute lecture. Un bind avec DN vide et mot de passe vide est un <strong>null bind</strong> (anonyme).</div>
+            </div>
+            <div class="glossary-card">
+                <div class="glossary-term">Base DN</div>
+                <div class="glossary-def">Point de départ de la recherche dans l’arbre LDAP.</div>
+            </div>
+            <div class="glossary-card">
+                <div class="glossary-term">inetOrgPerson</div>
+                <div class="glossary-def">Classe d’objet standard pour décrire une personne (nom, email, téléphone…).</div>
+            </div>
+            <div class="glossary-card">
+                <div class="glossary-term">ldapsearch</div>
+                <div class="glossary-def">Outil en ligne de commande (paquet <code>ldap-utils</code>) pour interroger un serveur LDAP.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 2 -->
+    <section class="section" id="s2">
+        <div class="section-label">Phase <span>02</span></div>
+        <h2 class="section-title">Théorie du bind LDAP</h2>
+
+        <h3 class="subsection-title">Principe</h3>
+        <p>
+            Avant de lire l’annuaire, le client doit s’authentifier : c’est le <strong>bind</strong>.
+        </p>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Type de bind</th><th>Identifiant</th><th>Mot de passe</th><th>Droits</th></tr></thead>
+                <tbody>
+                    <tr><td>Bind authentifié</td><td>DN d’un utilisateur</td><td>Mot de passe</td><td>Selon les ACL</td></tr>
+                    <tr style="background: var(--cyan-dim); border: 1px solid var(--cyan);">
+                        <td><strong>Null bind (anonyme)</strong></td><td><code>""</code> (vide)</td><td><code>""</code> (vide)</td><td>Lecture publique (si mal configuré)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p>
+            La RFC 4513 précise : <em>« A Bind request with a name of zero length and a password of zero length establishes an anonymous authorization state. »</em>
+        </p>
+        <div class="warn-badge">
+            ⚠️ Vulnérabilité : si l’administrateur autorise le bind anonyme et laisse trop d’attributs lisibles, n’importe qui peut énumérer les utilisateurs, emails, groupes… sans compte.
+        </div>
+
+        <h3 class="subsection-title">Ordinogramme du null bind</h3>
+        <div class="chain">
+            <span class="chain-title">Flux d’une requête LDAP anonyme</span>
+            <span class="chain-node highlight">1. Client envoie bind avec DN vide et mot de passe vide</span>
+            <span class="chain-arrow">→</span>
+            <span class="chain-node">2. Serveur LDAP</span>
+            <span class="chain-arrow">→</span>
+            <span class="chain-node">3. Vérification des autorisations anonymes (ACL)</span>
+            <span class="chain-arrow">→</span>
+            <span class="chain-node danger">4. Si ACL permissives → accès en lecture publique</span>
+            <span class="chain-arrow">→</span>
+            <span class="chain-node">5. Client énumère les entrées (utilisateurs, emails…)</span>
+        </div>
+    </section>
+
+    <!-- SECTION 3 -->
+    <section class="section" id="s3">
+        <div class="section-label">Phase <span>03</span></div>
+        <h2 class="section-title">Méthodologie</h2>
+
+        <h3 class="subsection-title">Installation de l’outil</h3>
+        <div class="code-wrap">
+            <div class="code-header"><span class="code-lang">Installation</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+            <pre># Fedora
+sudo dnf install openldap-clients
+
+# Debian / Kali
+sudo apt install ldap-utils</pre>
+        </div>
+
+        <h3 class="subsection-title">Première tentative — base donnée dans l’énoncé</h3>
+        <p>
+            On se connecte en null bind (<code>-x</code> sans <code>-D</code>/<code>-w</code> = anonyme) et on interroge la racine indiquée :
+        </p>
+        <div class="code-wrap">
+            <div class="code-header"><span class="code-lang">Commande</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+            <pre>ldapsearch -x -H "ldap://challenge01.root-me.org:54013" -b "dc=challenge01,dc=root-me,dc=org"</pre>
+        </div>
+
+        <div class="terminal-frame">
+            <div class="terminal-bar">
+                <div class="t-dot t-dot-red"></div>
+                <div class="t-dot t-dot-amber"></div>
+                <div class="t-dot t-dot-green"></div>
+                <span class="terminal-bar-label">Résultat — Accès insuffisant</span>
+            </div>
+            <div class="img-scroll">
+                <img src="ldap/ladcap.png" alt="Capture montrant le résultat Insufficient access">
+            </div>
+            <div class="terminal-caption">
+                Le serveur accepte le bind anonyme, mais refuse de lister toute la zone. Les ACL bloquent la lecture de la racine.
+            </div>
+        </div>
+        <p>
+            <strong>Résultat :</strong> <code>result: 50 Insufficient access</code> — il faut viser une branche plus précise.
+        </p>
+
+        <h3 class="subsection-title">La clé est dans l’énoncé</h3>
+        <p>
+            Relisons bien :<br>
+            <em>« un des anonymous se soit installé dans une nouvelle branche »</em>
+        </p>
+        <p>
+            En LDAP, une branche = une <strong>Organizational Unit</strong> (<code>ou=</code>). L’OU s’appelle donc très probablement :
+        </p>
+        <div class="code-wrap">
+            <div class="code-header"><span class="code-lang">Branche cible</span></div>
+            <pre>ou=anonymous,dc=challenge01,dc=root-me,dc=org</pre>
+        </div>
+
+        <h3 class="subsection-title">Requête ciblée — la branche <code>anonymous</code></h3>
+        <div class="code-wrap">
+            <div class="code-header"><span class="code-lang">Commande</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+            <pre>ldapsearch -x -H "ldap://challenge01.root-me.org:54013" -b "ou=anonymous,dc=challenge01,dc=root-me,dc=org"</pre>
+        </div>
+        <p>
+            Équivalent avec la syntaxe <code>-h</code> / <code>-p</code> :
+        </p>
+        <div class="code-wrap">
+            <div class="code-header"><span class="code-lang">Syntaxe alternative</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+            <pre>ldapsearch -x -h challenge01.root-me.org -p 54013 -D '' -w '' -b "ou=anonymous,dc=challenge01,dc=root-me,dc=org"</pre>
+        </div>
+        <p>
+            Cette fois, le serveur répond avec succès.
+        </p>
+    </section>
+
+    <!-- SECTION 4 -->
+    <section class="section" id="s4">
+        <div class="section-label">Phase <span>04</span></div>
+        <h2 class="section-title">Analyse des réponses</h2>
+
+        <div class="terminal-frame">
+            <div class="terminal-bar">
+                <div class="t-dot t-dot-red"></div>
+                <div class="t-dot t-dot-amber"></div>
+                <div class="t-dot t-dot-green"></div>
+                <span class="terminal-bar-label">Sortie complète de la requête</span>
+            </div>
+            <div class="img-scroll">
+                <img src="ldap/ldap2.png" alt="Capture de la sortie ldapsearch complète">
+            </div>
+            <div class="terminal-caption">On découvre la branche <code>ou=anonymous</code> et l’utilisateur <code>sabu</code>.</div>
+        </div>
+
+        <p><strong>Extrait de la réponse :</strong></p>
+        <div class="code-wrap">
+            <div class="code-header"><span class="code-lang">Sortie</span></div>
+            <pre># anonymous, challenge01.root-me.org
+dn: ou=anonymous,dc=challenge01,dc=root-me,dc=org
+objectClass: organizationalUnit
+ou: anonymous
+
+# sabu, anonymous, challenge01.root-me.org
+dn: uid=sabu,ou=anonymous,dc=challenge01,dc=root-me,dc=org
+objectClass: inetOrgPerson
+objectClass: shadowAccount
+uid: sabu
+mail: sabu@anonops.org</pre>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Attribut</th><th>Valeur</th><th>Interprétation</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>dn</strong></td><td><code>uid=sabu,ou=anonymous,...</code></td><td>Compte de l’intrus</td></tr>
+                    <tr><td><strong>objectClass</strong></td><td><code>inetOrgPerson</code></td><td>Fiche personne (nom, email…)</td></tr>
+                    <tr><td><strong>uid</strong></td><td><code>sabu</code></td><td>Identifiant (référence à Sabu / Anonymous)</td></tr>
+                    <tr style="background: var(--cyan-dim); border: 1px solid var(--cyan);">
+                        <td><strong>mail</strong></td><td><code>sabu@anonops.org</code></td><td>🏁 <strong>L’adresse demandée</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>
+            L’intrus s’est créé une fiche <code>inetOrgPerson</code> dans sa propre OU, lisible en anonyme. L’email est en clair.
+        </p>
+
+        <div class="terminal-frame">
+            <div class="terminal-bar">
+                <div class="t-dot t-dot-red"></div>
+                <div class="t-dot t-dot-amber"></div>
+                <div class="t-dot t-dot-green"></div>
+                <span class="terminal-bar-label">Filtrage sur l’email uniquement</span>
+            </div>
+            <div class="img-scroll">
+                <img src="ldap/lda3.png" alt="Capture montrant le filtre sur l'attribut mail">
+            </div>
+            <div class="terminal-caption">On peut aussi filtrer directement l’attribut <code>mail</code> avec <code>"(objectClass=inetOrgPerson)" mail</code>.</div>
+        </div>
+    </section>
+
+    <!-- SECTION 5 -->
+    <section class="section" id="s5">
+        <div class="section-label">Phase <span>05</span></div>
+        <h2 class="section-title">🏁 Flag</h2>
+        <p>
+            L’adresse email à soumettre est :
+        </p>
+        <div class="flag-box">
+            <div class="flag-label">Flag final (partiellement masqué)</div>
+            <div class="flag-text">sabu@***.org</div>
+        </div>
+        <p>
+            <span style="color: var(--muted);">(Le flag complet est <code>sabu@anonops.org</code> ; les astérisques masquent la partie <code>anonops</code> pour préserver l’intérêt du challenge.)</span>
+        </p>
+        <p>
+            Validez cette adresse sur la page du challenge Root‑Me.
+        </p>
+    </section>
+
+    <!-- SECTION 6 -->
+    <section class="section" id="s6">
+        <div class="section-label">Phase <span>06</span></div>
+        <h2 class="section-title">Impact et remédiation</h2>
+
+        <h3 class="subsection-title">Impact</h3>
+        <p>
+            Un null bind trop permissif permet d’énumérer :
+        </p>
+        <ul class="plain">
+            <li><strong>Comptes et emails</strong> (phishing, credential stuffing) ;</li>
+            <li><strong>Groupes et structure interne</strong> de l’organisation ;</li>
+            <li>Parfois des attributs sensibles (<code>userPassword</code>, descriptions, téléphones).</li>
+        </ul>
+
+        <h3 class="subsection-title">Corrections</h3>
+        <ol class="plain">
+            <li><strong>Désactiver le bind anonyme</strong> (OpenLDAP) :
+                <div class="code-wrap"><pre>olcDisallows: bind_anon
+olcRequires: authc</pre></div>
+            </li>
+            <li><strong>ACL restrictives</strong> : lecture limitée aux attributs publics nécessaires, jamais <code>userPassword</code> ni données RH.</li>
+            <li><strong>Ne pas exposer LDAP sur Internet</strong> : VPN, firewall, LDAPS (636) uniquement.</li>
+            <li><strong>Auditer</strong> : <code>ldapsearch -x -H ldap://ton-serveur -b "dc=..." "(objectClass=*)"</code> depuis l’extérieur doit échouer.</li>
+        </ol>
+    </section>
+
+    <!-- QUIZ -->
+    <section class="section" id="quiz">
+        <div class="section-label">// <span>auto-évaluation</span></div>
+        <h2 class="section-title">Quiz – Validation des acquis</h2>
+        <p style="font-size:.85rem;color:var(--muted);margin-bottom:1.5rem;">Clique sur une question pour révéler la réponse.</p>
+
+        <div class="quiz-list">
+            <div class="quiz-item">
+                <div class="quiz-q"><span class="quiz-q-num">Q1</span><span class="quiz-q-text">Que signifie « null bind » dans LDAP ?</span><span class="quiz-toggle">+</span></div>
+                <div class="quiz-a"><div class="quiz-a-inner">→ Une connexion anonyme avec un DN vide et un mot de passe vide.</div></div>
+            </div>
+            <div class="quiz-item">
+                <div class="quiz-q"><span class="quiz-q-num">Q2</span><span class="quiz-q-text">Quelle option de <code>ldapsearch</code> spécifie la base de recherche ?</span><span class="quiz-toggle">+</span></div>
+                <div class="quiz-a"><div class="quiz-a-inner">→ <code>-b</code></div></div>
+            </div>
+            <div class="quiz-item">
+                <div class="quiz-q"><span class="quiz-q-num">Q3</span><span class="quiz-q-text">Pourquoi la première requête sur la racine a‑t‑elle échoué ?</span><span class="quiz-toggle">+</span></div>
+                <div class="quiz-a"><div class="quiz-a-inner">→ Les ACL du serveur bloquent la lecture de la racine, mais pas des sous‑branches.</div></div>
+            </div>
+            <div class="quiz-item">
+                <div class="quiz-q"><span class="quiz-q-num">Q4</span><span class="quiz-q-text">Quelle classe d’objet est utilisée pour décrire une personne avec un email ?</span><span class="quiz-toggle">+</span></div>
+                <div class="quiz-a"><div class="quiz-a-inner">→ <code>inetOrgPerson</code></div></div>
+            </div>
+            <div class="quiz-item">
+                <div class="quiz-q"><span class="quiz-q-num">Q5</span><span class="quiz-q-text">Quelle est la principale mesure de sécurité contre ce type de vulnérabilité ?</span><span class="quiz-toggle">+</span></div>
+                <div class="quiz-a"><div class="quiz-a-inner">→ Désactiver le bind anonyme et restreindre les ACL.</div></div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-author">
+            Rédigé par <strong style="color: var(--cyan);">SPECTRA MZ</strong>
+            &nbsp;·&nbsp; ROOT‑ME — LDAP null bind
+            <br>
+            <a class="bottom-back" href="../index.html">← Retour à l'accueil</a>
+        </div>
+        <div class="footer-badge">
+            <span>📂</span> Write‑up · LDAP &amp; null bind
+        </div>
+    </footer>
+
+</div>
+</main>
+
+<script>
+    function copyCode(btn) {
+        const pre = btn.closest('.code-wrap').querySelector('pre');
+        const text = pre.innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            btn.textContent = 'copié ✓';
+            btn.style.borderColor = 'var(--cyan)';
+            btn.style.color = 'var(--cyan)';
+            setTimeout(() => {
+                btn.textContent = 'copier';
+                btn.style.borderColor = '';
+                btn.style.color = '';
+            }, 1800);
+        });
+    }
+
+    const sections = document.querySelectorAll('.section[id]');
+    const dots = document.querySelectorAll('.phase-dot');
+    const mobileItems = document.querySelectorAll('.mobile-nav-item');
+    const progressFill = document.getElementById('progressFill');
+
+    function updateActive() {
+        let current = '';
+        sections.forEach(sec => { if (window.scrollY + 200 >= sec.offsetTop) current = sec.id; });
+        dots.forEach(dot => dot.classList.toggle('active', dot.getAttribute('href') === '#' + current));
+        mobileItems.forEach(item => item.classList.toggle('active', item.getAttribute('href') === '#' + current));
+
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const scrolled = docHeight > 0 ? (window.scrollY / docHeight) * 100 : 0;
+        progressFill.style.width = scrolled + '%';
+    }
+
+    window.addEventListener('scroll', updateActive, { passive: true });
+    window.addEventListener('resize', updateActive, { passive: true });
+    updateActive();
+
+    document.querySelectorAll('.quiz-q').forEach(q => {
+        q.addEventListener('click', () => q.parentElement.classList.toggle('open'));
+    });
+</script>
+</body>
+</html>

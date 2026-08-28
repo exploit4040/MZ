@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Root-Me — DNS Transfert de zone — Write‑up</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* ===== STYLE IDENTIQUE AUX PAGES PRÉCÉDENTES ===== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        :root {
+            --bg:        #080c18;
+            --surface:   #0f1525;
+            --surface2:  #151d30;
+            --border:    #1e2a42;
+            --cyan:      #00d4aa;
+            --cyan-dim:  #00d4aa22;
+            --cyan-glow: #00d4aa44;
+            --red:       #ff4757;
+            --amber:     #ffa502;
+            --purple:    #a855f7;
+            --blue:      #2f9bff;
+            --green:     #4ade80;
+            --text:      #e2e8f4;
+            --muted:     #6b7a99;
+            --code-bg:   #060a14;
+            --safe-t: env(safe-area-inset-top, 0px);
+            --safe-b: env(safe-area-inset-bottom, 0px);
+            --safe-l: env(safe-area-inset-left, 0px);
+            --safe-r: env(safe-area-inset-right, 0px);
+        }
+        html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+        body {
+            background: var(--bg); color: var(--text);
+            font-family: 'Inter', sans-serif; font-size: 16px; line-height: 1.7;
+            overflow-x: hidden; -webkit-font-smoothing: antialiased;
+        }
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.08) 2px, rgba(0,0,0,.08) 4px);
+            pointer-events: none; z-index: 9999;
+        }
+        img { max-width: 100%; height: auto; display: block; }
+        .progress-bar { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 700; background: var(--border); }
+        .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--cyan), var(--blue)); box-shadow: 0 0 8px var(--cyan-glow); transition: width .1s linear; }
+        .back-home {
+            position: fixed; top: calc(1.2rem + var(--safe-t)); left: calc(1.2rem + var(--safe-l)); z-index: 600;
+            display: inline-flex; align-items: center; gap: .5rem; padding: .6rem 1.05rem; min-height: 44px;
+            background: rgba(15,21,37,.9); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+            border: 1px solid var(--border); border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace; font-size: .78rem; font-weight: 500; color: var(--muted);
+            text-decoration: none; transition: all .2s;
+        }
+        .back-home:hover, .back-home:active { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 16px var(--cyan-glow); }
+        .back-home svg { width: 14px; height: 14px; flex-shrink: 0; }
+        .sidebar {
+            position: fixed; left: 0; top: 0; width: 64px; height: 100vh;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 100; padding: 2rem 0;
+        }
+        .sidebar-line { width: 1px; flex: 1; background: var(--border); }
+        .phase-dot {
+            width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--muted);
+            cursor: pointer; transition: all .3s; text-decoration: none; flex-shrink: 0;
+        }
+        .phase-dot:hover, .phase-dot.active { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 12px var(--cyan-glow); background: var(--cyan-dim); }
+        .mobile-nav {
+            display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 650;
+            background: rgba(15,21,37,.95); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+            border-top: 1px solid var(--border);
+            padding: .6rem calc(.6rem + var(--safe-l)) calc(.6rem + var(--safe-b)) calc(.6rem + var(--safe-r));
+        }
+        .mobile-nav-scroll { display: flex; gap: .5rem; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+        .mobile-nav-scroll::-webkit-scrollbar { display: none; }
+        .mobile-nav-item {
+            flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+            min-width: 44px; min-height: 44px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface);
+            font-family: 'JetBrains Mono', monospace; font-size: .66rem; color: var(--muted); text-decoration: none; transition: all .2s;
+        }
+        .mobile-nav-item.active { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+        main { margin-left: 64px; width: calc(100% - 64px); padding: 0 2rem 6rem; }
+        .inner { max-width: 920px; margin: 0 auto; }
+        .hero { padding: 5.5rem 0 4rem; position: relative; }
+        .hero-eyebrow {
+            font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+            color: var(--cyan); margin-bottom: 1.5rem; display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
+        }
+        .hero-eyebrow::before { content:''; display:inline-block; width:24px; height:1px; background: var(--cyan); }
+        .hero-title {
+            font-family: 'JetBrains Mono', monospace; font-size: clamp(1.9rem, 5.4vw, 3.3rem);
+            font-weight: 700; line-height: 1.15; letter-spacing: -.02em; margin-bottom: 1rem; word-break: break-word;
+        }
+        .hero-title .accent { color: var(--cyan); }
+        .hero-title .dim { color: var(--muted); font-weight: 300; }
+        .hero-sub { font-size: clamp(.95rem, 2.2vw, 1.05rem); color: var(--muted); margin-bottom: 2.5rem; max-width: 640px; }
+        .meta-pills { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 2rem; }
+        .pill { padding: .35rem .9rem; border-radius: 99px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .08em; font-weight: 500; white-space: nowrap; }
+        .pill-cyan   { border:1px solid var(--cyan);   color:var(--cyan);   background:var(--cyan-dim); }
+        .pill-red    { border:1px solid var(--red);    color:var(--red);    background:#ff475711; }
+        .pill-amber  { border:1px solid var(--amber);  color:var(--amber);  background:#ffa50211; }
+        .pill-purple { border:1px solid var(--purple); color:var(--purple); background:#a855f711; }
+        .pill-green  { border:1px solid var(--green);  color:var(--green);  background:#4ade8011; }
+        .hero-divider { width: 100%; height: 1px; background: linear-gradient(90deg, var(--cyan) 0%, var(--border) 60%, transparent 100%); margin-top: 3rem; }
+        .toc { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem 1.6rem; margin: 2rem 0; }
+        .toc-title { font-family: 'JetBrains Mono', monospace; font-size: .75rem; letter-spacing: .15em; text-transform: uppercase; color: var(--cyan); margin-bottom: 1rem; }
+        .toc-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: .6rem 1.5rem; }
+        .toc-list a { font-size: .85rem; color: #b8c3d9; text-decoration: none; display: flex; align-items: baseline; gap: .5rem; transition: color .2s; min-height: 24px; }
+        .toc-list a:hover, .toc-list a:active { color: var(--cyan); }
+        .toc-num { font-family: 'JetBrains Mono', monospace; font-size: .7rem; color: var(--muted); flex-shrink: 0; }
+        .section { padding: 3.5rem 0 2rem; border-bottom: 1px solid var(--border); }
+        .section:last-of-type { border-bottom: none; }
+        .section-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--cyan); margin-bottom: .6rem; display: flex; align-items: center; gap: .5rem; }
+        .section-label span { color: var(--muted); }
+        .section-title { font-family: 'JetBrains Mono', monospace; font-size: clamp(1.2rem, 3.2vw, 1.5rem); font-weight: 600; color: var(--text); margin-bottom: 1.5rem; line-height: 1.3; }
+        .subsection-title { font-family: 'JetBrains Mono', monospace; font-size: 1rem; font-weight: 600; color: var(--cyan); margin: 2.2rem 0 .9rem; padding-left: 1rem; border-left: 2px solid var(--cyan); }
+        p { margin-bottom: 1.1rem; color: #b8c3d9; word-wrap: break-word; }
+        p strong { color: var(--text); font-weight: 600; }
+        ul.plain, ol.plain { margin: 0 0 1.1rem 1.3rem; color: #b8c3d9; }
+        ul.plain li, ol.plain li { margin-bottom: .5rem; }
+        .def-box { background: linear-gradient(135deg, #2f9bff0a 0%, #2f9bff03 100%); border: 1px solid var(--blue); border-radius: 10px; padding: 1.3rem 1.4rem; margin: 1.2rem 0 1.6rem; }
+        .def-term { display: flex; align-items: center; gap: .6rem; font-family: 'JetBrains Mono', monospace; font-size: .92rem; font-weight: 700; color: var(--blue); margin-bottom: .5rem; flex-wrap: wrap; }
+        .def-term::before { content: '§'; font-size: 1.1rem; }
+        .def-body { color: #b8c3d9; font-size: .88rem; }
+        .def-body code { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: .1em .4em; color: #c0cce8; font-size: .85em; word-break: break-all; }
+        .glossary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+        .glossary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem; }
+        .glossary-term { font-family: 'JetBrains Mono', monospace; font-size: .85rem; font-weight: 700; color: var(--cyan); margin-bottom: .5rem; }
+        .glossary-def { font-size: .82rem; color: var(--muted); line-height: 1.55; }
+        .terminal-frame { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 1.5rem 0; box-shadow: 0 8px 40px rgba(0,0,0,.5), 0 0 0 1px rgba(0,212,170,.06); }
+        .terminal-bar { background: var(--surface2); padding: .6rem .9rem; display: flex; align-items: center; gap: .5rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+        .t-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .t-dot-red { background: #ff5f57; } .t-dot-amber { background: #ffbd2e; } .t-dot-green { background: #28c840; }
+        .terminal-bar-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); margin-left: .3rem; word-break: break-all; }
+        .terminal-frame .img-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .terminal-frame img { width: 100%; display: block; vertical-align: top; }
+        .terminal-caption { padding: .6rem .9rem; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); background: var(--surface2); border-top: 1px solid var(--border); display: flex; align-items: flex-start; gap: .5rem; }
+        .terminal-caption::before { content: '▸'; color: var(--cyan); flex-shrink: 0; }
+        .code-wrap { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 1rem 0 1.5rem; position: relative; }
+        .code-header { background: var(--surface2); padding: .45rem .9rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); gap: .5rem; }
+        .code-lang { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--cyan); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .copy-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: .35rem .7rem; border-radius: 4px; cursor: pointer; transition: all .2s; min-height: 32px; flex-shrink: 0; }
+        .copy-btn:hover, .copy-btn:active { border-color: var(--cyan); color: var(--cyan); }
+        .code-wrap pre { padding: 1.1rem 1.1rem; overflow-x: auto; -webkit-overflow-scrolling: touch; font-family: 'JetBrains Mono', monospace; font-size: .78rem; line-height: 1.7; color: #c0cce8; }
+        .code-wrap pre .kw { color: var(--cyan); }
+        .code-wrap pre .str { color: #ffdd87; }
+        .code-wrap pre .hl { color: var(--amber); font-weight: 700; }
+        .code-wrap pre .hl-cyan { color: var(--cyan); font-weight: 700; }
+        .code-wrap pre .hl-red { color: var(--red); font-weight: 700; }
+        .code-wrap pre .cmt { color: var(--muted); font-style: italic; }
+        .code-wrap pre .prop { color: var(--purple); }
+        .result-badge { display: inline-flex; align-items: flex-start; gap: .5rem; background: #00d4aa0f; border: 1px solid var(--cyan); border-radius: 6px; padding: .6rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--cyan); margin: .5rem 0 1rem; word-break: break-word; }
+        .result-badge::before { content: '✓'; font-weight: 700; flex-shrink: 0; }
+        .warn-badge { display: inline-flex; align-items: flex-start; gap: .5rem; background: #ffa5020f; border: 1px solid var(--amber); border-radius: 6px; padding: .6rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--amber); margin: .5rem 0 1rem; word-break: break-word; }
+        .warn-badge::before { content: '⚠'; font-weight: 700; flex-shrink: 0; }
+        .flag-box { background: linear-gradient(135deg, #00d4aa0a 0%, #00d4aa03 100%); border: 1px solid var(--cyan); border-radius: 10px; padding: 1.6rem 1.4rem; text-align: center; position: relative; overflow: hidden; margin: 1.5rem 0; }
+        .flag-box::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, var(--cyan-glow) 0%, transparent 70%); pointer-events: none; }
+        .flag-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); margin-bottom: .8rem; }
+        .flag-text { font-family: 'JetBrains Mono', monospace; font-size: clamp(.9rem, 3.2vw, 1.2rem); font-weight: 700; color: var(--cyan); letter-spacing: .02em; text-shadow: 0 0 20px var(--cyan-glow); word-break: break-all; }
+        .ref-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .8rem; margin-top: 1rem; }
+        .ref-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; text-decoration: none; display: flex; flex-direction: column; gap: .3rem; transition: border-color .2s, box-shadow .2s; min-height: 44px; }
+        .ref-card:hover, .ref-card:active { border-color: var(--cyan); box-shadow: 0 0 20px var(--cyan-glow); }
+        .ref-icon { font-size: 1.1rem; margin-bottom: .2rem; }
+        .ref-name { font-family: 'JetBrains Mono', monospace; font-size: .78rem; color: var(--cyan); font-weight: 600; }
+        .ref-url { font-size: .73rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .chain { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.1rem 1.2rem; margin: 1.2rem 0 1.6rem; }
+        .chain-title { width: 100%; font-family: 'JetBrains Mono', monospace; font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: .7rem; }
+        .chain-node { font-family: 'JetBrains Mono', monospace; font-size: .74rem; color: var(--text); background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; padding: .35rem .65rem; word-break: break-word; }
+        .chain-arrow { font-family: 'JetBrains Mono', monospace; font-size: .9rem; color: var(--cyan); flex-shrink: 0; }
+        .chain-node.highlight { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+        .chain-node.danger { border-color: var(--red); color: var(--red); background: #ff475711; }
+        footer { margin-top: 4rem; padding: 2rem 0; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+        .footer-author { font-family: 'JetBrains Mono', monospace; font-size: .78rem; color: var(--muted); line-height: 1.8; }
+        .footer-badge { font-family: 'JetBrains Mono', monospace; font-size: .72rem; color: var(--muted); display: flex; align-items: center; gap: .4rem; }
+        .footer-badge span { color: var(--cyan); }
+        .bottom-back { display: inline-flex; align-items: center; gap: .5rem; padding: .7rem 1.2rem; margin-top: .8rem; min-height: 44px; border: 1px solid var(--cyan); border-radius: 8px; color: var(--cyan); text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: .8rem; background: var(--cyan-dim); transition: all .2s; }
+        .bottom-back:hover, .bottom-back:active { box-shadow: 0 0 20px var(--cyan-glow); }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+        /* ===== TABLEAUX STYLISÉS ===== */
+        .table-wrap { overflow-x: auto; margin: 1.5rem 0; border-radius: 10px; border: 1px solid var(--border); }
+        .table-wrap table { width: 100%; border-collapse: collapse; font-size: .85rem; background: var(--surface); }
+        .table-wrap th { background: var(--surface2); color: var(--cyan); font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; padding: .7rem .9rem; text-align: left; border-bottom: 1px solid var(--border); }
+        .table-wrap td { padding: .6rem .9rem; border-bottom: 1px solid var(--border); color: #b8c3d9; }
+        .table-wrap tr:last-child td { border-bottom: none; }
+        .table-wrap td code { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: .1em .4em; color: #c0cce8; font-size: .85em; }
+
+        @media (max-width: 900px) {
+            main { margin-left: 0; width: 100%; padding: 0 1.6rem 6rem; }
+            .sidebar { display: none; }
+            .mobile-nav { display: block; }
+        }
+        @media (max-width: 768px) {
+            .hero { padding: 4.5rem 0 3rem; }
+            .toc-list { grid-template-columns: 1fr; }
+            .glossary-grid { grid-template-columns: 1fr; }
+            .ref-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+        }
+        @media (max-width: 480px) {
+            body { font-size: 15px; }
+            main { padding: 0 1.1rem 6rem; }
+            .hero { padding: 4rem 0 2.5rem; }
+            .back-home { font-size: .72rem; padding: .5rem .8rem; }
+            .back-home span.label { display: none; }
+            .section { padding: 2.6rem 0 1.5rem; }
+            .section-title { margin-bottom: 1.1rem; }
+            .subsection-title { margin: 1.8rem 0 .7rem; font-size: .92rem; }
+            .terminal-bar-label { font-size: 10px; }
+            .code-wrap pre { font-size: .7rem; padding: .9rem .8rem; }
+            .def-box, .toc, .terminal-caption { padding: 1rem 1.1rem; }
+            .flag-box { padding: 1.3rem 1rem; }
+            footer { flex-direction: column; align-items: flex-start; }
+        }
+        @media (max-height: 480px) and (orientation: landscape) {
+            .mobile-nav { padding-bottom: calc(.4rem + var(--safe-b)); }
+            .mobile-nav-item { min-height: 36px; }
+        }
+        @media (min-width: 1400px) { .inner { max-width: 1020px; } }
+    </style>
+</head>
+<body>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+<a class="back-home" href="../index.html">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9.5 3L4.5 8L9.5 13"/></svg>
+    <span class="label">Retour à l'accueil</span>
+</a>
+
+<nav class="sidebar">
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#s0">00</a>
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#s1">01</a>
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#s2">02</a>
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#s3">03</a>
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#s4">04</a>
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#s5">05</a>
+    <div class="sidebar-line"></div>
+    <a class="phase-dot" href="#s6">06</a>
+    <div class="sidebar-line"></div>
+</nav>
+
+<nav class="mobile-nav">
+    <div class="mobile-nav-scroll">
+        <a class="mobile-nav-item" href="#s0">00</a>
+        <a class="mobile-nav-item" href="#s1">01</a>
+        <a class="mobile-nav-item" href="#s2">02</a>
+        <a class="mobile-nav-item" href="#s3">03</a>
+        <a class="mobile-nav-item" href="#s4">04</a>
+        <a class="mobile-nav-item" href="#s5">05</a>
+        <a class="mobile-nav-item" href="#s6">06</a>
+    </div>
+</nav>
+
+<main>
+<div class="inner">
+
+    <header class="hero">
+        <div class="hero-eyebrow">ROOT‑ME · Défi : Service réseau</div>
+        <h1 class="hero-title">
+            DNS — <span class="accent">Transfert de zone</span>
+        </h1>
+        <p class="hero-sub">
+            <strong>Catégorie :</strong> Service réseau — <strong>Points :</strong> 15 — <strong>Difficulté :</strong> ⭐ (1/5) — <strong>Auteur :</strong> g0uZ (20 mai 2013)<br>
+            Rédigé par <span style="color:var(--cyan);">SPECTRA MZ</span> — exploitation d’un transfert de zone AXFR ouvert.
+        </p>
+        <div class="meta-pills">
+            <span class="pill pill-cyan">ROOT‑ME</span>
+            <span class="pill pill-red">DNS</span>
+            <span class="pill pill-amber">AXFR</span>
+            <span class="pill pill-purple">Transfert de zone</span>
+            <span class="pill pill-green">dig / host</span>
+        </div>
+        <div class="hero-divider"></div>
+    </header>
+
+    <div class="toc">
+        <div class="toc-title">Sommaire</div>
+        <ul class="toc-list">
+            <li><span class="toc-num">00</span><a href="#s0">Présentation & énoncé</a></li>
+            <li><span class="toc-num">01</span><a href="#s1">Vocabulaire DNS</a></li>
+            <li><span class="toc-num">02</span><a href="#s2">Théorie du transfert AXFR</a></li>
+            <li><span class="toc-num">03</span><a href="#s3">Reconnaissance avec dig</a></li>
+            <li><span class="toc-num">04</span><a href="#s4">Analyse de la zone</a></li>
+            <li><span class="toc-num">05</span><a href="#s5">Obtention du flag</a></li>
+            <li><span class="toc-num">06</span><a href="#s6">Remédiation</a></li>
+        </ul>
+    </div>
+
+    <!-- SECTION 0 -->
+    <section class="section" id="s0">
+        <div class="section-label">Phase <span>00</span></div>
+        <h2 class="section-title">Présentation du challenge</h2>
+
+        <div style="background: var(--surface); border: 2px solid var(--cyan); border-radius: 10px; padding: 1.5rem; margin: 1.5rem 0; box-shadow: 0 0 20px var(--cyan-glow);">
+            <p style="font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: var(--cyan); margin: 0;">
+                📜 <strong>ÉNONCÉ OFFICIEL</strong>
+            </p>
+            <p style="font-size: 1.05rem; color: var(--text); margin: 0.5rem 0 0 0; font-weight: 500;">
+                Récupérer la clé secrète cachée dans la zone DNS du domaine <code>ch11.challenge01.root-me.org</code>, en exploitant un transfert de zone mal configuré.
+            </p>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Élément</th><th>Valeur</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>Challenge</strong></td><td>DNS — Transfert de zone</td></tr>
+                    <tr><td><strong>Points</strong></td><td>15</td></tr>
+                    <tr><td><strong>Catégorie</strong></td><td>Service réseau</td></tr>
+                    <tr><td><strong>Auteur</strong></td><td>g0uZ (20 mai 2013)</td></tr>
+                    <tr><td><strong>Difficulté</strong></td><td>Facile (8% de réussite)</td></tr>
+                    <tr><td><strong>Hôte cible</strong></td><td><code>challenge01.root-me.org</code></td></tr>
+                    <tr><td><strong>Protocole</strong></td><td>DNS</td></tr>
+                    <tr><td><strong>Port</strong></td><td>54011</td></tr>
+                    <tr><td><strong>Domaine</strong></td><td><code>ch11.challenge01.root-me.org</code></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- SECTION 1 -->
+    <section class="section" id="s1">
+        <div class="section-label">Phase <span>01</span></div>
+        <h2 class="section-title">Vocabulaire clé</h2>
+        <div class="glossary-grid">
+            <div class="glossary-card">
+                <div class="glossary-term">DNS</div>
+                <div class="glossary-def">Domain Name System — l’annuaire téléphonique d’Internet. Traduit les noms de domaine en adresses IP.</div>
+            </div>
+            <div class="glossary-card">
+                <div class="glossary-term">Zone DNS</div>
+                <div class="glossary-def">Ensemble des enregistrements (SOA, NS, A, TXT, etc.) décrivant un domaine.</div>
+            </div>
+            <div class="glossary-card">
+                <div class="glossary-term">AXFR</div>
+                <div class="glossary-def">Authoritative Transfer — requête TCP permettant de répliquer une zone complète entre serveurs DNS.</div>
+            </div>
+            <div class="glossary-card">
+                <div class="glossary-term">SOA</div>
+                <div class="glossary-def">Start Of Authority — en-tête de la zone contenant le serial, le contact admin, et les paramètres de réplication.</div>
+            </div>
+            <div class="glossary-card">
+                <div class="glossary-term">TXT</div>
+                <div class="glossary-def">Enregistrement texte libre — souvent utilisé pour SPF, vérifications de domaine, ou… des secrets !</div>
+            </div>
+            <div class="glossary-card">
+                <div class="glossary-term">allow-transfer</div>
+                <div class="glossary-def">Directive BIND qui restreint les transferts de zone à une liste d’IP autorisées.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 2 -->
+    <section class="section" id="s2">
+        <div class="section-label">Phase <span>02</span></div>
+        <h2 class="section-title">Théorie du transfert de zone (AXFR)</h2>
+
+        <h3 class="subsection-title">Principe</h3>
+        <div class="chain">
+            <span class="chain-title">Ordinogramme — Transfert AXFR</span>
+            <span class="chain-node highlight">1. Client envoie requête AXFR (TCP)</span>
+            <span class="chain-arrow">→</span>
+            <span class="chain-node">2. Serveur DNS autoritaire</span>
+            <span class="chain-arrow">→</span>
+            <span class="chain-node">3. Vérification de la directive <code>allow-transfer</code></span>
+            <span class="chain-arrow">→</span>
+            <span class="chain-node danger">4. Si ouverte → renvoie la zone complète</span>
+            <span class="chain-arrow">→</span>
+            <span class="chain-node">5. Client récupère tous les enregistrements</span>
+        </div>
+        <p>
+            Un transfert de zone (AXFR) est un mécanisme légitime de réplication entre serveurs DNS primaires et secondaires. Le serveur primaire envoie <strong>tous</strong> les enregistrements de la zone au secondaire. Si la directive <code>allow-transfer</code> est mal configurée et autorise <strong>0.0.0.0/0</strong> (tout le monde), alors n’importe quel client peut exfiltrer l’intégralité de la zone.
+        </p>
+
+        <div class="def-box">
+            <div class="def-term">Pourquoi le transfert se fait en TCP ?</div>
+            <div class="def-body">
+                Une requête DNS classique utilise <strong>UDP</strong> (léger, sans connexion). Un AXFR peut être volumineux (potentiellement des milliers d’enregistrements). Il utilise donc <strong>TCP</strong> pour garantir la fiabilité et l’intégrité des données. C’est pourquoi les commandes <code>dig</code> et <code>host</code> basculent automatiquement en TCP pour un AXFR.
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 3 -->
+    <section class="section" id="s3">
+        <div class="section-label">Phase <span>03</span></div>
+        <h2 class="section-title">Reconnaissance avec <code>dig</code></h2>
+
+        <h3 class="subsection-title">Première requête</h3>
+        <div class="code-wrap">
+            <div class="code-header"><span class="code-lang">Commande dig</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+            <pre>spectrax@fedora:~$ dig @challenge01.root-me.org -p 54011 ch11.challenge01.root-me.org AXFR</pre>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Option</th><th>Rôle</th></tr></thead>
+                <tbody>
+                    <tr><td><code>@challenge01.root-me.org</code></td><td>Adresse du serveur DNS à interroger</td></tr>
+                    <tr><td><code>-p 54011</code></td><td>Port non standard du challenge</td></tr>
+                    <tr><td><code>ch11.challenge01.root-me.org</code></td><td>Zone à transférer</td></tr>
+                    <tr><td><code>AXFR</code></td><td>Type de requête : transfert de zone complet</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p><strong>Résultat :</strong> le serveur répond <strong>sans restriction</strong> et renvoie la zone complète — <strong>6 enregistrements</strong>. La vulnérabilité est confirmée.</p>
+
+        <h3 class="subsection-title">Confirmation avec <code>host</code></h3>
+        <div class="code-wrap">
+            <div class="code-header"><span class="code-lang">Commande host</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+            <pre>spectrax@fedora:~$ host -T -p 54011 -t AXFR ch11.challenge01.root-me.org challenge01.root-me.org</pre>
+        </div>
+        <ul class="plain">
+            <li><code>-T</code> : force le passage par TCP (obligatoire pour un AXFR).</li>
+            <li><code>-t AXFR</code> : précise le type d’enregistrement demandé.</li>
+            <li>Le dernier argument est le serveur DNS.</li>
+        </ul>
+        <p>Résultat identique : <strong>6 réponses, status NOERROR</strong> → double vérification.</p>
+    </section>
+
+    <!-- SECTION 4 -->
+    <section class="section" id="s4">
+        <div class="section-label">Phase <span>04</span></div>
+        <h2 class="section-title">Analyse de la zone exfiltrée</h2>
+
+        <div class="terminal-frame">
+            <div class="terminal-bar">
+                <div class="t-dot t-dot-red"></div>
+                <div class="t-dot t-dot-amber"></div>
+                <div class="t-dot t-dot-green"></div>
+                <span class="terminal-bar-label">Sortie de la requête AXFR</span>
+            </div>
+            <div class="img-scroll"><pre style="padding: 0.8rem 1rem; font-size: 0.7rem; line-height:1.6; background:var(--code-bg); color:#c0cce8; margin:0; overflow-x:auto;">ch11.challenge01.root-me.org.  604800 IN SOA  ch11.challenge01.root-me.org. root.ch11.challenge01.root-me.org. 2 604800 86400 2419200 604800
+ch11.challenge01.root-me.org.  604800 IN TXT  "DNS transfer secret key : CBkFRwfNMMtRjHY"
+ch11.challenge01.root-me.org.  604800 IN NS   ch11.challenge01.root-me.org.
+ch11.challenge01.root-me.org.  604800 IN A    127.0.0.1
+challenge01.ch11.challenge01.root-me.org.  604800 IN A  192.168.27.101
+ch11.challenge01.root-me.org.  604800 IN SOA  ch11.challenge01.root-me.org. root.ch11.challenge01.root-me.org. 2 604800 86400 2419200 604800</pre></div>
+            <div class="terminal-caption">Les 6 enregistrements récupérés — le SOA est répété en fin de transfert (marqueur de fin AXFR).</div>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Enregistrement</th><th>Valeur</th><th>Analyse</th></tr></thead>
+                <tbody>
+                    <tr>
+                        <td><strong>SOA</strong></td>
+                        <td><code>serial 2, contact root@ch11...</code></td>
+                        <td>En‑tête de zone classique ; serial bas → zone jeune ou peu modifiée</td>
+                    </tr>
+                    <tr>
+                        <td><strong>TXT</strong></td>
+                        <td><code>"DNS transfer secret key : CBkFRwfNMMtRjHY"</code></td>
+                        <td>💎 <strong>LE FLAG</strong> — la clé secrète stockée en clair</td>
+                    </tr>
+                    <tr>
+                        <td><strong>NS</strong></td>
+                        <td><code>ch11.challenge01.root-me.org</code></td>
+                        <td>Le serveur est autoritaire pour sa propre zone</td>
+                    </tr>
+                    <tr>
+                        <td><strong>A</strong></td>
+                        <td><code>127.0.0.1</code></td>
+                        <td>Le domaine pointe vers localhost (environnement isolé)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>A</strong></td>
+                        <td><code>192.168.27.101</code></td>
+                        <td>Sous‑domaine <code>challenge01</code> vers une IP privée — information d’énumération utile</td>
+                    </tr>
+                    <tr>
+                        <td><strong>SOA (répété)</strong></td>
+                        <td><code>...</code></td>
+                        <td>Marqueur de fin de transfert imposé par la RFC 5936</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- SECTION 5 -->
+    <section class="section" id="s5">
+        <div class="section-label">Phase <span>05</span></div>
+        <h2 class="section-title">🏁 Obtention du flag</h2>
+        <p>
+            Le flag est directement lisible dans l’enregistrement TXT :
+        </p>
+        <div class="code-wrap">
+            <div class="code-header"><span class="code-lang">Flag extrait</span></div>
+            <pre>DNS transfer secret key : CBkFRwfNMMtRjHY</pre>
+        </div>
+        <div class="flag-box">
+            <div class="flag-label">Flag final</div>
+            <div class="flag-text">CBkFRwfNMMtRjHY</div>
+        </div>
+        <p>
+            La validation se fait en soumettant cette valeur sur la page du challenge Root‑Me.
+        </p>
+    </section>
+
+    <!-- SECTION 6 -->
+    <section class="section" id="s6">
+        <div class="section-label">Phase <span>06</span></div>
+        <h2 class="section-title">Impact et remédiation</h2>
+
+        <h3 class="subsection-title">Impact réel</h3>
+        <p>
+            Un AXFR ouvert expose en production :
+        </p>
+        <ul class="plain">
+            <li><strong>La cartographie complète du réseau interne</strong> (sous‑domaines, IP privées, serveurs) — facilitateur majeur pour la phase de reconnaissance d’un attaquant.</li>
+            <li><strong>Les secrets stockés en TXT</strong> (clés API, jetons de vérification, mots de passe) — comme ici.</li>
+            <li><strong>Les cibles prioritaires</strong> (serveurs MX, VPN, intranet, etc.) pour la suite de l’attaque.</li>
+        </ul>
+
+        <h3 class="subsection-title">Corrections à appliquer</h3>
+        <ol class="plain">
+            <li><strong>Restreindre <code>allow-transfer</code></strong> dans la configuration BIND aux seuls serveurs secondaires de confiance :
+                <div class="code-wrap"><pre>options {
+    allow-transfer { 192.168.27.53; };  /* IP du secondaire légitime */
+};</pre></div>
+            </li>
+            <li><strong>Utiliser TSIG</strong> (Transaction SIGnature, RFC 2845) : signer les transferts avec une clé partagée, pour que l’IP seule ne suffise pas.</li>
+            <li><strong>Ne jamais stocker de secrets en enregistrements TXT</strong> — la zone DNS est lisible par quiconque peut la transférer (voire la requêter).</li>
+            <li><strong>Auditer régulièrement</strong> ses zones : <code>dig @ns1.mondomaine.com mondomaine.com AXFR</code> depuis l’extérieur doit échouer.</li>
+            <li>Sur les serveurs publics, utiliser <strong>DNSSEC</strong> pour garantir l’intégrité et l’authenticité des réponses.</li>
+        </ol>
+    </section>
+
+    <footer>
+        <div class="footer-author">
+            Rédigé par <strong style="color: var(--cyan);">SPECTRA MZ</strong>
+            &nbsp;·&nbsp; ROOT‑ME — DNS Transfert de zone
+            <br>
+            <a class="bottom-back" href="../index.html">← Retour à l'accueil</a>
+        </div>
+        <div class="footer-badge">
+            <span>🌐</span> Write‑up · DNS &amp; AXFR
+        </div>
+    </footer>
+
+</div>
+</main>
+
+<script>
+    function copyCode(btn) {
+        const pre = btn.closest('.code-wrap').querySelector('pre');
+        const text = pre.innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            btn.textContent = 'copié ✓';
+            btn.style.borderColor = 'var(--cyan)';
+            btn.style.color = 'var(--cyan)';
+            setTimeout(() => {
+                btn.textContent = 'copier';
+                btn.style.borderColor = '';
+                btn.style.color = '';
+            }, 1800);
+        });
+    }
+
+    const sections = document.querySelectorAll('.section[id]');
+    const dots = document.querySelectorAll('.phase-dot');
+    const mobileItems = document.querySelectorAll('.mobile-nav-item');
+    const progressFill = document.getElementById('progressFill');
+
+    function updateActive() {
+        let current = '';
+        sections.forEach(sec => { if (window.scrollY + 200 >= sec.offsetTop) current = sec.id; });
+        dots.forEach(dot => dot.classList.toggle('active', dot.getAttribute('href') === '#' + current));
+        mobileItems.forEach(item => item.classList.toggle('active', item.getAttribute('href') === '#' + current));
+
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const scrolled = docHeight > 0 ? (window.scrollY / docHeight) * 100 : 0;
+        progressFill.style.width = scrolled + '%';
+    }
+
+    window.addEventListener('scroll', updateActive, { passive: true });
+    window.addEventListener('resize', updateActive, { passive: true });
+    updateActive();
+</script>
+</body>
+</html>
