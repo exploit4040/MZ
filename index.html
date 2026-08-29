@@ -43,7 +43,6 @@ body {
   overflow-x: hidden;
 }
 
-/* Scanlines subtle */
 body::before {
   content: '';
   position: fixed; inset: 0;
@@ -55,7 +54,6 @@ body::before {
   z-index: 9999;
 }
 
-/* Ambient glow background */
 body::after {
   content: '';
   position: fixed;
@@ -67,7 +65,6 @@ body::after {
   z-index: 0;
 }
 
-/* ── NAVBAR ── */
 .navbar {
   position: sticky; top: 0; z-index: 500;
   background: rgba(6,10,20,.92);
@@ -138,7 +135,6 @@ body::after {
 
 main { max-width: 1140px; margin: 0 auto; padding: 0 2rem; position: relative; z-index: 1; }
 
-/* ── HERO ── */
 .hero {
   padding: 5rem 0 3.5rem;
   display: grid;
@@ -242,7 +238,6 @@ main { max-width: 1140px; margin: 0 auto; padding: 0 2rem; position: relative; z
 .link-btn.primary { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
 .link-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
 
-/* ── STATS BAR ── */
 .stats-bar {
   display: grid; grid-template-columns: repeat(4, 1fr);
   gap: 1rem; margin-top: 2.5rem;
@@ -272,7 +267,6 @@ main { max-width: 1140px; margin: 0 auto; padding: 0 2rem; position: relative; z
   letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-top: .35rem;
 }
 
-/* ── SECTIONS ── */
 .section { padding: 3.5rem 0; border-top: 1px solid var(--border); }
 
 .section-header {
@@ -292,7 +286,6 @@ main { max-width: 1140px; margin: 0 auto; padding: 0 2rem; position: relative; z
   font-size: 1.45rem; font-weight: 700; color: var(--text);
 }
 
-/* ── SECTION TOGGLE ── */
 .section-toggle-btn {
   display: inline-flex; align-items: center; gap: .45rem;
   padding: .4rem 1rem; border-radius: 8px; cursor: pointer;
@@ -308,9 +301,6 @@ main { max-width: 1140px; margin: 0 auto; padding: 0 2rem; position: relative; z
 .section-toggle-btn.is-open .eye-open  { display: none; }
 .section-toggle-btn.is-open .eye-close { display: inline; }
 
-.toggle-icon { font-size: 1em; }
-
-/* ── COLLAPSIBLE ── */
 .collapsible-wrap {
   overflow: hidden;
   max-height: 0;
@@ -324,7 +314,6 @@ main { max-width: 1140px; margin: 0 auto; padding: 0 2rem; position: relative; z
   pointer-events: auto;
 }
 
-/* ── WHOAMI CODE BLOCK ── */
 .whoami-wrap {
   background: var(--code-bg); border: 1px solid var(--border);
   border-radius: 12px; overflow: hidden;
@@ -347,7 +336,6 @@ main { max-width: 1140px; margin: 0 auto; padding: 0 2rem; position: relative; z
 .whoami-wrap .com { color: var(--muted); font-style: italic; }
 .whoami-wrap .prop { color: var(--purple); }
 
-/* ── SKILLS GRID ── */
 .skills-grid {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1rem;
@@ -375,7 +363,6 @@ main { max-width: 1140px; margin: 0 auto; padding: 0 2rem; position: relative; z
 }
 .skill-desc { font-size: .82rem; color: var(--muted); line-height: 1.55; }
 
-/* ── CERTS ── */
 .cert-list { display: flex; flex-direction: column; gap: .9rem; }
 .cert-item {
   display: flex; align-items: center; gap: 1.2rem;
@@ -400,7 +387,6 @@ main { max-width: 1140px; margin: 0 auto; padding: 0 2rem; position: relative; z
 }
 .cert-bar { height: 100%; background: linear-gradient(90deg, var(--amber), #fbbf24); border-radius: 2px; }
 
-/* ── COURSE GRID ── */
 .course-intro { color: var(--muted); font-size: .9rem; margin-bottom: 1.8rem; max-width: 620px; }
 .course-overview {
   display: flex; align-items: center; gap: 1.1rem;
@@ -446,10 +432,8 @@ main { max-width: 1140px; margin: 0 auto; padding: 0 2rem; position: relative; z
   border: 1px solid var(--border); color: var(--muted);
 }
 
-/* ── WRITE-UPS ── */
 .writeups-intro { color: var(--muted); font-size: .9rem; max-width: 620px; }
 
-/* Badges NEW / ANCIEN */
 .new-badge {
   font-family: 'JetBrains Mono', monospace; font-size: .58rem; font-weight: 700;
   letter-spacing: .06em; text-transform: uppercase;
@@ -569,7 +553,6 @@ main { max-width: 1140px; margin: 0 auto; padding: 0 2rem; position: relative; z
 .writeup-card.placeholder .writeup-body { align-items: center; text-align: center; justify-content: center; }
 .writeup-card.placeholder:hover { transform: none; box-shadow: none; border-color: var(--border); }
 
-/* ── REPOS ── */
 .repo-grid {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 1rem;
@@ -595,7 +578,6 @@ main { max-width: 1140px; margin: 0 auto; padding: 0 2rem; position: relative; z
 .lang-dot.html { background: #f97316; }
 .lang-dot.bash { background: #22c55e; }
 
-/* ── DISCLAIMER ── */
 .disclaimer {
   background: rgba(255,71,87,.06); border: 1px solid rgba(255,71,87,.3);
   border-radius: 10px; padding: 1.1rem 1.4rem;
@@ -604,7 +586,6 @@ main { max-width: 1140px; margin: 0 auto; padding: 0 2rem; position: relative; z
   margin-top: 2.5rem;
 }
 
-/* ── FOOTER ── */
 footer {
   padding: 4rem 0 3rem; border-top: 1px solid var(--border);
   text-align: center;
@@ -634,13 +615,11 @@ footer {
 .footer-meta a { color: var(--border2); text-decoration: none; }
 .footer-meta a:hover { color: var(--muted); }
 
-/* ── SCROLLBAR ── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
 
-/* ── ANIMATIONS ── */
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(16px); }
@@ -649,7 +628,6 @@ footer {
 .hero { animation: fade-up .55s ease both; }
 .stats-bar { animation: fade-up .55s .15s ease both; }
 
-/* ── MOBILE NAV TOGGLE ── */
 .hamburger {
   display: none; flex-direction: column; gap: 5px; cursor: pointer;
   padding: .4rem; border: 1px solid var(--border); border-radius: 7px;
@@ -678,14 +656,11 @@ footer {
 </head>
 <body>
 
-<!-- NAVBAR -->
 <nav class="navbar">
   <div class="nav-inner">
     <a class="nav-logo" href="#top">
       <span class="dot"></span> SPECTRA<span class="accent">MZ</span>
     </a>
-
-    <!-- Desktop tabs -->
     <div class="nav-center">
       <a class="nav-tab" href="#about">whoami</a>
       <a class="nav-tab" href="#skills">skills</a>
@@ -694,16 +669,13 @@ footer {
       <a class="nav-tab" href="#repos">repos</a>
       <a class="nav-tab" href="#contact">contact</a>
     </div>
-
     <div class="nav-right">
       <span class="nav-badge">disponible · Bug Bounty</span>
-      <!-- Hamburger -->
       <button class="hamburger" onclick="toggleMobileMenu()" aria-label="Menu">
         <span></span><span></span><span></span>
       </button>
     </div>
   </div>
-  <!-- Mobile menu -->
   <div class="mobile-menu" id="mobileMenu">
     <a href="#about" onclick="closeMobileMenu()">whoami</a>
     <a href="#skills" onclick="closeMobileMenu()">skills</a>
@@ -716,7 +688,6 @@ footer {
 
 <main id="top">
 
-  <!-- HERO -->
   <header class="hero">
     <div class="hero-avatar-wrap">
       <div class="hero-avatar-ring2"></div>
@@ -754,7 +725,6 @@ footer {
     </div>
   </header>
 
-  <!-- STATS -->
   <div class="stats-bar">
     <div class="stat-box"><div class="stat-num">16</div><div class="stat-label">Repositories</div></div>
     <div class="stat-box"><div class="stat-num">6</div><div class="stat-label">Stars</div></div>
@@ -762,11 +732,9 @@ footer {
     <div class="stat-box"><div class="stat-num">3</div><div class="stat-label">Certifications</div></div>
   </div>
 
-  <!-- WHOAMI / ABOUT -->
   <section class="section" id="about">
     <div class="section-label">// <span>about</span></div>
     <h2 class="section-title">whoami</h2>
-
     <div class="whoami-wrap">
       <div class="whoami-bar">
         <div class="t-dot t-dot-red"></div>
@@ -794,50 +762,22 @@ footer {
     </div>
   </section>
 
-  <!-- SKILLS -->
   <section class="section" id="skills">
     <div class="section-label">// <span>expertise</span></div>
     <h2 class="section-title">Domaines de compétence</h2>
-
     <div class="skills-grid">
-      <div class="skill-card">
-        <div class="skill-icon">🕸️</div>
-        <div class="skill-name">Web Security</div>
-        <div class="skill-desc">SSTI, XSS, Command Injection, SQL Truncation, contournement de WAF et logique métier.</div>
-      </div>
-      <div class="skill-card">
-        <div class="skill-icon">🎯</div>
-        <div class="skill-name">Red Team / Pentest</div>
-        <div class="skill-desc">Exploitation de CVE connus, post-exploitation, simulation d'attaques réseau.</div>
-      </div>
-      <div class="skill-card">
-        <div class="skill-icon">🔍</div>
-        <div class="skill-name">OSINT & Recon</div>
-        <div class="skill-desc">Géolocalisation IP, traceroute, whois, recherche d'informations publiques.</div>
-      </div>
-      <div class="skill-card">
-        <div class="skill-icon">📡</div>
-        <div class="skill-name">Réseaux</div>
-        <div class="skill-desc">Cisco Packet Tracer, GNS3, TCP/IP, VLAN, VPN — formation Réseaux & Maintenance Informatique.</div>
-      </div>
-      <div class="skill-card">
-        <div class="skill-icon">📶</div>
-        <div class="skill-name">WiFi & Radio</div>
-        <div class="skill-desc">Audit WiFi, attaques Evil Twin, portails captifs (FakeAP).</div>
-      </div>
-      <div class="skill-card">
-        <div class="skill-icon">🐍</div>
-        <div class="skill-name">Développement d'outils</div>
-        <div class="skill-desc">Python, Bash — automatisation de tâches offensives et défensives.</div>
-      </div>
+      <div class="skill-card"><div class="skill-icon">🕸️</div><div class="skill-name">Web Security</div><div class="skill-desc">SSTI, XSS, Command Injection, SQL Truncation, contournement de WAF et logique métier.</div></div>
+      <div class="skill-card"><div class="skill-icon">🎯</div><div class="skill-name">Red Team / Pentest</div><div class="skill-desc">Exploitation de CVE connus, post-exploitation, simulation d'attaques réseau.</div></div>
+      <div class="skill-card"><div class="skill-icon">🔍</div><div class="skill-name">OSINT & Recon</div><div class="skill-desc">Géolocalisation IP, traceroute, whois, recherche d'informations publiques.</div></div>
+      <div class="skill-card"><div class="skill-icon">📡</div><div class="skill-name">Réseaux</div><div class="skill-desc">Cisco Packet Tracer, GNS3, TCP/IP, VLAN, VPN — formation Réseaux & Maintenance Informatique.</div></div>
+      <div class="skill-card"><div class="skill-icon">📶</div><div class="skill-name">WiFi & Radio</div><div class="skill-desc">Audit WiFi, attaques Evil Twin, portails captifs (FakeAP).</div></div>
+      <div class="skill-card"><div class="skill-icon">🐍</div><div class="skill-name">Développement d'outils</div><div class="skill-desc">Python, Bash — automatisation de tâches offensives et défensives.</div></div>
     </div>
   </section>
 
-  <!-- CERTIFICATIONS -->
   <section class="section">
     <div class="section-label">// <span>roadmap</span></div>
     <h2 class="section-title">Certifications</h2>
-
     <div class="cert-list">
       <div class="cert-item">
         <div class="cert-status done">✓</div>
@@ -872,7 +812,6 @@ footer {
     </div>
   </section>
 
-  <!-- COURS CEH -->
   <section class="section" id="cours-ceh">
     <div class="section-header">
       <div class="section-header-left">
@@ -884,11 +823,9 @@ footer {
         <span class="eye-close">▼ Masquer</span>
       </button>
     </div>
-
     <p class="course-intro">
       Notes de cours publiées au fil de ma progression sur la certification CEH v12.
     </p>
-
     <div class="collapsible-wrap" id="wrap-ceh-cours">
       <a class="course-overview" href="cours_ceh/plan-general.html">
         <span class="course-overview-icon">🗂️</span>
@@ -898,7 +835,6 @@ footer {
         </div>
         <span class="course-overview-arrow">→</span>
       </a>
-
       <div class="course-grid">
         <a class="course-card" href="cours_ceh/module-01.html"><div class="course-top"><span class="course-num">01</span><span class="course-icon">🛡️</span></div><div class="course-name">Introduction à l'Ethical Hacking</div><div class="course-tags"><span class="ctag">Concepts</span><span class="ctag">CIA Triad</span></div></a>
         <a class="course-card" href="cours_ceh/module-02.html"><div class="course-top"><span class="course-num">02</span><span class="course-icon">🔎</span></div><div class="course-name">Footprinting et Reconnaissance</div><div class="course-tags"><span class="ctag">OSINT</span><span class="ctag">Recon</span></div></a>
@@ -921,10 +857,9 @@ footer {
         <a class="course-card" href="cours_ceh/module-19.html"><div class="course-top"><span class="course-num">19</span><span class="course-icon">☁️</span></div><div class="course-name">Cloud Computing</div><div class="course-tags"><span class="ctag">AWS</span><span class="ctag">Azure</span></div></a>
         <a class="course-card" href="cours_ceh/module-20.html"><div class="course-top"><span class="course-num">20</span><span class="course-icon">🔐</span></div><div class="course-name">Cryptographie</div><div class="course-tags"><span class="ctag">AES</span><span class="ctag">Hashing</span></div></a>
       </div>
-    </div><!-- /wrap-ceh-cours -->
+    </div>
   </section>
 
-  <!-- WRITE-UPS -->
   <section class="section" id="writeups">
     <div class="section-header">
       <div class="section-header-left">
@@ -936,14 +871,11 @@ footer {
         <span class="eye-close">▼ Masquer</span>
       </button>
     </div>
-
     <p class="writeups-intro" style="margin-bottom:1.8rem;">
       Documentation détaillée de mes résolutions de challenges CTF — méthodologie, payloads,
       captures d'écran et recommandations de sécurité. Nouvelle entrée à chaque challenge résolu.
     </p>
-
     <div class="collapsible-wrap is-open" id="wrap-wu-all">
-
       <div class="writeup-section-group">
         <div class="writeup-group-label">
           <span class="line-l"></span>
@@ -953,8 +885,7 @@ footer {
         <div class="writeup-grid">
 
           <!-- ====== NOUVEAUX (NEW) : ROOT-ME ====== -->
-          <!-- NTLM - 01 juin 2026 -->
-          <a class="writeup-card is-new" href="writeups/NTLM_ Authentification.html">
+          <a class="writeup-card is-new" href="writeups/NTLM_Authentification.html">
             <div class="writeup-thumb"><span class="writeup-thumb-icon">🔐</span></div>
             <div class="writeup-body">
               <div class="writeup-tags">
@@ -968,8 +899,7 @@ footer {
             </div>
           </a>
 
-          <!-- Kerberos - 03 juin 2026 -->
-          <a class="writeup-card is-new" href="writeups/Kerberos__Authentificatio.html">
+          <a class="writeup-card is-new" href="writeups/Kerberos_Authentificatio.html">
             <div class="writeup-thumb"><span class="writeup-thumb-icon">🎫</span></div>
             <div class="writeup-body">
               <div class="writeup-tags">
@@ -983,8 +913,7 @@ footer {
             </div>
           </a>
 
-          <!-- LDAP null bind - 06 juin 2026 -->
-          <a class="writeup-card is-new" href="writeups/LDAP_null_bind.html">
+          <a class="writeup-card is-new" href="writeups/LDAP_null%20bind.html">
             <div class="writeup-thumb"><span class="writeup-thumb-icon">📂</span></div>
             <div class="writeup-body">
               <div class="writeup-tags">
@@ -998,8 +927,7 @@ footer {
             </div>
           </a>
 
-          <!-- DNS transfert - 08 juin 2026 -->
-          <a class="writeup-card is-new" href="/writeups/DNS_Transfert_de_zone.html">
+          <a class="writeup-card is-new" href="writeups/DNS_Transfert_de_zone.html">
             <div class="writeup-thumb"><span class="writeup-thumb-icon">🌐</span></div>
             <div class="writeup-body">
               <div class="writeup-tags">
@@ -1013,8 +941,7 @@ footer {
             </div>
           </a>
 
-          <!-- Cisco - 11 juin 2026 -->
-          <a class="writeup-card is-new" href="writeups/CISCO_mot_de_passe.html">
+          <a class="writeup-card is-new" href="writeups/CISCO_mot%20de%20passe.html">
             <div class="writeup-thumb"><span class="writeup-thumb-icon">🔧</span></div>
             <div class="writeup-body">
               <div class="writeup-tags">
@@ -1028,8 +955,7 @@ footer {
             </div>
           </a>
 
-          <!-- Bluetooth - 14 juin 2026 -->
-          <a class="writeup-card is-new" href="writeups/Bluetooth_Fichier_inconnu.html">
+          <a class="writeup-card is-new" href="writeups/Bluetooth_Fichier%20inconnu.html">
             <div class="writeup-thumb"><span class="writeup-thumb-icon">📶</span></div>
             <div class="writeup-body">
               <div class="writeup-tags">
@@ -1043,8 +969,7 @@ footer {
             </div>
           </a>
 
-          <!-- Authentification Twitter - 17 juin 2026 -->
-          <a class="writeup-card is-new" href="writeups/Authentification_twitter.html">
+          <a class="writeup-card is-new" href="writeups/Authentication_twitter.html">
             <div class="writeup-thumb"><span class="writeup-thumb-icon">🐦</span></div>
             <div class="writeup-body">
               <div class="writeup-tags">
@@ -1058,7 +983,6 @@ footer {
             </div>
           </a>
 
-          <!-- IP TTL - 20 juin 2026 -->
           <a class="writeup-card is-new" href="writeups/IP_Time_To_Live.html">
             <div class="writeup-thumb"><span class="writeup-thumb-icon">⏱️</span></div>
             <div class="writeup-body">
@@ -1073,7 +997,6 @@ footer {
             </div>
           </a>
 
-          <!-- RH Trame - 23 juin 2026 -->
           <a class="writeup-card is-new" href="writeups/RH_Trame.html">
             <div class="writeup-thumb"><span class="writeup-thumb-icon">📡</span></div>
             <div class="writeup-body">
@@ -1089,8 +1012,7 @@ footer {
           </a>
 
           <!-- ====== ANCIENS (ANCIEN) : picoCTF / HackTheBox ====== -->
-          <!-- SSTI2 - 07 juil. 2026 -->
-          <a class="writeup-card is-old" href="writeups/ssti2-picoctf2025.html">
+          <a class="writeup-card is-old" href="writeups/ssti2-picocft2025.html">
             <div class="writeup-thumb"><span class="writeup-thumb-icon">🧬</span></div>
             <div class="writeup-body">
               <div class="writeup-tags">
@@ -1104,8 +1026,7 @@ footer {
             </div>
           </a>
 
-          <!-- Power Cookie - 09 juil. 2026 -->
-          <a class="writeup-card is-old" href="writeups/power-cookie-picoctf2022.html">
+          <a class="writeup-card is-old" href="writeups/power-cookie-picocft2022.html">
             <div class="writeup-thumb"><span class="writeup-thumb-icon">🍪</span></div>
             <div class="writeup-body">
               <div class="writeup-tags">
@@ -1119,8 +1040,7 @@ footer {
             </div>
           </a>
 
-          <!-- Roboto Sans - 10 juil. 2026 -->
-          <a class="writeup-card is-old" href="writeups/roboto-sans-picoctf2022.html">
+          <a class="writeup-card is-old" href="writeups/roboto-sans-picocft2022.html">
             <div class="writeup-thumb"><span class="writeup-thumb-icon">🤖</span></div>
             <div class="writeup-body">
               <div class="writeup-tags">
@@ -1134,7 +1054,6 @@ footer {
             </div>
           </a>
 
-          <!-- Java RMI - 10 juil. 2026 -->
           <a class="writeup-card is-old" href="writeups/java-rmi-metasploitable2.html">
             <div class="writeup-thumb"><span class="writeup-thumb-icon">☕</span></div>
             <div class="writeup-body">
@@ -1149,8 +1068,7 @@ footer {
             </div>
           </a>
 
-          <!-- findme - 13 juil. 2026 -->
-          <a class="writeup-card is-old" href="writeups/findme-picoctf2023.html">
+          <a class="writeup-card is-old" href="writeups/findme-picocft2023.html">
             <div class="writeup-thumb"><span class="writeup-thumb-icon">↪️</span></div>
             <div class="writeup-body">
               <div class="writeup-tags">
@@ -1164,7 +1082,6 @@ footer {
             </div>
           </a>
 
-          <!-- Termux - 10 juil. 2026 -->
           <a class="writeup-card is-old" href="writeups/termux-pentest-guide.html">
             <div class="writeup-thumb"><span class="writeup-thumb-icon">📱</span></div>
             <div class="writeup-body">
@@ -1179,8 +1096,7 @@ footer {
             </div>
           </a>
 
-          <!-- NoSQL - 13 juil. 2026 -->
-          <a class="writeup-card is-old" href="writeups/nosql-injection-picoctf2024.html">
+          <a class="writeup-card is-old" href="writeups/nosql-injection-picocft2024.html">
             <div class="writeup-thumb"><span class="writeup-thumb-icon">🍃</span></div>
             <div class="writeup-body">
               <div class="writeup-tags">
@@ -1194,8 +1110,7 @@ footer {
             </div>
           </a>
 
-          <!-- SQLiLite - 15 juil. 2026 -->
-          <a class="writeup-card is-old" href="writeups/sqlilite-picoctf2022.html">
+          <a class="writeup-card is-old" href="writeups/sqlilite-picocft2022.html">
             <div class="writeup-thumb"><span class="writeup-thumb-icon">🗄️</span></div>
             <div class="writeup-body">
               <div class="writeup-tags">
@@ -1209,8 +1124,7 @@ footer {
             </div>
           </a>
 
-          <!-- Sql1 - 16 juil. 2026 -->
-          <a class="writeup-card is-old" href="writeups/sql1-picoctf2026.html">
+          <a class="writeup-card is-old" href="writeups/sql1-picocft2026.html">
             <div class="writeup-thumb"><span class="writeup-thumb-icon">🤖</span></div>
             <div class="writeup-body">
               <div class="writeup-tags">
@@ -1224,7 +1138,6 @@ footer {
             </div>
           </a>
 
-          <!-- Three - 21 juil. 2026 -->
           <a class="writeup-card is-old" href="writeups/Three.html">
             <div class="writeup-thumb"><span class="writeup-thumb-icon">☁️</span></div>
             <div class="writeup-body">
@@ -1239,7 +1152,6 @@ footer {
             </div>
           </a>
 
-          <!-- Placeholder -->
           <div class="writeup-card placeholder">
             <div class="writeup-body">
               <div class="writeup-title" style="color:var(--muted)">+ Prochain write-up</div>
@@ -1249,14 +1161,12 @@ footer {
 
         </div>
       </div>
-    </div><!-- /wrap-wu-all -->
+    </div>
   </section>
 
-  <!-- REPOS -->
   <section class="section" id="repos">
     <div class="section-label">// <span>repositories</span></div>
     <h2 class="section-title" style="margin-bottom:1.8rem;">Outils & Recherches</h2>
-
     <div class="repo-grid">
       <a class="repo-card" href="https://github.com/exploit4040/CyberTrace" target="_blank" rel="noopener">
         <div class="repo-top"><span class="repo-name">CyberTrace</span><span class="repo-star">★ 3</span></div>
@@ -1299,18 +1209,15 @@ footer {
         <div class="repo-lang"><span class="lang-dot" style="background:var(--muted)"></span> Markdown</div>
       </a>
     </div>
-
     <div class="disclaimer">
       ⚠ Tous les outils publiés sont à but <strong>éducatif et de tests autorisés uniquement</strong>.
       Aucune responsabilité en cas d'usage détourné.
     </div>
   </section>
 
-  <!-- CONTACT -->
   <section class="section" id="contact">
     <div class="section-label">// <span>contact</span></div>
     <h2 class="section-title" style="margin-bottom:1.8rem;">Me contacter</h2>
-
     <div class="hero-links">
       <a class="link-btn primary" href="https://github.com/exploit4040" target="_blank" rel="noopener">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
@@ -1345,7 +1252,6 @@ footer {
 </footer>
 
 <script>
-/* ── Nav active tab on scroll ── */
 const sections = document.querySelectorAll('section[id], header');
 const navTabs  = document.querySelectorAll('.nav-tab');
 const observer = new IntersectionObserver(entries => {
@@ -1360,7 +1266,6 @@ const observer = new IntersectionObserver(entries => {
 }, { threshold: 0.35, rootMargin: '-80px 0px -40% 0px' });
 sections.forEach(s => observer.observe(s));
 
-/* ── Generic toggle ── */
 function toggleSection(wrapId, btnId) {
   const wrap = document.getElementById(wrapId);
   const btn  = document.getElementById(btnId);
@@ -1368,7 +1273,6 @@ function toggleSection(wrapId, btnId) {
   btn.classList.toggle('is-open', open);
 }
 
-/* ── Mobile menu ── */
 function toggleMobileMenu() {
   document.getElementById('mobileMenu').classList.toggle('open');
 }
