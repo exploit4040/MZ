@@ -728,7 +728,7 @@ footer {
   <div class="stats-bar">
     <div class="stat-box"><div class="stat-num">16</div><div class="stat-label">Repositories</div></div>
     <div class="stat-box"><div class="stat-num">6</div><div class="stat-label">Stars</div></div>
-    <div class="stat-box"><div class="stat-num">19</div><div class="stat-label">Write-ups</div></div>
+    <div class="stat-box"><div class="stat-num">20</div><div class="stat-label">Write-ups</div></div>
     <div class="stat-box"><div class="stat-num">3</div><div class="stat-label">Certifications</div></div>
   </div>
 
@@ -864,7 +864,7 @@ footer {
     <div class="section-header">
       <div class="section-header-left">
         <div class="section-label">// <span>write-ups</span></div>
-        <h2 class="section-title">Espace Write-ups <span class="new-badge">19 publiés</span></h2>
+        <h2 class="section-title">Espace Write-ups <span class="new-badge">20 publiés</span></h2>
       </div>
       <button class="section-toggle-btn is-open" id="btn-wu-all" onclick="toggleSection('wrap-wu-all','btn-wu-all')">
         <span class="eye-open">▶ Afficher</span>
@@ -879,10 +879,25 @@ footer {
       <div class="writeup-section-group">
         <div class="writeup-group-label">
           <span class="line-l"></span>
-          📚 Tous les write-ups · 19 articles
+          📚 Tous les write-ups · 20 articles
           <span class="line-r"></span>
         </div>
         <div class="writeup-grid">
+
+          <!-- ====== NOUVEAU : SSTI Jinja2 — Write-up le plus récent ====== -->
+          <a class="writeup-card is-new" href="writeups/ssti-jinja2-rce.html">
+            <div class="writeup-thumb"><span class="writeup-thumb-icon">🧬</span></div>
+            <div class="writeup-body">
+              <div class="writeup-tags">
+                <span class="wtag cyan">SSTI</span><span class="wtag red">Jinja2</span><span class="wtag amber">RCE</span>
+                <span class="new-badge">NEW</span>
+              </div>
+              <div class="writeup-title">SSTI Jinja2 — Cours Complet</div>
+              <div class="writeup-desc">Cours complet : architecture du moteur Jinja2, détection SSTI, exploitation RCE via introspection Python, bypass de filtres, reverse shell et lab pratique documenté par captures.</div>
+              <div class="writeup-date"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>29 sept. 2026 · 14h30</div>
+              <div class="writeup-footer"><span>Web Exploitation · Cours + Lab</span><span class="writeup-arrow">→</span></div>
+            </div>
+          </a>
 
           <!-- ====== NOUVEAUX (NEW) : ROOT-ME ====== -->
           <a class="writeup-card is-new" href="writeups/NTLM_Authentification.html">
